@@ -1,19 +1,267 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "0.14.0",
-        "title": "Slamby API 0.14.0",
-        "description": "\n## Changelog\n### Features\n- added Status endpoint \n\n---\n\nSlamby introduces Slamby Service (API). Build powerful data management center, store and analyze your data easily. This documentation shows you a quick overview about the available API endpoints, technical details and business usage.\nWith Slamby you can:\n* Store and manage your data easily\n* Get high data security and privacy\n* Use improved data analysis\n\nOnce you've\n[registered your client](http://slamby.com/register/) it's easy\nto start working with Slamby API.\n\nAll endpoints are only accessible via https and are located at\n`api.slamby.com`.\n```\n  https://api.slamby.com/CLIENT_ID\n```\n\n> **Tip:** The `CLIENT_ID` is your unique identifier what you get after your server is ready to use.\n\n\n### Authentication\nThe base of the authentication is the `API_KEY`.\nYou have to provide it in the authorization header. It is **required for every API call**.\nThe examples of the documentation is preasuming that you provide the API key in the header.\n\n>*Example*\n>\n  Header   |Value\n  ---------|---\n  Authorization|Slamby `API_KEY`\n\n&nbsp;\n\n>**Tip:** You will get your `API_KEY` after your server is ready to use.\n\n### API Version\n\nEvery response contains API version information in response HTTP `X-Api-Version` header.\n\n>*Example*\n>\nX-Api-Version: 0.11.0\n\n## Dataset\nSlamby provides **Dataset** as a data storage. A dataset is a JSON document storage that allows to store schema free JSON objects, indexes and additional parameters. Inside your server you can create and manage multiple datasets.\n\nWith dataset you can:\n* Create multiple datasets\n* Using schema free JSON objects\n* Set indexes for text processing\n* Running text analysis on the stored data\n\n> **Tip:** With schema free JSON storage you can easily store your existing schemas. Store document related data - such as image urls, prices - and build powerful queries.\n\n### Create new Dataset\nCreate a new dataset by providing a sample JSON document and additional parameters.\n\n\n\n*Example REQUEST*\n\n> [POST /api/DataSets](#operation--api-DataSets-post))\n```JSON\n{\n    \"IdField\": \"id\",\n    \"InterpretedFields\": [\"title\", \"desc\"],\n    \"Name\": \"test1\",\n    \"NGramCount\": \"3\",\n    \"TagField\": \"tag\",\n    \"SampleDocument\": {\n      \"id\": 9,\n      \"title\": \"Example Product Title\",\n      \"desc\": \"Example Product Description\",\n      \"tag\": [1,2,3]\n    }\n}\n```\n\n*Example RESPONSE*\n>HTTP/1.1 201 CREATED\n\n##### Check the DataSet schema definition [here](#/definitions/DataSet)\n\n### Get Dataset\nGet information about a given dataset. A dataset can be accessed by its name.\n\nReturns with:\n* Dataset basic information\n* Dataset settings\n* Schema sample document\n* Dataset statistics\n\n*Example REQUEST*\n> [GET /api/DataSets/`example`](#operation--api-DataSets-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"Name\": \"example\",\n  \"NGramCount\": 3,\n  \"IdField\": \"id\",\n  \"TagField\": \"tag\",\n  \"InterpretedFields\": [\n    \"title\",\n    \"desc\"\n  ],\n  \"Statistics\": {\n    \"DocumentsCount\": 3\n  },\n  \"SampleDocument\": {\n    \"id\": 1,\n    \"title\": \"Example title\",\n    \"desc\": \"Example Description\"\n    \"tag\": [1,2,3]\n  }\n}\n```\n\n##### Check the DataSet schema definition [here](#/definitions/DataSet)\n\n### Get Dataset List\nGet a list of the available datasets.\n\nReturns with:\n* Dataset objects array\n\n*Example REQUEST*\n> [GET /api/DataSets](#operation--api-DataSets-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n[\n  {\n    \"Name\": \"example\",\n    \"NGramCount\": 3,\n    \"IdField\": \"id\",\n    \"TagField\": \"tags\",\n    \"InterpretedFields\": [\n      \"title\",\n      \"desc\"\n    ],\n    \"Statistics\": {\n      \"DocumentsCount\": 3\n    },\n    \"SampleDocument\": {\n      \"id\": 1,\n      \"title\": \"Example title\",\n      \"desc\": \"Example Description\"\n      \"tags\": [1,2,3]\n    }\n  },\n  {\n    \"Name\": \"example2\",\n    \"NGramCount\": 3,\n    \"IdField\": \"id\",\n    \"TagField\": \"tags\",\n    \"InterpretedFields\": [\n      \"title\",\n      \"desc\"\n    ],\n    \"Statistics\": {\n      \"DocumentsCount\": 3\n    },\n    \"SampleDocument\": {\n      \"id\": 1,\n      \"title\": \"Example title\",\n      \"desc\": \"Example Description\"\n      \"tags\": [1,2,3]\n    }\n  }\n]\n```\n\n##### Check the DataSet schema definition [here](#/definitions/DataSet)\n\n### Remove Dataset\nRemoves a given dataset. All the stored data will be removed.\n\n*Example REQUEST*\n> [DELETE /api/DataSets/`example`](#operation--api-DataSets-delete)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n## Document\nManage your **documents** easily. Create, edit, remove and running text analysis.\n\nEvery document is related to a dataset. You have to specify which dataset you want to use in the `X-DataSet` header by the name of the dataset.\n\n> **Tip:** If you use any of the Document methods without or an unexisting `X-DataSet` header you will get a `Missing X-DataSet header!` error.\n\nWith document you can:\n* Insert multiple documents\n* Using your own schema\n* Accessing your documents easily\n* Modifying your documents easily\n* Running text analysis\n\n> **Tip:** Store all the related information - such as text, prices, image urls - and use powerful queries.\n\n### Insert New Document\nInsert a new document to a dataset using the predefined schema.\n\n*Example REQUEST*\n> [POST /api/Documents](#operation--api-Documents-post)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n>\n```JSON\n{\n  \"id\": 9,\n  \"title\": \"Example Product Title\",\n  \"desc\": \"Example Product Description\",\n  \"tags\": [1,2,3]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 201 CREATED\n\n### Get Document\nGet a document from a dataset.\n\n*Example REQUEST*\n> [GET /api/Documents/`9`](#operation--api-Documents-get)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"id\": 9,\n  \"title\": \"Example Product Title\",\n  \"desc\": \"Example Product Description\",\n  \"tags\": [1,2,3]\n}\n```\n\n### Edit Document\nEdit an existing document in a dataset.\n\n*Example REQUEST*\n> [PUT /api/Documents/`9`](#operation--api-Documents-put)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n```JSON\n{\n  \"id\": 9,\n  \"title\": \"Example Modified Product Title\",\n  \"desc\": \"Example Modified Product Description\",\n  \"tags\": [1,2,3,4,5,6,7,8,9]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Delete Document\nDelete an existing document in a dataset.\n\n*Examle REQUEST*\n> [DELETE /api/Documents/`9`](#operation--api-Documents-delete)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Copy To\nCopying documents from a dataset to another one. You can specify the documents by id. You can copy documents to an existing dataset.\nThe selected documents will **remain in the source dataset** as well.\n\n*Example REQUEST*\n> [POST /api/Documents/Copy](#operation--api-Documents-Copy-post)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n```JSON\n{\n  \"DestinationDataSetName\": \"TARGET_DATASET_NAME\",\n  \"Ids\": [\"10\", \"11\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n> **Tip:** You can use the [POST /api/Documents/Sample](#operation--api-Documents-Sample-post) or the [POST /api/Documents/Filter](#operation--api-Documents-Filter-post) methods to get document ids easily.\n\n### Move To\n\nMoving documents from a dataset to another one. You can specify documents by id. You can move documents to an existing dataset. \nThe selected documents will be **removed from the source dataset**.\n\n*Example REQUEST*\n> [POST /api/Documents/Move](#operation--api-Documents-Move-post)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n```JSON\n{\n  \"DestinationDataSetName\": \"TARGET_DATASET_NAME\",\n  \"Ids\": [\"10\", \"11\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n> **Tip:** You can use the [POST /api/Documents/Sample](#operation--api-Documents-Sample-post) or the [POST /api/Documents/Filter](#operation--api-Documents-Filter-post) methods to get document ids easily.\n\n\n\n## Tags\nManage tags to organize your data. Using tags create a tag cloud or a hiearchical tag tree.\n\nEvery tag is related to a Dataset. You have to specify which dataset you want to use in the `X-DataSet` header by the name of the dataset.\n\n> **Tip:** If you use any of the tag methods without or an unexisting `X-DataSet` header you will get a `Missing X-DataSet header!` error.\n\nWith Tags you can:\n* Create new tag\n* Update a tag\n* Get a single tag or a full tag list\n* Organize your tags into hierarchy\n* Use tags for categorization\n* Use tags for tagging.\n\n### Create New Tag\nCreate a new tag in a dataset.\n\n>**Tip:** To create hierarchy you have to specify the ParentId of the tag. The ParentId is the Id of the parent of the tag. In the dataset there must be an existing tag with the id given in the ParentId. If the tag is a root element, or you don't want to use hierarchy then just skip the property or set to `null`.\n\n*Example REQUEST*\n> [POST /api/Tags](#operation--api-Tags-post)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n```JSON\n{\n  \"Id\": \"1\",\n  \"Name\": \"example tag 1\",\n  \"ParentId\": null\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 201 CREATED\n\n\n### Get Tag\nGet a tag by its Id. Provide 'withDetails=true' query parameter in order to get DocumentCount, WordCount values. Default value is 'false' because it takes time to calculate these properties.\n\n*Example REQUEST*\n> [GET /api/Tags/`1`?withDetails=false](#operation--api-Tags-get)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n  \n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"Id\": \"1\",\n  \"Name\": \"example tag 1\",\n  \"ParentId\": \"5\",\n  \"Properties\": {\n    \"Path\": [\n      {\n        \"Id\": \"5\",\n        \"Level\": \"1\",\n        \"Name\": \"example parent tag 5\"\n        }\n      ],\n    \"Level\": 2,\n    \"IsLeaf\": \"false\",\n    \"DocumentCount\": 33,\n    \"WordCount\": 123\n    }\n}\n```\n\n### Get Tag List\nGet all tags list from a given dataset. Provide 'withDetails=true' query parameter in order to get DocumentCount, WordCount values. Default value is 'false' because it takes time to calculate these properties.\n\n*Example REQUEST*\n> [GET /api/Tags?withDetails=false](#operation--api-Tags-get)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n[\n  {\n    \"Id\": \"1\",\n    \"Name\": \"example tag 1\",\n    \"ParentId\": null,\n    \"Properties\": {\n      \"Path\": [],\n      \"Level\": 1,\n      \"IsLeaf\": true,\n      \"DocumentCount\": 0,\n      \"WordCount\": 0\n    }\n  },\n  {\n    \"Id\": \"2\",\n    \"Name\": \"example tag 2\",\n    \"ParentId\": null,\n    \"Properties\": {\n      \"Path\": [],\n      \"Level\": 1,\n      \"IsLeaf\": true,\n      \"DocumentCount\": 0,\n      \"WordCount\": 0\n    }\n  }\n]\n```\n\n### Update Tag\n\n*Example REQUEST*\n> [PUT /api/Tags/`1`](#operation--api-Tags-put)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n```JSON\n{\n  \"Id\": \"1\",\n  \"Name\": \"example tag 1\",\n  \"ParentId\": null\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 CREATED\n\n### Remove Tag\nRemove a tag from tag list. Default behavior is that only leaf elements can be deleted. You should provide 'force=true' query parameter in order to remove tags with child elements. 'cleanDocument'. Setting 'cleanDocuments=true' removes the specified tag also from its documents.\n\n*Example REQUEST*\n> [DELETE /api/Tags/`1`?force=false&cleanDocuments=false](#operation--api-Tags-delete)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n## Sampling\nStatistical method to support sampling activity. Using sampling you can easily create **random samples** for experiments.\n\nWith sampling you can:\n- Create sample easily\n- Set the source categories\n- Use normal or stratified sampling method\n- Set sample size by fix number or percentage\n- Use built in pagination.\n\nFor sampling you have to specify which dataset you want to use in the `X-DataSet` header by the name of the dataset.\n\n*Example REQUEST*\n> [POST /api/Documents/Sample](#operation--api-Documents-Sample-post)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n```JSON\n{\n  \"Id\" : \"6902a2d3-0708-41f7-b21d-c5bd4b302bdc\",\n  \"IsStratified\" : \"false\",\n  \"Percent\" : \"0\",\n  \"Size\" : \"15000\",\n  \"TagIds\" : [],\n  \"Pagination\" : {\n      \"Offset\" : 0,\n      \"Limit\": 100,\n      \"OrderDirection\" : \"Asc\",\n      \"OrderByField\" : \"id\"\n  }\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"Items\": [\n    {\n      \"id\": \"1455197295447\",\n      \"title\": \"example title\",\n      \"desc\": \"example description\",\n      \"tags\": [\n        \"2\",\n        \"3\"\n      ]\n    },\n    {\n      \"id\": \"1455197591439\",\n      \"title\": \"example title\",\n      \"desc\": \"example description\",\n      \"tags\": [\n        \"3\"\n      ]\n    },\n    ...\n  ],\n  \"Pagination\": {\n    \"Offset\": 0,\n    \"Limit\": 100,\n    \"OrderDirection\": \"Asc\",\n    \"OrderByField\": \"desc\"\n  },\n  \"Count\": 100,\n  \"Total\": 15000\n}\n```\n\n##### For the parameters explanation check the DocumentSampleSettings schema definition [here](#/definitions/DocumentSampleSettings)\n##### For the pagination explanation check the pagination section [here](#pagination)\n\n## Filter\nPowerful **search engine**. Build **smart** search functions or filters. Easily access to your datasets with **simple queries**, **logical expressions** and **wild cards**. Manage your language dependencies using **optinal tokenizer**.\n\nWith Filter you can:\n* Create simple search queries\n* Filter by tags\n* Search in multiple fields\n* Access to all the available document fields and parameters\n* Use logical expressions\n* Use wild cards\n* Use optional tokenizers\n* Use built in pagination\n\n*Example REQUEST*\n> [POST /api/Documents/Filter](#operation--api-Documents-Filter-post)\n>\n  Header   |Value\n  ---------|---\n  X-DataSet|example\n```JSON\n{\n    \"Filter\" : {\n      \"TagIds\" : [\"1\"],\n      \"Query\" : \"title:michelin\"\n    },\n    \"Pagination\" : {\n        \"Offset\" : 0,\n        \"Limit\": 100,\n        \"OrderDirection\" : \"Asc\",\n        \"OrderByField\" : \"title\"\n    }\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"Items\": [\n    {\n      \"id\": \"1455197455453\",\n      \"title\": \"example title 1\",\n      \"desc\": \"example description\",\n      \"tags\": [\n        \"1\"\n      ]\n    },\n    {\n      \"id\": \"1455197455203\",\n      \"title\": \"example title 2\",\n      \"desc\": \"example description\",\n      \"tags\": [\n        \"1\"\n      ]\n    },\n    ...\n  ],\n  \"Pagination\": {\n    \"Offset\": 0,\n    \"Limit\": 100,\n    \"OrderDirection\": \"Asc\",\n    \"OrderByField\": \"title\"\n  },\n  \"Count\": 100,\n  \"Total\": 1543\n}\n```\n\n##### For the parameters explanation check the DocumentFilterSettings schema definition [here](#/definitions/DocumentFilterSettings)\n##### For the pagination explanation check the pagination section [here](#pagination)\n\n\n> **Tip:** Easily create a powerful search engine by using tokenizer and detailed search queries.\n\n## Services\nSlamby introduces services. You can quickly create a data processing service from the available service templates. Manage your data processing with services, run different tests, run more data management services parallelly.\n\n**Service definition:** a data management service with custom settings, dedicated resources and available API endpoint.\n\nWith services you can:\n* Create a service\n* Get your services list\n* Get a service\n* Remove a service\n* Manage processes\n\n### Get Service\nYou can get general information about a service using the Id of the service\n\n*Example REQUEST*\n> [GET /api/Services/`GUID`](#operation--api-Services-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"Id\": \"57c845dc-6aa4-475c-bbf2-0d682f471f32\",\n  \"Name\": \"Example name of a service\",\n  \"Description\": \"This is an example service description\",\n  \"Status\": \"New\",\n  \"Type\": \"Classifier\",\n  \"ProcessIdList\": [\n    \"e251dbbf-04ff-4d34-a959-90dc4a602142\",\n    \"d335edaf-354a-482c-ade4-4d8172f81a40\"\n  ],\n  \"ActualProcessId\": null\n}\n```\n\n### Create New Service\nCreate a new Service\n\n*Example REQUEST*\n> [POST /api/Services](#operation--api-Services-post)\n```JSON\n{\n  \"Name\": \"Example name of a service\",\n  \"Description\": \"This is an example service description\",\n  \"Type\" : \"Classifier\"\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 201 CREATED\n\n### Update Service\nYou can update only the Name and the Description field.\n*Example REQUEST*\n> [PUT /api/Services/`GUID`](#operation--api-Services-put)\n```JSON\n{\n  \"Name\": \"Updated example name of a service\",\n  \"Description\": \"This is an updated example service description\"\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 CREATED\n\n\n ### Remove Service\nYou remove a service anytime. If it's in Activated status then it will be Deactivated first. If it's in Busy status then it will be cancelled first.\n\n*Example REQUEST*\n> [DELETE /api/Services/`GUID`](#operation--api-Services-delete)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n\n## Classifier Service\nService for text classification. Create a classifier service from a selected dataset, specify your settings and use this service API endpoint to classify your incoming text.\n\n> Currently Slamby provides `Slamby Twister` as a highly accurate classification algorithm designed for e-commerce market.\n\n### Get Classifier Service\nYou can get classifier specified information about a classifier service with the Id of the service\n\n*Example REQUEST*\n> [GET /api/Services/Classifier/`GUID`](#operation--api-Services-Classifier-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"Id\": \"83326e75-dd16-4e5c-a66d-5ea5197bd8e0\",\n  \"Name\": \"Example name of a classifier service\",\n  \"Description\": \"This is an example classifier service description\",\n  \"Status\": \"New\",\n  \"Type\": \"Classifier\",\n  \"ProcessIdList\": null,\n  \"ActualProcessId\": null,\n  \"PrepareSettings\": null,\n  \"ActivateSettings\": null\n}\n```\n\n### Prepare Classifier Service\nTraining Process Steps:\n1. Give a suitable name to the service,\n2. Set the ngram values,\n3. Provide the tag ids the you are going to use during the training,\n4. Start the training process.\n\n> For Training process Slamby is using `Slamby Twister` as its own classification algorithm. \n\nThis request is a long running task so the API do it in async way. Therefore the response is a Process.\n\n> `N-gram seetings`: each dataset has an n-gram setting. For set the required n-gram the minimum value is 1, the maximum value equals with the maximum n-gram number of the given dataset. Using a [1,2,3] n-gram settings means during the training process the classifier is going to create 1,2,3 n-gram dictionaries. [Learn more about N-gram](https://en.wikipedia.org/wiki/N-gram)\n\n*Example REQUEST*\n> [POST /api/Services/Classifier/`GUID`/Prepare](#operation--api-Services-Classifier-Prepare-post)\n```JSON\n{\n  \"DataSetName\" : \"test dataset\",\n  \"NGramList\": [1,2],\n  \"TagIdList\": [\"tag1Id\",\"tag2Id\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 202 ACCEPTED\n```JSON\n{\n  \"Id\": \"d335edaf-354a-482c-ade4-4d8172f81a40\",\n  \"Start\": \"2016-03-16T13:12:15.5520625Z\",\n  \"End\": \"0001-01-01T00:00:00\",\n  \"Percent\": 0,\n  \"Status\": \"InProgress\"\n}\n```\n\n### Activate Classifier Service\nEach service has two status: active, deactive. When a preparation/training process is ready, the service has a deactivated status. A deactivated service is ready, but its not loaded into memory and the API is not able to process the incoming requests. To use a service set the status to Activated. After the activation process the service is ready to use, all the required files are loaded and stored in memory, the API endpoint is active.\n\n*Example REQUEST*\n> [POST /api/Services/Classifier/`GUID`/Activate](#operation--api-Services-Classifier-Activate-post)\n```JSON\n{\n  \"NGramList\": [1,2],\n  \"EmphasizedTagIdList\": null,\n  \"TagIdList\": null\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Deactivate Classifier Service\nWhen a service is not needed for continous usage you can deactivate it. After deactivating a service, all the settings and files remain, but they are not using any resources (memory, cores). You can store your deactivated services and activate them anytime.\n\n*Example REQUEST*\n> [POST /api/Services/Classifier/`GUID`/Deactivate](#operation--api-Services-Classifier-Deactivate-post)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Recommend\nBuilt-in text classification engine. Uses the prepared Classifier dictionaries and calculations. High speed and classification capability. Built-in n-gram analyzer.\n\n*Example Request*\n> [POST /api/Services/Classifier/`GUID`/Recommend](#operation--api-Services-Classifier-Recommend-post)\n```JSON\n{\n  \"Text\": \"Lorem Ipsum Dolorem\",\n  \"Count\": \"2\",\n  \"UseEmphasizing\": false,\n  \"NeedTagInResults\": true,\n  \n}\n```\n\n*Example Response*\n```JSON\n[\n  {\n    \"TagId\": \"324\",\n    \"Score\": 0.35175663155586434,\n    \"Tag\": {\n      \"Id\": \"324\",\n      \"Name\": \"Tag name\",\n      \"ParentId\": \"16\",\n      \"Properties\": null\n    }\n  },\n  {\n    \"TagId\": \"232\",\n    \"Score\": 0.30277479057126688,\n    \"Tag\": {\n      \"Id\": \"232\",\n      \"Name\": \"Tag name\",\n      \"ParentId\": \"24\",\n      \"Properties\": null\n    }\n  }\n]\n```\n\n### Export dictionaries\n\n*Example Request*\n> [POST /api/Services/Classifier/`GUID`/ExportDictionaries](#operation--api-Services-Classifier-ExportDictionaries-post)\n```JSON\n{\n  \"NGramList\": [1],\n  \"TagIdList\": null\n}\n```\n\n> **Tip:** If you skip the `TagIdList` or set it to `null` than the API will use all the leaf tags\n\n*Example Response*\n```JSON\n{\n  \"Id\": \"345e1c79-dc78-427f-8ad1-facce75f6ae3\",\n  \"Start\": \"2016-04-18T13:29:15.3728991Z\",\n  \"End\": \"2016-04-18T13:29:39.3144202Z\",\n  \"Percent\": 0,\n  \"Description\": \"Exporting dictionaries from Classifier service prc...\",\n  \"Status\": \"Finished\",\n  \"Type\": \"ClassifierExportDictionaries\",\n  \"ErrorMessages\": [],\n  \"ResultMessage\": \"Successfully exported dictionaries from Classifier service prc!\\nExport file can be download from here: https://api.slamby.com/demo-api/files/345e1c79-dc78-427f-8ad1-facce75f6ae3.zip\"\n}\n```\n\n## Prc Service\n\n### Get Prc Service\n\n*Example REQUEST*\n> [GET /api/Services/Prc/`GUID`](#operation--api-Services-Prc-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"PrepareSettings\": null,\n  \"ActivateSettings\": null,\n  \"Id\": \"996f91f4-f1ca-428b-af1a-929ccf3b0243\",\n  \"Name\": \"prc\",\n  \"Description\": null,\n  \"Status\": \"New\",\n  \"Type\": \"Prc\",\n  \"ProcessIdList\": [],\n  \"ActualProcessId\": null\n}\n```\n\n### Prepare Prc Service\n\n*Example REQUEST*\n> [POST /api/Services/Prc/`GUID`/Prepare](#operation--api-Services-Prc-Prepare-post)\n```JSON\n{\n  \"DataSetName\" : \"test dataset\",\n  \"TagIdList\": [\"tag1Id\",\"tag2Id\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 202 ACCEPTED\n```JSON\n{\n  \"Id\": \"ceed2045-70fb-4785-b483-aadb9bf9a992\",\n  \"Start\": \"2016-04-18T13:09:49.6032716Z\",\n  \"End\": \"0001-01-01T00:00:00\",\n  \"Percent\": 0,\n  \"Description\": \"Preparing Prc service prc...\",\n  \"Status\": \"InProgress\",\n  \"Type\": \"PrcPrepare\",\n  \"ErrorMessages\": [],\n  \"ResultMessage\": \"\"\n}\n```\n\n### Activate Prc Service\n\n*Example REQUEST*\n> [POST /api/Services/Prc/`GUID`/Activate](#operation--api-Services-Prc-Activate-post)\n```JSON\n{\n  \"FieldsForRecommendation\": [\"title\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Deactivate Prc Service\n\n*Example REQUEST*\n> [POST /api/Services/Prc/`GUID`/Deactivate](#operation--api-Services-Prc-Deactivate-post)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Recommend\n\n*Example Request*\n> [POST /api/Services/Prc/`GUID`/Recommend](#operation--api-Services-Prc-Recommend-post)\n```JSON\n{\n  \"Text\": \"Lorem Ipsum Dolorem\",\n  \"Count\": \"2\",\n  \"Filter\": null,\n  \"Weights\": null,\n  \"TagId\": \"tag1Id\",\n  \"NeedDocumentInResult\": true\n}\n```\n\n*Example Response*\n```JSON\n[\n  {\n    \"DocumentId\": \"1777237\",\n    \"Score\": 0.89313365295595715,\n    \"Document\": {\n      \"id\": \"1777237\",\n      \"tag_id\": \"tag1Id\",\n      \"title\": \"Lorem\",\n      \"body\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor\"\n    }\n  },\n  {\n    \"DocumentId\": \"6507461\",\n    \"Score\": 0.7894283811358983,\n    \"Document\": {\n      \"ad_id\": \"6507461\",\n      \"tag_id\": \"tag1Id\",\n      \"title\": \"Duis aute irure dolorem\",\n      \"body\": \"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\"\n    }\n  }\n]\n```\n\n### Export dictionaries\n\n*Example Request*\n> [POST /api/Services/Prc/`GUID`/ExportDictionaries](#operation--api-Services-Prc-ExportDictionaries-post)\n```JSON\n{\n  \"TagIdList\": null\n}\n```\n\n> **Tip:** If you skip the `TagIdList` or set it to `null` than the API will use all the leaf tags\n\n*Example Response*\n```JSON\n{\n  \"Id\": \"345e1c79-dc78-427f-8ad1-facce75f6ae3\",\n  \"Start\": \"2016-04-18T13:29:15.3728991Z\",\n  \"End\": \"2016-04-18T13:29:39.3144202Z\",\n  \"Percent\": 0,\n  \"Description\": \"Exporting dictionaries from Prc service prc...\",\n  \"Status\": \"Finished\",\n  \"Type\": \"PrcExportDictionaries\",\n  \"ErrorMessages\": [],\n  \"ResultMessage\": \"Successfully exported dictionaries from Prc service prc!\\nExport file can be download from here: https://api.slamby.com/demo-api/files/345e1c79-dc78-427f-8ad1-facce75f6ae3.zip\"\n}\n```\n\n\n\n## Processes\nThere are long running tasks in the Slamby API. These requests are served in async way. These methods returns with `HTTP/1.1 202 ACCEPTED`and with a Process object.\n\n> **Tip:** You can cancel a process anytime during its progress\n\n### Get Process information\nGet a process by its Id.\n\n*Example REQUEST*\n> [GET /api/Processes/`GUID`](#operation--api-Processes-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"Id\": \"958c1bdd-cd21-48f6-b9ec-c232271adec5\",\n  \"Start\": \"2016-04-18T16:04:04.2156558Z\",\n  \"End\": \"0001-01-01T00:00:00\",\n  \"Percent\": 0,\n  \"Description\": \"Exporting words from 1 tag(s) of dataset test...\",\n  \"Status\": \"InProgress\",\n  \"Type\": \"TagsExportWords\",\n  \"ErrorMessages\": [],\n  \"ResultMessage\": null\n}\n```\n\n### Cancel Process\nCancel the process. Only Process with status `InProgress` can be canceled. The method returns with `HTTP/1.1 202 ACCEPTED` because it can take time to cancel a process. You have to check periodically that whether the process status is already `Canceled`.\n\n*Example REQUEST*\n> [POST /api/Processes/`GUID`](#operation--api-Processes-Cancel-post)\n\n*Example RESPONSE*\n> HTTP/1.1 202 ACCEPTED\n\n##### For the parameters explanation check the Process schema definition [here](#/definitions/Process)\n\n## General\n\n\n### Pagination\nThere are situations when your query results lots of data. In these cases the pagination can be handy.\nYou have to only provide an offset and a limit in the pagination object.\nOptionally you can set a field which will be the base of the ordering and also the direction of the ordering (ascendig or descending). If you specify `-1` value for `Limit` then you will get all the elements in one result.\n\nIn the result (PaginatedList[Object]) there is an Items property which containing the requested elements (or the part of the requested elements). Also it provides the count of the items (this is equal or lesser than the limit property) and the total count of the requested items. Also it returns the same pagination object which was int the request.\n\n>*Example REQUEST*\n```json\n{\n    ...\n    \"Pagination\" : {\n        \"Offset\" : 0,\n        \"Limit\": 10,\n        \"OrderDirection\" : \"Asc\",\n        \"OrderByField\" : \"title\"\n    }\n}\n```\n\n>*Example RESPONSE*\n```json\n{\n  \"Items\": [\n    {\n      ...\n    },\n    {\n      ...\n    },\n    ...\n  ],\n  \"Pagination\": {\n    \"Offset\": 0,\n    \"Limit\": 100,\n    \"OrderDirection\": \"Asc\",\n    \"OrderByField\": \"title\"\n  },\n  \"Count\": 10,\n  \"Total\": 21\n}\n```\n\n##### Check the Pagination schema definition [here](#/definitions/Pagination)\n##### Check the PaginatedList[Object] schema definition [here](#/definitions/PaginatedList[Object])\n\n### Status\n\n*Example REQUEST*\n\n> [GET /api/Status](#operation--api-Status-get))\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n  \"ProcessorCount\": 4,\n  \"AvailableFreeSpace\": 47895.53,\n  \"ApiVersion\": \"0.14.0\",\n  \"CpuUsage\": 0.6,\n  \"TotalMemory\": 996.08,\n  \"FreeMemory\": 36.3\n}\n```\n",
+        "version": "0.15.0",
+        "title": "Slamby API 0.15.0",
+        "description": "\n## Changelog\n### Features\n- added DataSet schema definition endpoint\n- hierarchical interpreted fields\n\n---\n\nSlamby introduces Slamby Service (API). Build powerful data management center, store and analyze your data easily. This documentation shows you a quick overview about the available API endpoints, technical details and business usage.\nWith Slamby you can:\n* Store and manage your data easily\n* Get high data security and privacy\n* Use improved data analysis\n\nOnce you've\n[registered your client](http://slamby.com/register/) it's easy\nto start working with Slamby API.\n\nAll endpoints are only accessible via https and are located at\n`api.slamby.com`.\n```\n    https://api.slamby.com/CLIENT_ID\n```\n\n> **Tip:** The `CLIENT_ID` is your unique identifier what you get after your server is ready to use.\n\n\n### Authentication\nThe base of the authentication is the `API_KEY`.\nYou have to provide it in the authorization header. It is **required for every API call**.\nThe examples of the documentation is preasuming that you provide the API key in the header.\n\n>*Example*\n>\nHeader   |Value\n---------|---\nAuthorization|Slamby `API_KEY`\n\n&nbsp;\n\n>**Tip:** You will get your `API_KEY` after your server is ready to use.\n\n### API Version\n\nEvery response contains API version information in response HTTP `X-Api-Version` header.\n\n>*Example*\n>\nX-Api-Version: 0.11.0\n\n## Dataset\nSlamby provides **Dataset** as a data storage. A dataset is a JSON document storage that allows to store schema free JSON objects, indexes and additional parameters. Inside your server you can create and manage multiple datasets.\n\nWith dataset you can:\n* Create multiple datasets\n* Using schema free JSON objects\n* Set indexes for text processing\n* Running text analysis on the stored data\n\n> **Tip:** With schema free JSON storage you can easily store your existing schemas. Store document related data - such as image urls, prices - and build powerful queries.\n\n### Create new Dataset\nCreate a new dataset by providing a sample JSON document and additional parameters.\n\n*Example REQUEST*\n\n> [POST /api/DataSets](#operation--api-DataSets-post))\n```JSON\n{\n    \"IdField\": \"id\",\n    \"InterpretedFields\": [\"title\", \"desc\"],\n    \"Name\": \"test1\",\n    \"NGramCount\": \"3\",\n    \"TagField\": \"tag\",\n    \"SampleDocument\": {\n        \"id\": 9,\n        \"title\": \"Example Product Title\",\n        \"desc\": \"Example Product Description\",\n        \"tag\": [1,2,3]\n    }\n}\n```\n\nCreate a new dataset by providing a schema JSON document and additional parameters.\n\n*Example REQUEST*\n\n> [POST /api/DataSets/Schema](#operation--api-DataSets-Schema-post))\n```JSON\n{\n    \"IdField\": \"id\",\n    \"InterpretedFields\": [\n        \"title\",\n        \"desc\"\n    ],\n    \"Name\": \"test2\",\n    \"NGramCount\": \"3\",\n    \"TagField\": \"tag\",\n    \"Schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"id\": {\n                \"type\": \"integer\"\n            },\n            \"title\": {\n                \"type\": \"string\"\n            },\n            \"desc\": {\n                \"type\": \"string\"\n            },\n            \"tag\": {\n                \"type\": \"array\",\n                \"items\": {\n                    \"type\": \"byte\"\n                }\n            }\n        }\n    }\n}\n```\n\n*Example RESPONSE*\n>HTTP/1.1 201 CREATED\n\n##### Check the DataSet schema definition [here](#/definitions/DataSet)\n\n\n\n### Data Types\n\nDefining a dataset schema you can set your custom field type.\n\n*Currently available field types:*\n\nName    |   Types\n--- |   ---\nString  |   `string`\nNumeric |   `long`, `integer`, `short`, `byte`, `double`, `float`\nDate    |   `date`\nBoolean |   `boolean`\nArray   |   `array`\nObject  |   `object` for single JSON objects\n\n*Example schema*\n\n```JSON\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"name\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"firstName\": {\n                    \"type\": \"string\"\n                },\n                \"secondName\": {\n                    \"type\": \"string\"\n                }\n            },\n        \"age\": {\n            \"type\":\"integer\"\n        },\n        \"sex\": {\n            \"type\":\"boolean\"\n        },\n        \"luckyNumbers\": {\n            \"type\": \"array\",\n            \"items\": {\n                type: \"integer\"\n            }\n        }\n    }\n}\n```\n\n### Date Formats\n\nYou can define your custom date format to specify your needs.\nFor dataset date formats you can use the built-in [elastic-search custom formats](https://www.elastic.co/guide/en/elasticsearch/reference/2.2/mapping-date-format.html).\nIf you do not provide date format, default value is `\"strict_date_optional_time||epoch_millis\"`.\n\n**Built in formats e.g.**\n\nname    |   Description\n--- |   ---\n`epoch_millis`    |   A formatter for the number of milliseconds since the epoch. Note, that this timestamp allows a max length of 13 chars, so only dates between 1653 and 2286 are supported. You should use a different date formatter in that case. \n`epoch_second`    |   A formatter for the number of seconds since the epoch. Note, that this timestamp allows a max length of 10 chars, so only dates between 1653 and 2286 are supported. You should use a different date formatter in that case. \n`date_optional_time` or `strict_date_optional_time` |    A generic ISO datetime parser where the date is mandatory and the time is optional.\n`basic_date`  |   A basic formatter for a full date as four digit year, two digit month of year, and two digit day of month: yyyyMMdd.\n`basic_date_time` |   A basic formatter that combines a basic date and time, separated by a T: yyyyMMdd'T'HHmmss.SSSZ.\n`basic_date_time_no_millis`   |   A basic formatter that combines a basic date and time without millis, separated by a T: yyyyMMdd'T'HHmmssZ. \n`basic_ordinal_date`  |   A formatter for a full ordinal date, using a four digit year and three digit dayOfYear: yyyyDDD. \n...\n\n### Get Dataset\nGet information about a given dataset. A dataset can be accessed by its name.\n\nReturns with:\n* Dataset basic information\n* Dataset settings\n* Schema sample document\n* Dataset statistics\n\n*Example REQUEST*\n> [GET /api/DataSets/`example`](#operation--api-DataSets-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"Name\": \"example\",\n    \"NGramCount\": 3,\n    \"IdField\": \"id\",\n    \"TagField\": \"tag\",\n    \"InterpretedFields\": [\n    \"title\",\n    \"desc\"\n    ],\n    \"Statistics\": {\n    \"DocumentsCount\": 3\n    },\n    \"SampleDocument\": {\n    \"id\": 1,\n    \"title\": \"Example title\",\n    \"desc\": \"Example Description\"\n    \"tag\": [1,2,3]\n    }\n}\n```\n\n##### Check the DataSet schema definition [here](#/definitions/DataSet)\n\n### Get Dataset List\nGet a list of the available datasets.\n\nReturns with:\n* Dataset objects array\n\n*Example REQUEST*\n> [GET /api/DataSets](#operation--api-DataSets-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n[\n    {\n    \"Name\": \"example\",\n    \"NGramCount\": 3,\n    \"IdField\": \"id\",\n    \"TagField\": \"tags\",\n    \"InterpretedFields\": [\n        \"title\",\n        \"desc\"\n    ],\n    \"Statistics\": {\n        \"DocumentsCount\": 3\n    },\n    \"SampleDocument\": {\n        \"id\": 1,\n        \"title\": \"Example title\",\n        \"desc\": \"Example Description\"\n        \"tags\": [1,2,3]\n    }\n    },\n    {\n    \"Name\": \"example2\",\n    \"NGramCount\": 3,\n    \"IdField\": \"id\",\n    \"TagField\": \"tags\",\n    \"InterpretedFields\": [\n        \"title\",\n        \"desc\"\n    ],\n    \"Statistics\": {\n        \"DocumentsCount\": 3\n    },\n    \"SampleDocument\": {\n        \"id\": 1,\n        \"title\": \"Example title\",\n        \"desc\": \"Example Description\"\n        \"tags\": [1,2,3]\n    }\n    }\n]\n```\n\n##### Check the DataSet schema definition [here](#/definitions/DataSet)\n\n### Remove Dataset\nRemoves a given dataset. All the stored data will be removed.\n\n*Example REQUEST*\n> [DELETE /api/DataSets/`example`](#operation--api-DataSets-delete)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n## Document\nManage your **documents** easily. Create, edit, remove and running text analysis.\n\nEvery document is related to a dataset. You have to specify which dataset you want to use in the `X-DataSet` header by the name of the dataset.\n\n> **Tip:** If you use any of the Document methods without or an unexisting `X-DataSet` header you will get a `Missing X-DataSet header!` error.\n\nWith document you can:\n* Insert multiple documents\n* Using your own schema\n* Accessing your documents easily\n* Modifying your documents easily\n* Running text analysis\n\n> **Tip:** Store all the related information - such as text, prices, image urls - and use powerful queries.\n\n### Insert New Document\nInsert a new document to a dataset using the predefined schema.\n\n*Example REQUEST*\n> [POST /api/Documents](#operation--api-Documents-post)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n>\n```JSON\n{\n    \"id\": 9,\n    \"title\": \"Example Product Title\",\n    \"desc\": \"Example Product Description\",\n    \"tags\": [1,2,3]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 201 CREATED\n\n### Get Document\nGet a document from a dataset.\n\n*Example REQUEST*\n> [GET /api/Documents/`9`](#operation--api-Documents-get)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"id\": 9,\n    \"title\": \"Example Product Title\",\n    \"desc\": \"Example Product Description\",\n    \"tags\": [1,2,3]\n}\n```\n\n### Edit Document\nEdit an existing document in a dataset.\n\n*Example REQUEST*\n> [PUT /api/Documents/`9`](#operation--api-Documents-put)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n```JSON\n{\n    \"id\": 9,\n    \"title\": \"Example Modified Product Title\",\n    \"desc\": \"Example Modified Product Description\",\n    \"tags\": [1,2,3,4,5,6,7,8,9]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Delete Document\nDelete an existing document in a dataset.\n\n*Examle REQUEST*\n> [DELETE /api/Documents/`9`](#operation--api-Documents-delete)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Copy To\nCopying documents from a dataset to another one. You can specify the documents by id. You can copy documents to an existing dataset.\nThe selected documents will **remain in the source dataset** as well.\n\n*Example REQUEST*\n> [POST /api/Documents/Copy](#operation--api-Documents-Copy-post)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n```JSON\n{\n    \"DestinationDataSetName\": \"TARGET_DATASET_NAME\",\n    \"Ids\": [\"10\", \"11\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n> **Tip:** You can use the [POST /api/Documents/Sample](#operation--api-Documents-Sample-post) or the [POST /api/Documents/Filter](#operation--api-Documents-Filter-post) methods to get document ids easily.\n\n### Move To\n\nMoving documents from a dataset to another one. You can specify documents by id. You can move documents to an existing dataset. \nThe selected documents will be **removed from the source dataset**.\n\n*Example REQUEST*\n> [POST /api/Documents/Move](#operation--api-Documents-Move-post)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n```JSON\n{\n    \"DestinationDataSetName\": \"TARGET_DATASET_NAME\",\n    \"Ids\": [\"10\", \"11\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n> **Tip:** You can use the [POST /api/Documents/Sample](#operation--api-Documents-Sample-post) or the [POST /api/Documents/Filter](#operation--api-Documents-Filter-post) methods to get document ids easily.\n\n\n\n## Tags\nManage tags to organize your data. Using tags create a tag cloud or a hiearchical tag tree.\n\nEvery tag is related to a Dataset. You have to specify which dataset you want to use in the `X-DataSet` header by the name of the dataset.\n\n> **Tip:** If you use any of the tag methods without or an unexisting `X-DataSet` header you will get a `Missing X-DataSet header!` error.\n\nWith Tags you can:\n* Create new tag\n* Update a tag\n* Get a single tag or a full tag list\n* Organize your tags into hierarchy\n* Use tags for categorization\n* Use tags for tagging.\n\n### Create New Tag\nCreate a new tag in a dataset.\n\n>**Tip:** To create hierarchy you have to specify the ParentId of the tag. The ParentId is the Id of the parent of the tag. In the dataset there must be an existing tag with the id given in the ParentId. If the tag is a root element, or you don't want to use hierarchy then just skip the property or set to `null`.\n\n*Example REQUEST*\n> [POST /api/Tags](#operation--api-Tags-post)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n```JSON\n{\n    \"Id\": \"1\",\n    \"Name\": \"example tag 1\",\n    \"ParentId\": null\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 201 CREATED\n\n\n### Get Tag\nGet a tag by its Id. Provide 'withDetails=true' query parameter in order to get DocumentCount, WordCount values. Default value is 'false' because it takes time to calculate these properties.\n\n*Example REQUEST*\n> [GET /api/Tags/`1`?withDetails=false](#operation--api-Tags-get)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n    \n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"Id\": \"1\",\n    \"Name\": \"example tag 1\",\n    \"ParentId\": \"5\",\n    \"Properties\": {\n    \"Path\": [\n        {\n        \"Id\": \"5\",\n        \"Level\": \"1\",\n        \"Name\": \"example parent tag 5\"\n        }\n        ],\n    \"Level\": 2,\n    \"IsLeaf\": \"false\",\n    \"DocumentCount\": 33,\n    \"WordCount\": 123\n    }\n}\n```\n\n### Get Tag List\nGet all tags list from a given dataset. Provide 'withDetails=true' query parameter in order to get DocumentCount, WordCount values. Default value is 'false' because it takes time to calculate these properties.\n\n*Example REQUEST*\n> [GET /api/Tags?withDetails=false](#operation--api-Tags-get)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n[\n    {\n    \"Id\": \"1\",\n    \"Name\": \"example tag 1\",\n    \"ParentId\": null,\n    \"Properties\": {\n        \"Path\": [],\n        \"Level\": 1,\n        \"IsLeaf\": true,\n        \"DocumentCount\": 0,\n        \"WordCount\": 0\n    }\n    },\n    {\n    \"Id\": \"2\",\n    \"Name\": \"example tag 2\",\n    \"ParentId\": null,\n    \"Properties\": {\n        \"Path\": [],\n        \"Level\": 1,\n        \"IsLeaf\": true,\n        \"DocumentCount\": 0,\n        \"WordCount\": 0\n    }\n    }\n]\n```\n\n### Update Tag\n\n*Example REQUEST*\n> [PUT /api/Tags/`1`](#operation--api-Tags-put)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n```JSON\n{\n    \"Id\": \"1\",\n    \"Name\": \"example tag 1\",\n    \"ParentId\": null\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 CREATED\n\n### Remove Tag\nRemove a tag from tag list. Default behavior is that only leaf elements can be deleted. You should provide 'force=true' query parameter in order to remove tags with child elements. 'cleanDocument'. Setting 'cleanDocuments=true' removes the specified tag also from its documents.\n\n*Example REQUEST*\n> [DELETE /api/Tags/`1`?force=false&cleanDocuments=false](#operation--api-Tags-delete)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n## Sampling\nStatistical method to support sampling activity. Using sampling you can easily create **random samples** for experiments.\n\nWith sampling you can:\n- Create sample easily\n- Set the source categories\n- Use normal or stratified sampling method\n- Set sample size by fix number or percentage\n- Use built in pagination.\n\nFor sampling you have to specify which dataset you want to use in the `X-DataSet` header by the name of the dataset.\n\n*Example REQUEST*\n> [POST /api/Documents/Sample](#operation--api-Documents-Sample-post)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n```JSON\n{\n    \"Id\" : \"6902a2d3-0708-41f7-b21d-c5bd4b302bdc\",\n    \"IsStratified\" : \"false\",\n    \"Percent\" : \"0\",\n    \"Size\" : \"15000\",\n    \"TagIds\" : [],\n    \"Pagination\" : {\n        \"Offset\" : 0,\n        \"Limit\": 100,\n        \"OrderDirection\" : \"Asc\",\n        \"OrderByField\" : \"id\"\n    }\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"Items\": [\n    {\n        \"id\": \"1455197295447\",\n        \"title\": \"example title\",\n        \"desc\": \"example description\",\n        \"tags\": [\n        \"2\",\n        \"3\"\n        ]\n    },\n    {\n        \"id\": \"1455197591439\",\n        \"title\": \"example title\",\n        \"desc\": \"example description\",\n        \"tags\": [\n        \"3\"\n        ]\n    },\n    ...\n    ],\n    \"Pagination\": {\n    \"Offset\": 0,\n    \"Limit\": 100,\n    \"OrderDirection\": \"Asc\",\n    \"OrderByField\": \"desc\"\n    },\n    \"Count\": 100,\n    \"Total\": 15000\n}\n```\n\n##### For the parameters explanation check the DocumentSampleSettings schema definition [here](#/definitions/DocumentSampleSettings)\n##### For the pagination explanation check the pagination section [here](#pagination)\n\n## Filter\nPowerful **search engine**. Build **smart** search functions or filters. Easily access to your datasets with **simple queries**, **logical expressions** and **wild cards**. Manage your language dependencies using **optinal tokenizer**.\n\nWith Filter you can:\n* Create simple search queries\n* Filter by tags\n* Search in multiple fields\n* Access to all the available document fields and parameters\n* Use logical expressions\n* Use wild cards\n* Use optional tokenizers\n* Use built in pagination\n\n*Example REQUEST*\n> [POST /api/Documents/Filter](#operation--api-Documents-Filter-post)\n>\nHeader   |Value\n---------|---\nX-DataSet|example\n```JSON\n{\n    \"Filter\" : {\n        \"TagIds\" : [\"1\"],\n        \"Query\" : \"title:michelin\"\n    },\n    \"Pagination\" : {\n        \"Offset\" : 0,\n        \"Limit\": 100,\n        \"OrderDirection\" : \"Asc\",\n        \"OrderByField\" : \"title\"\n    }\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"Items\": [\n    {\n        \"id\": \"1455197455453\",\n        \"title\": \"example title 1\",\n        \"desc\": \"example description\",\n        \"tags\": [\n        \"1\"\n        ]\n    },\n    {\n        \"id\": \"1455197455203\",\n        \"title\": \"example title 2\",\n        \"desc\": \"example description\",\n        \"tags\": [\n        \"1\"\n        ]\n    },\n    ...\n    ],\n    \"Pagination\": {\n    \"Offset\": 0,\n    \"Limit\": 100,\n    \"OrderDirection\": \"Asc\",\n    \"OrderByField\": \"title\"\n    },\n    \"Count\": 100,\n    \"Total\": 1543\n}\n```\n\n##### For the parameters explanation check the DocumentFilterSettings schema definition [here](#/definitions/DocumentFilterSettings)\n##### For the pagination explanation check the pagination section [here](#pagination)\n\n\n> **Tip:** Easily create a powerful search engine by using tokenizer and detailed search queries.\n\n## Services\nSlamby introduces services. You can quickly create a data processing service from the available service templates. Manage your data processing with services, run different tests, run more data management services parallelly.\n\n**Service definition:** a data management service with custom settings, dedicated resources and available API endpoint.\n\nWith services you can:\n* Create a service\n* Get your services list\n* Get a service\n* Remove a service\n* Manage processes\n\n### Get Service\nYou can get general information about a service using the Id of the service\n\n*Example REQUEST*\n> [GET /api/Services/`GUID`](#operation--api-Services-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"Id\": \"57c845dc-6aa4-475c-bbf2-0d682f471f32\",\n    \"Name\": \"Example name of a service\",\n    \"Description\": \"This is an example service description\",\n    \"Status\": \"New\",\n    \"Type\": \"Classifier\",\n    \"ProcessIdList\": [\n    \"e251dbbf-04ff-4d34-a959-90dc4a602142\",\n    \"d335edaf-354a-482c-ade4-4d8172f81a40\"\n    ],\n    \"ActualProcessId\": null\n}\n```\n\n### Create New Service\nCreate a new Service\n\n*Example REQUEST*\n> [POST /api/Services](#operation--api-Services-post)\n```JSON\n{\n    \"Name\": \"Example name of a service\",\n    \"Description\": \"This is an example service description\",\n    \"Type\" : \"Classifier\"\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 201 CREATED\n\n### Update Service\nYou can update only the Name and the Description field.\n*Example REQUEST*\n> [PUT /api/Services/`GUID`](#operation--api-Services-put)\n```JSON\n{\n    \"Name\": \"Updated example name of a service\",\n    \"Description\": \"This is an updated example service description\"\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 CREATED\n\n\n    ### Remove Service\nYou remove a service anytime. If it's in Activated status then it will be Deactivated first. If it's in Busy status then it will be cancelled first.\n\n*Example REQUEST*\n> [DELETE /api/Services/`GUID`](#operation--api-Services-delete)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n\n## Classifier Service\nService for text classification. Create a classifier service from a selected dataset, specify your settings and use this service API endpoint to classify your incoming text.\n\n> Currently Slamby provides `Slamby Twister` as a highly accurate classification algorithm designed for e-commerce market.\n\n### Get Classifier Service\nYou can get classifier specified information about a classifier service with the Id of the service\n\n*Example REQUEST*\n> [GET /api/Services/Classifier/`GUID`](#operation--api-Services-Classifier-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"Id\": \"83326e75-dd16-4e5c-a66d-5ea5197bd8e0\",\n    \"Name\": \"Example name of a classifier service\",\n    \"Description\": \"This is an example classifier service description\",\n    \"Status\": \"New\",\n    \"Type\": \"Classifier\",\n    \"ProcessIdList\": null,\n    \"ActualProcessId\": null,\n    \"PrepareSettings\": null,\n    \"ActivateSettings\": null\n}\n```\n\n### Prepare Classifier Service\nTraining Process Steps:\n1. Give a suitable name to the service,\n2. Set the ngram values,\n3. Provide the tag ids the you are going to use during the training,\n4. Start the training process.\n\n> For Training process Slamby is using `Slamby Twister` as its own classification algorithm. \n\nThis request is a long running task so the API do it in async way. Therefore the response is a Process.\n\n> `N-gram seetings`: each dataset has an n-gram setting. For set the required n-gram the minimum value is 1, the maximum value equals with the maximum n-gram number of the given dataset. Using a [1,2,3] n-gram settings means during the training process the classifier is going to create 1,2,3 n-gram dictionaries. [Learn more about N-gram](https://en.wikipedia.org/wiki/N-gram)\n\n*Example REQUEST*\n> [POST /api/Services/Classifier/`GUID`/Prepare](#operation--api-Services-Classifier-Prepare-post)\n```JSON\n{\n    \"DataSetName\" : \"test dataset\",\n    \"NGramList\": [1,2],\n    \"TagIdList\": [\"tag1Id\",\"tag2Id\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 202 ACCEPTED\n```JSON\n{\n    \"Id\": \"d335edaf-354a-482c-ade4-4d8172f81a40\",\n    \"Start\": \"2016-03-16T13:12:15.5520625Z\",\n    \"End\": \"0001-01-01T00:00:00\",\n    \"Percent\": 0,\n    \"Status\": \"InProgress\"\n}\n```\n\n### Activate Classifier Service\nEach service has two status: active, deactive. When a preparation/training process is ready, the service has a deactivated status. A deactivated service is ready, but its not loaded into memory and the API is not able to process the incoming requests. To use a service set the status to Activated. After the activation process the service is ready to use, all the required files are loaded and stored in memory, the API endpoint is active.\n\n*Example REQUEST*\n> [POST /api/Services/Classifier/`GUID`/Activate](#operation--api-Services-Classifier-Activate-post)\n```JSON\n{\n    \"NGramList\": [1,2],\n    \"EmphasizedTagIdList\": null,\n    \"TagIdList\": null\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Deactivate Classifier Service\nWhen a service is not needed for continous usage you can deactivate it. After deactivating a service, all the settings and files remain, but they are not using any resources (memory, cores). You can store your deactivated services and activate them anytime.\n\n*Example REQUEST*\n> [POST /api/Services/Classifier/`GUID`/Deactivate](#operation--api-Services-Classifier-Deactivate-post)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Recommend\nBuilt-in text classification engine. Uses the prepared Classifier dictionaries and calculations. High speed and classification capability. Built-in n-gram analyzer.\n\n*Example Request*\n> [POST /api/Services/Classifier/`GUID`/Recommend](#operation--api-Services-Classifier-Recommend-post)\n```JSON\n{\n    \"Text\": \"Lorem Ipsum Dolorem\",\n    \"Count\": \"2\",\n    \"UseEmphasizing\": false,\n    \"NeedTagInResults\": true,\n    \n}\n```\n\n*Example Response*\n```JSON\n[\n    {\n    \"TagId\": \"324\",\n    \"Score\": 0.35175663155586434,\n    \"Tag\": {\n        \"Id\": \"324\",\n        \"Name\": \"Tag name\",\n        \"ParentId\": \"16\",\n        \"Properties\": null\n    }\n    },\n    {\n    \"TagId\": \"232\",\n    \"Score\": 0.30277479057126688,\n    \"Tag\": {\n        \"Id\": \"232\",\n        \"Name\": \"Tag name\",\n        \"ParentId\": \"24\",\n        \"Properties\": null\n    }\n    }\n]\n```\n\n### Export dictionaries\n\n*Example Request*\n> [POST /api/Services/Classifier/`GUID`/ExportDictionaries](#operation--api-Services-Classifier-ExportDictionaries-post)\n```JSON\n{\n    \"NGramList\": [1],\n    \"TagIdList\": null\n}\n```\n\n> **Tip:** If you skip the `TagIdList` or set it to `null` than the API will use all the leaf tags\n\n*Example Response*\n```JSON\n{\n    \"Id\": \"345e1c79-dc78-427f-8ad1-facce75f6ae3\",\n    \"Start\": \"2016-04-18T13:29:15.3728991Z\",\n    \"End\": \"2016-04-18T13:29:39.3144202Z\",\n    \"Percent\": 0,\n    \"Description\": \"Exporting dictionaries from Classifier service prc...\",\n    \"Status\": \"Finished\",\n    \"Type\": \"ClassifierExportDictionaries\",\n    \"ErrorMessages\": [],\n    \"ResultMessage\": \"Successfully exported dictionaries from Classifier service prc!\\nExport file can be download from here: https://api.slamby.com/demo-api/files/345e1c79-dc78-427f-8ad1-facce75f6ae3.zip\"\n}\n```\n\n## Prc Service\n\n### Get Prc Service\n\n*Example REQUEST*\n> [GET /api/Services/Prc/`GUID`](#operation--api-Services-Prc-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"PrepareSettings\": null,\n    \"ActivateSettings\": null,\n    \"Id\": \"996f91f4-f1ca-428b-af1a-929ccf3b0243\",\n    \"Name\": \"prc\",\n    \"Description\": null,\n    \"Status\": \"New\",\n    \"Type\": \"Prc\",\n    \"ProcessIdList\": [],\n    \"ActualProcessId\": null\n}\n```\n\n### Prepare Prc Service\n\n*Example REQUEST*\n> [POST /api/Services/Prc/`GUID`/Prepare](#operation--api-Services-Prc-Prepare-post)\n```JSON\n{\n    \"DataSetName\" : \"test dataset\",\n    \"TagIdList\": [\"tag1Id\",\"tag2Id\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 202 ACCEPTED\n```JSON\n{\n    \"Id\": \"ceed2045-70fb-4785-b483-aadb9bf9a992\",\n    \"Start\": \"2016-04-18T13:09:49.6032716Z\",\n    \"End\": \"0001-01-01T00:00:00\",\n    \"Percent\": 0,\n    \"Description\": \"Preparing Prc service prc...\",\n    \"Status\": \"InProgress\",\n    \"Type\": \"PrcPrepare\",\n    \"ErrorMessages\": [],\n    \"ResultMessage\": \"\"\n}\n```\n\n### Activate Prc Service\n\n*Example REQUEST*\n> [POST /api/Services/Prc/`GUID`/Activate](#operation--api-Services-Prc-Activate-post)\n```JSON\n{\n    \"FieldsForRecommendation\": [\"title\"]\n}\n```\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Deactivate Prc Service\n\n*Example REQUEST*\n> [POST /api/Services/Prc/`GUID`/Deactivate](#operation--api-Services-Prc-Deactivate-post)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n\n### Recommend\n\n*Example Request*\n> [POST /api/Services/Prc/`GUID`/Recommend](#operation--api-Services-Prc-Recommend-post)\n```JSON\n{\n    \"Text\": \"Lorem Ipsum Dolorem\",\n    \"Count\": \"2\",\n    \"Filter\": null,\n    \"Weights\": null,\n    \"TagId\": \"tag1Id\",\n    \"NeedDocumentInResult\": true\n}\n```\n\n*Example Response*\n```JSON\n[\n    {\n    \"DocumentId\": \"1777237\",\n    \"Score\": 0.89313365295595715,\n    \"Document\": {\n        \"id\": \"1777237\",\n        \"tag_id\": \"tag1Id\",\n        \"title\": \"Lorem\",\n        \"body\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor\"\n    }\n    },\n    {\n    \"DocumentId\": \"6507461\",\n    \"Score\": 0.7894283811358983,\n    \"Document\": {\n        \"ad_id\": \"6507461\",\n        \"tag_id\": \"tag1Id\",\n        \"title\": \"Duis aute irure dolorem\",\n        \"body\": \"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\"\n    }\n    }\n]\n```\n\n### Export dictionaries\n\n*Example Request*\n> [POST /api/Services/Prc/`GUID`/ExportDictionaries](#operation--api-Services-Prc-ExportDictionaries-post)\n```JSON\n{\n    \"TagIdList\": null\n}\n```\n\n> **Tip:** If you skip the `TagIdList` or set it to `null` than the API will use all the leaf tags\n\n*Example Response*\n```JSON\n{\n    \"Id\": \"345e1c79-dc78-427f-8ad1-facce75f6ae3\",\n    \"Start\": \"2016-04-18T13:29:15.3728991Z\",\n    \"End\": \"2016-04-18T13:29:39.3144202Z\",\n    \"Percent\": 0,\n    \"Description\": \"Exporting dictionaries from Prc service prc...\",\n    \"Status\": \"Finished\",\n    \"Type\": \"PrcExportDictionaries\",\n    \"ErrorMessages\": [],\n    \"ResultMessage\": \"Successfully exported dictionaries from Prc service prc!\\nExport file can be download from here: https://api.slamby.com/demo-api/files/345e1c79-dc78-427f-8ad1-facce75f6ae3.zip\"\n}\n```\n\n\n\n## Processes\nThere are long running tasks in the Slamby API. These requests are served in async way. These methods returns with `HTTP/1.1 202 ACCEPTED`and with a Process object.\n\n> **Tip:** You can cancel a process anytime during its progress\n\n### Get Process information\nGet a process by its Id.\n\n*Example REQUEST*\n> [GET /api/Processes/`GUID`](#operation--api-Processes-get)\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"Id\": \"958c1bdd-cd21-48f6-b9ec-c232271adec5\",\n    \"Start\": \"2016-04-18T16:04:04.2156558Z\",\n    \"End\": \"0001-01-01T00:00:00\",\n    \"Percent\": 0,\n    \"Description\": \"Exporting words from 1 tag(s) of dataset test...\",\n    \"Status\": \"InProgress\",\n    \"Type\": \"TagsExportWords\",\n    \"ErrorMessages\": [],\n    \"ResultMessage\": null\n}\n```\n\n### Cancel Process\nCancel the process. Only Process with status `InProgress` can be canceled. The method returns with `HTTP/1.1 202 ACCEPTED` because it can take time to cancel a process. You have to check periodically that whether the process status is already `Canceled`.\n\n*Example REQUEST*\n> [POST /api/Processes/`GUID`](#operation--api-Processes-Cancel-post)\n\n*Example RESPONSE*\n> HTTP/1.1 202 ACCEPTED\n\n##### For the parameters explanation check the Process schema definition [here](#/definitions/Process)\n\n## General\n\n\n### Pagination\nThere are situations when your query results lots of data. In these cases the pagination can be handy.\nYou have to only provide an offset and a limit in the pagination object.\nOptionally you can set a field which will be the base of the ordering and also the direction of the ordering (ascendig or descending). If you specify `-1` value for `Limit` then you will get all the elements in one result.\n\nIn the result (PaginatedList[Object]) there is an Items property which containing the requested elements (or the part of the requested elements). Also it provides the count of the items (this is equal or lesser than the limit property) and the total count of the requested items. Also it returns the same pagination object which was int the request.\n\n>*Example REQUEST*\n```json\n{\n    ...\n    \"Pagination\" : {\n        \"Offset\" : 0,\n        \"Limit\": 10,\n        \"OrderDirection\" : \"Asc\",\n        \"OrderByField\" : \"title\"\n    }\n}\n```\n\n>*Example RESPONSE*\n```json\n{\n    \"Items\": [\n    {\n        ...\n    },\n    {\n        ...\n    },\n    ...\n    ],\n    \"Pagination\": {\n    \"Offset\": 0,\n    \"Limit\": 100,\n    \"OrderDirection\": \"Asc\",\n    \"OrderByField\": \"title\"\n    },\n    \"Count\": 10,\n    \"Total\": 21\n}\n```\n\n##### Check the Pagination schema definition [here](#/definitions/Pagination)\n##### Check the PaginatedList[Object] schema definition [here](#/definitions/PaginatedList[Object])\n\n### Status\n\n*Example REQUEST*\n\n> [GET /api/Status](#operation--api-Status-get))\n\n*Example RESPONSE*\n> HTTP/1.1 200 OK\n```JSON\n{\n    \"ProcessorCount\": 4,\n    \"AvailableFreeSpace\": 47895.53,\n    \"ApiVersion\": \"0.14.0\",\n    \"CpuUsage\": 0.6,\n    \"TotalMemory\": 996.08,\n    \"FreeMemory\": 36.3\n}\n```    \n",
         "termsOfService": "None"
     },
     "basePath": "/",
     "paths": {
+        "/api/Services/Classifier/{id}": {
+            "get": {
+                "tags": [
+                    "ClassifierService"
+                ],
+                "operationId": "ClassifierGetService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ClassifierService"
+                        }
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "404": {
+                        "description": "NotFound"
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Services/Classifier/{id}/Prepare": {
+            "post": {
+                "tags": [
+                    "ClassifierService"
+                ],
+                "operationId": "ClassifierPrepareService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "classifierPrepareSettings",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/ClassifierPrepareSettings"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Process"
+                        }
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Services/Classifier/{id}/Activate": {
+            "post": {
+                "tags": [
+                    "ClassifierService"
+                ],
+                "operationId": "ClassifierActivateService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "classifierActivateSettings",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/ClassifierActivateSettings"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Services/Classifier/{id}/Deactivate": {
+            "post": {
+                "tags": [
+                    "ClassifierService"
+                ],
+                "operationId": "ClassifierDeactivateService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Services/Classifier/{id}/Recommend": {
+            "post": {
+                "tags": [
+                    "ClassifierService"
+                ],
+                "operationId": "ClassifierRecommendService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "request",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/ClassifierRecommendationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ClassifierRecommendationResult"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Services/Classifier/{id}/ExportDictionaries": {
+            "post": {
+                "tags": [
+                    "ClassifierService"
+                ],
+                "operationId": "ClassifierExportDictionaries",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "settings",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/ExportDictionariesSettings"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Process"
+                        }
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
         "/api/DataSets": {
             "get": {
                 "tags": [
-                    "DataSets"
+                    "DataSet"
                 ],
-                "operationId": "ApiDataSetsGet",
+                "operationId": "GetDataSets",
                 "produces": [],
                 "responses": {
                     "200": {
@@ -30,9 +278,9 @@
             },
             "post": {
                 "tags": [
-                    "DataSets"
+                    "DataSet"
                 ],
-                "operationId": "ApiDataSetsPost",
+                "operationId": "CreateDataSet",
                 "produces": [],
                 "parameters": [
                     {
@@ -47,6 +295,12 @@
                 "responses": {
                     "201": {
                         "description": "Created"
+                    },
+                    "400": {
+                        "description": "BadRequest"
+                    },
+                    "409": {
+                        "description": "Conflict"
                     }
                 },
                 "deprecated": false
@@ -55,9 +309,9 @@
         "/api/DataSets/{name}": {
             "get": {
                 "tags": [
-                    "DataSets"
+                    "DataSet"
                 ],
-                "operationId": "ApiDataSetsByNameGet",
+                "operationId": "GetDataSet",
                 "produces": [],
                 "parameters": [
                     {
@@ -73,15 +327,18 @@
                         "schema": {
                             "$ref": "#/definitions/DataSet"
                         }
+                    },
+                    "404": {
+                        "description": ""
                     }
                 },
                 "deprecated": false
             },
             "delete": {
                 "tags": [
-                    "DataSets"
+                    "DataSet"
                 ],
-                "operationId": "ApiDataSetsByNameDelete",
+                "operationId": "DeleteDataSet",
                 "produces": [],
                 "parameters": [
                     {
@@ -94,6 +351,46 @@
                 "responses": {
                     "200": {
                         "description": "OK"
+                    },
+                    "404": {
+                        "description": "NotFound"
+                    },
+                    "406": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/DataSets/Schema": {
+            "post": {
+                "tags": [
+                    "DataSet"
+                ],
+                "operationId": "CreateDataSetSchema",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "dataSet",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/DataSet"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "BadRequest"
+                    },
+                    "409": {
+                        "description": "Conflict"
                     }
                 },
                 "deprecated": false
@@ -102,9 +399,9 @@
         "/api/Documents/Bulk": {
             "post": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsBulkPost",
+                "operationId": "BulkDocuments",
                 "produces": [],
                 "parameters": [
                     {
@@ -122,6 +419,12 @@
                         "schema": {
                             "$ref": "#/definitions/BulkResults"
                         }
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
                     }
                 },
                 "deprecated": false
@@ -130,9 +433,9 @@
         "/api/Documents/{id}": {
             "get": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsByIdGet",
+                "operationId": "GetDocument",
                 "produces": [],
                 "parameters": [
                     {
@@ -148,15 +451,18 @@
                         "schema": {
                             "$ref": "#/definitions/Object"
                         }
+                    },
+                    "404": {
+                        "description": "NotFound"
                     }
                 },
                 "deprecated": false
             },
             "put": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsByIdPut",
+                "operationId": "UpdateDocument",
                 "produces": [],
                 "parameters": [
                     {
@@ -180,15 +486,24 @@
                         "schema": {
                             "$ref": "#/definitions/Object"
                         }
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "404": {
+                        "description": "NotFound"
                     }
                 },
                 "deprecated": false
             },
             "delete": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsByIdDelete",
+                "operationId": "DeleteDocument",
                 "produces": [],
                 "parameters": [
                     {
@@ -201,6 +516,9 @@
                 "responses": {
                     "200": {
                         "description": "OK"
+                    },
+                    "404": {
+                        "description": "NotFound"
                     }
                 },
                 "deprecated": false
@@ -209,9 +527,9 @@
         "/api/Documents": {
             "post": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsPost",
+                "operationId": "CreateDocument",
                 "produces": [],
                 "parameters": [
                     {
@@ -226,6 +544,15 @@
                 "responses": {
                     "201": {
                         "description": "Created"
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict"
                     }
                 },
                 "deprecated": false
@@ -234,9 +561,9 @@
         "/api/Documents/Filter": {
             "post": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsFilterPost",
+                "operationId": "GetFilteredDocuments",
                 "produces": [],
                 "parameters": [
                     {
@@ -268,9 +595,9 @@
         "/api/Documents/Sample": {
             "post": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsSamplePost",
+                "operationId": "GetSampleDocuments",
                 "produces": [],
                 "parameters": [
                     {
@@ -288,6 +615,12 @@
                         "schema": {
                             "$ref": "#/definitions/PaginatedList[Object]"
                         }
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
                     }
                 },
                 "deprecated": false
@@ -296,9 +629,9 @@
         "/api/Documents/Copy": {
             "post": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsCopyPost",
+                "operationId": "CopyDocuments",
                 "produces": [],
                 "parameters": [
                     {
@@ -313,6 +646,9 @@
                 "responses": {
                     "200": {
                         "description": "OK"
+                    },
+                    "409": {
+                        "description": "Conflict"
                     }
                 },
                 "deprecated": false
@@ -321,9 +657,9 @@
         "/api/Documents/Move": {
             "post": {
                 "tags": [
-                    "Documents"
+                    "Document"
                 ],
-                "operationId": "ApiDocumentsMovePost",
+                "operationId": "MoveDocuments",
                 "produces": [],
                 "parameters": [
                     {
@@ -338,392 +674,9 @@
                 "responses": {
                     "200": {
                         "description": "OK"
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Processes": {
-            "get": {
-                "tags": [
-                    "Processes"
-                ],
-                "operationId": "ApiProcessesGet",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "allStatus",
-                        "in": "query",
-                        "required": false,
-                        "type": "boolean"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/Process"
-                            }
-                        }
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Processes/{id}": {
-            "get": {
-                "tags": [
-                    "Processes"
-                ],
-                "operationId": "ApiProcessesByIdGet",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/Process"
-                        }
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Processes/{id}/Cancel": {
-            "post": {
-                "tags": [
-                    "Processes"
-                ],
-                "operationId": "ApiProcessesByIdCancelPost",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "202": {
-                        "description": "Accepted"
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Services/Classifier/{id}": {
-            "get": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesClassifierByIdGet",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/ClassifierService"
-                        }
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Services/Classifier/{id}/Prepare": {
-            "post": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesClassifierByIdPreparePost",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
                     },
-                    {
-                        "name": "classifierPrepareSettings",
-                        "in": "body",
-                        "required": false,
-                        "schema": {
-                            "$ref": "#/definitions/ClassifierPrepareSettings"
-                        }
-                    }
-                ],
-                "responses": {
-                    "202": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/Process"
-                        }
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Services/Classifier/{id}/Activate": {
-            "post": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesClassifierByIdActivatePost",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "classifierActivateSettings",
-                        "in": "body",
-                        "required": false,
-                        "schema": {
-                            "$ref": "#/definitions/ClassifierActivateSettings"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Services/Classifier/{id}/Deactivate": {
-            "post": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesClassifierByIdDeactivatePost",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Services/Classifier/{id}/Recommend": {
-            "post": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesClassifierByIdRecommendPost",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "request",
-                        "in": "body",
-                        "required": false,
-                        "schema": {
-                            "$ref": "#/definitions/ClassifierRecommendationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/ClassifierRecommendationResult"
-                            }
-                        }
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Services/Classifier/{id}/ExportDictionaries": {
-            "post": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesClassifierByIdExportDictionariesPost",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "settings",
-                        "in": "body",
-                        "required": false,
-                        "schema": {
-                            "$ref": "#/definitions/ExportDictionariesSettings"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/Process"
-                        }
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Services": {
-            "get": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesGet",
-                "produces": [],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/Service"
-                            }
-                        }
-                    }
-                },
-                "deprecated": false
-            },
-            "post": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesPost",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "service",
-                        "in": "body",
-                        "required": false,
-                        "schema": {
-                            "$ref": "#/definitions/Service"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    }
-                },
-                "deprecated": false
-            }
-        },
-        "/api/Services/{id}": {
-            "get": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesByIdGet",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/Service"
-                        }
-                    }
-                },
-                "deprecated": false
-            },
-            "put": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesByIdPut",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "service",
-                        "in": "body",
-                        "required": false,
-                        "schema": {
-                            "$ref": "#/definitions/Service"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/Service"
-                        }
-                    }
-                },
-                "deprecated": false
-            },
-            "delete": {
-                "tags": [
-                    "Services"
-                ],
-                "operationId": "ApiServicesByIdDelete",
-                "produces": [],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
+                    "409": {
+                        "description": "Conflict"
                     }
                 },
                 "deprecated": false
@@ -732,9 +685,9 @@
         "/api/Services/Prc/{id}": {
             "get": {
                 "tags": [
-                    "Services"
+                    "PrcService"
                 ],
-                "operationId": "ApiServicesPrcByIdGet",
+                "operationId": "PrcGetService",
                 "produces": [],
                 "parameters": [
                     {
@@ -758,9 +711,9 @@
         "/api/Services/Prc/{id}/Prepare": {
             "post": {
                 "tags": [
-                    "Services"
+                    "PrcService"
                 ],
-                "operationId": "ApiServicesPrcByIdPreparePost",
+                "operationId": "PrcPrepareService",
                 "produces": [],
                 "parameters": [
                     {
@@ -792,9 +745,9 @@
         "/api/Services/Prc/{id}/Activate": {
             "post": {
                 "tags": [
-                    "Services"
+                    "PrcService"
                 ],
-                "operationId": "ApiServicesPrcByIdActivatePost",
+                "operationId": "PrcActivateService",
                 "produces": [],
                 "parameters": [
                     {
@@ -823,9 +776,9 @@
         "/api/Services/Prc/{id}/Deactivate": {
             "post": {
                 "tags": [
-                    "Services"
+                    "PrcService"
                 ],
-                "operationId": "ApiServicesPrcByIdDeactivatePost",
+                "operationId": "PrcDeactivateService",
                 "produces": [],
                 "parameters": [
                     {
@@ -846,9 +799,9 @@
         "/api/Services/Prc/{id}/Recommend": {
             "post": {
                 "tags": [
-                    "Services"
+                    "PrcService"
                 ],
-                "operationId": "ApiServicesPrcByIdRecommendPost",
+                "operationId": "PrcRecommendService",
                 "produces": [],
                 "parameters": [
                     {
@@ -883,9 +836,9 @@
         "/api/Services/Prc/{id}/ExportDictionaries": {
             "post": {
                 "tags": [
-                    "Services"
+                    "PrcService"
                 ],
-                "operationId": "ApiServicesPrcByIdExportDictionariesPost",
+                "operationId": "PrcExportDictionaries",
                 "produces": [],
                 "parameters": [
                     {
@@ -914,12 +867,237 @@
                 "deprecated": false
             }
         },
+        "/api/Processes": {
+            "get": {
+                "tags": [
+                    "Process"
+                ],
+                "operationId": "GetProcesses",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "allStatus",
+                        "in": "query",
+                        "required": false,
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Process"
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Processes/{id}": {
+            "get": {
+                "tags": [
+                    "Process"
+                ],
+                "operationId": "GetProcess",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Process"
+                        }
+                    },
+                    "404": {
+                        "description": ""
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Processes/{id}/Cancel": {
+            "post": {
+                "tags": [
+                    "Process"
+                ],
+                "operationId": "CancelProcess",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "404": {
+                        "description": ""
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Services": {
+            "get": {
+                "tags": [
+                    "Service"
+                ],
+                "operationId": "GetServices",
+                "produces": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Service"
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            },
+            "post": {
+                "tags": [
+                    "Service"
+                ],
+                "operationId": "CreateService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "service",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/Service"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "BadRequest"
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/Services/{id}": {
+            "get": {
+                "tags": [
+                    "Service"
+                ],
+                "operationId": "GetService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Service"
+                        }
+                    },
+                    "404": {
+                        "description": "NotFound"
+                    }
+                },
+                "deprecated": false
+            },
+            "put": {
+                "tags": [
+                    "Service"
+                ],
+                "operationId": "UpdateService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "service",
+                        "in": "body",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/definitions/Service"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Service"
+                        }
+                    },
+                    "404": {
+                        "description": "NotFound"
+                    }
+                },
+                "deprecated": false
+            },
+            "delete": {
+                "tags": [
+                    "Service"
+                ],
+                "operationId": "DeleteService",
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "NotFound"
+                    }
+                },
+                "deprecated": false
+            }
+        },
         "/api/Status": {
             "get": {
                 "tags": [
                     "Status"
                 ],
-                "operationId": "ApiStatusGet",
+                "operationId": "GetStatus",
                 "produces": [],
                 "responses": {
                     "200": {
@@ -935,9 +1113,9 @@
         "/api/Tags/Bulk": {
             "post": {
                 "tags": [
-                    "Tags"
+                    "Tag"
                 ],
-                "operationId": "ApiTagsBulkPost",
+                "operationId": "BulkTags",
                 "produces": [],
                 "parameters": [
                     {
@@ -963,9 +1141,9 @@
         "/api/Tags/CleanDocuments": {
             "post": {
                 "tags": [
-                    "Tags"
+                    "Tag"
                 ],
-                "operationId": "ApiTagsCleanDocumentsPost",
+                "operationId": "CleanDocuments",
                 "produces": [],
                 "responses": {
                     "200": {
@@ -978,9 +1156,9 @@
         "/api/Tags": {
             "get": {
                 "tags": [
-                    "Tags"
+                    "Tag"
                 ],
-                "operationId": "ApiTagsGet",
+                "operationId": "GetTags",
                 "produces": [],
                 "parameters": [
                     {
@@ -1005,9 +1183,9 @@
             },
             "post": {
                 "tags": [
-                    "Tags"
+                    "Tag"
                 ],
-                "operationId": "ApiTagsPost",
+                "operationId": "CreateTag",
                 "produces": [],
                 "parameters": [
                     {
@@ -1021,7 +1199,22 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created"
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/Tag"
+                        }
+                    },
+                    "406": {
+                        "description": "NotAcceptable",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
                     }
                 },
                 "deprecated": false
@@ -1030,9 +1223,9 @@
         "/api/Tags/{id}": {
             "get": {
                 "tags": [
-                    "Tags"
+                    "Tag"
                 ],
-                "operationId": "ApiTagsByIdGet",
+                "operationId": "GetTag",
                 "produces": [],
                 "parameters": [
                     {
@@ -1060,9 +1253,9 @@
             },
             "put": {
                 "tags": [
-                    "Tags"
+                    "Tag"
                 ],
-                "operationId": "ApiTagsByIdPut",
+                "operationId": "UpdateTag",
                 "produces": [],
                 "parameters": [
                     {
@@ -1082,9 +1275,18 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "OK"
+                    },
+                    "404": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/Tag"
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "406": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
                         }
                     }
                 },
@@ -1092,9 +1294,9 @@
             },
             "delete": {
                 "tags": [
-                    "Tags"
+                    "Tag"
                 ],
-                "operationId": "ApiTagsByIdDelete",
+                "operationId": "DeleteTag",
                 "produces": [],
                 "parameters": [
                     {
@@ -1119,6 +1321,18 @@
                 "responses": {
                     "200": {
                         "description": "OK"
+                    },
+                    "404": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
                     }
                 },
                 "deprecated": false
@@ -1127,9 +1341,9 @@
         "/api/Tags/ExportWords": {
             "post": {
                 "tags": [
-                    "Tags"
+                    "Tag"
                 ],
-                "operationId": "ApiTagsExportWordsPost",
+                "operationId": "WordsExport",
                 "produces": [],
                 "parameters": [
                     {
@@ -1147,6 +1361,12 @@
                         "schema": {
                             "$ref": "#/definitions/Process"
                         }
+                    },
+                    "400": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorsModel"
+                        }
                     }
                 },
                 "deprecated": false
@@ -1154,6 +1374,316 @@
         }
     },
     "definitions": {
+        "ClassifierService": {
+            "required": [
+                "Name",
+                "Type"
+            ],
+            "type": "object",
+            "description": "For the common properties detail check the [Service](#/definitions/Service)\n",
+            "properties": {
+                "PrepareSettings": {
+                    "$ref": "#/definitions/ClassifierPrepareSettings"
+                },
+                "ActivateSettings": {
+                    "$ref": "#/definitions/ClassifierActivateSettings"
+                },
+                "Id": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Description": {
+                    "type": "string"
+                },
+                "Status": {
+                    "enum": [
+                        "New",
+                        "Busy",
+                        "Prepared",
+                        "Active"
+                    ],
+                    "type": "string"
+                },
+                "Type": {
+                    "enum": [
+                        "Classifier",
+                        "Prc"
+                    ],
+                    "description": "It's always Classifier for this type\n",
+                    "type": "string"
+                },
+                "ProcessIdList": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ActualProcessId": {
+                    "type": "string"
+                }
+            }
+        },
+        "ClassifierPrepareSettings": {
+            "required": [
+                "DataSetName",
+                "NGramList"
+            ],
+            "type": "object",
+            "description": "These settings are required for the training (Prepare method)\n",
+            "properties": {
+                "DataSetName": {
+                    "type": "string",
+                    "description": "The DataSet name where the Classifier will be trained from\n"
+                },
+                "TagIdList": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The list of the tag Ids which will be trained\n"
+                },
+                "NGramList": {
+                    "type": "array",
+                    "items": {
+                        "format": "int32",
+                        "type": "integer"
+                    },
+                    "description": "The list of the NGrams which will be trained. The maximum NGram can be the DataSet's NGram\n"
+                }
+            }
+        },
+        "ClassifierActivateSettings": {
+            "type": "object",
+            "description": "These settings are required for the recommendation (Recommend method)\n",
+            "properties": {
+                "EmphasizedTagIdList": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The list of the tag Ids which will emphasized during the recommendation\n"
+                },
+                "TagIdList": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The list of the tag Ids which will be activated (the recommendation will be contains these only)\n"
+                },
+                "NGramList": {
+                    "type": "array",
+                    "items": {
+                        "format": "int32",
+                        "type": "integer"
+                    },
+                    "description": "The list of the NGrams will be activated (the recommendation algorithm will be use these only)\n"
+                }
+            }
+        },
+        "ErrorsModel": {
+            "type": "object",
+            "properties": {
+                "Errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "Process": {
+            "type": "object",
+            "properties": {
+                "Id": {
+                    "type": "string"
+                },
+                "Start": {
+                    "format": "date-time",
+                    "type": "string",
+                    "description": "The UTC time of the process start\n"
+                },
+                "End": {
+                    "format": "date-time",
+                    "type": "string",
+                    "description": "The UTC time of the process end\n"
+                },
+                "Percent": {
+                    "format": "double",
+                    "type": "number",
+                    "description": "The percent of the whole process. (e.g.: 12.23 means 12.23%)\n"
+                },
+                "Description": {
+                    "type": "string"
+                },
+                "Status": {
+                    "enum": [
+                        "InProgress",
+                        "Cancelled",
+                        "Finished",
+                        "Error",
+                        "Interrupted",
+                        "Paused,"
+                    ],
+                    "description": "InProgress - the process is in progress, it's working |\nCancelled - the process was cancelled by the user | \nFinished - the process was finished succesffully |\nError - the process stopped by an error, see the ErrorMessages for detailed information |\nInterrupted - the process was interrupted by an unknown event (e.g.: server restart) - under development |\nPaused - the process was paused  - under development\n",
+                    "type": "string"
+                },
+                "Type": {
+                    "enum": [
+                        "ClassifierPrepare",
+                        "PrcPrepare",
+                        "ClassifierExportDictionaries",
+                        "PrcExportDictionaries",
+                        "TagsExportWords"
+                    ],
+                    "type": "string"
+                },
+                "ErrorMessages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ResultMessage": {
+                    "type": "string"
+                }
+            }
+        },
+        "ClassifierRecommendationRequest": {
+            "required": [
+                "Text"
+            ],
+            "type": "object",
+            "properties": {
+                "Text": {
+                    "type": "string",
+                    "description": "The text the you want to classify\n"
+                },
+                "Count": {
+                    "format": "int32",
+                    "type": "integer",
+                    "description": "How many results you want to see in the response (default value is 3)\n"
+                },
+                "UseEmphasizing": {
+                    "type": "boolean",
+                    "description": "Use emphasizing algorithm during this recommendation\n"
+                },
+                "NeedTagInResult": {
+                    "type": "boolean",
+                    "description": "If you want to see all the tag object in the response\n"
+                }
+            }
+        },
+        "ClassifierRecommendationResult": {
+            "type": "object",
+            "properties": {
+                "TagId": {
+                    "type": "string",
+                    "description": "The recommended tag id\n"
+                },
+                "Score": {
+                    "format": "double",
+                    "type": "number",
+                    "description": "The score that belongs to the tag id\n"
+                },
+                "Tag": {
+                    "$ref": "#/definitions/Tag"
+                }
+            }
+        },
+        "Tag": {
+            "required": [
+                "Id",
+                "Name"
+            ],
+            "type": "object",
+            "properties": {
+                "Id": {
+                    "description": "The identifier of the tag. It must be unique accross the DataSet\n",
+                    "type": "string"
+                },
+                "Name": {
+                    "description": "Name of the tag\n",
+                    "type": "string"
+                },
+                "ParentId": {
+                    "description": "The identifier of the parent of the tag. It must be the id of an existing tag\n",
+                    "type": "string"
+                },
+                "Properties": {
+                    "$ref": "#/definitions/TagProperties",
+                    "description": "These are read only calculated values\n"
+                }
+            }
+        },
+        "TagProperties": {
+            "description": "Some calculated values for the tag\n",
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+                "Path": {
+                    "description": "A tag array contains parent path elements\n",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PathItem"
+                    }
+                },
+                "Level": {
+                    "description": "The level of the tag in the hierarchy (root level is: 0)\n",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "IsLeaf": {
+                    "description": "If the tag is a leaf tag. Leaf tag means the tag is not a parent of any other tags\n",
+                    "type": "boolean"
+                },
+                "DocumentCount": {
+                    "description": "Document count for the tag\n",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "WordCount": {
+                    "description": "Word count for the tag\n",
+                    "format": "int32",
+                    "type": "integer"
+                }
+            }
+        },
+        "PathItem": {
+            "type": "object",
+            "description": "",
+            "properties": {
+                "Id": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Level": {
+                    "format": "int32",
+                    "type": "integer"
+                }
+            }
+        },
+        "ExportDictionariesSettings": {
+            "type": "object",
+            "properties": {
+                "TagIdList": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "NGramList": {
+                    "type": "array",
+                    "items": {
+                        "format": "int32",
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "DataSet": {
             "required": [
                 "Name",
@@ -1197,6 +1727,10 @@
                 "SampleDocument": {
                     "$ref": "#/definitions/Object",
                     "description": "Using flexible document schema, you can store all of your required data inside one simple dataset. To create a dataset with your required schema you can provide a sample document. The schema is flexible; the only requirement is using standard JSON format\n"
+                },
+                "Schema": {
+                    "$ref": "#/definitions/Object",
+                    "description": "Using flexible document schema, you can store all of your required data inside one simple dataset. To create a dataset with your required schema you can provide a schema. The schema is flexible\n"
                 }
             }
         },
@@ -1345,17 +1879,6 @@
                 }
             }
         },
-        "ErrorsModel": {
-            "type": "object",
-            "properties": {
-                "Errors": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "DocumentSampleSettings": {
             "required": [
                 "Id",
@@ -1434,348 +1957,6 @@
                 "TargetDataSetName": {
                     "type": "string",
                     "description": "The DataSet name where you want to move the selected documents\n"
-                }
-            }
-        },
-        "Process": {
-            "type": "object",
-            "properties": {
-                "Id": {
-                    "type": "string"
-                },
-                "Start": {
-                    "format": "date-time",
-                    "type": "string",
-                    "description": "The UTC time of the process start\n"
-                },
-                "End": {
-                    "format": "date-time",
-                    "type": "string",
-                    "description": "The UTC time of the process end\n"
-                },
-                "Percent": {
-                    "format": "double",
-                    "type": "number",
-                    "description": "The percent of the whole process. (e.g.: 12.23 means 12.23%)\n"
-                },
-                "Status": {
-                    "enum": [
-                        "InProgress",
-                        "Cancelled",
-                        "Finished",
-                        "Error",
-                        "Interrupted",
-                        "Paused,"
-                    ],
-                    "description": "InProgress - the process is in progress, it's working |\nCancelled - the process was cancelled by the user | \nFinished - the process was finished succesffully |\nError - the process stopped by an error, see the ErrorMessages for detailed information |\nInterrupted - the process was interrupted by an unknown event (e.g.: server restart) - under development |\nPaused - the process was paused  - under development\n",
-                    "type": "string"
-                },
-                "Type": {
-                    "enum": [
-                        "ClassifierPrepare",
-                        "PrcPrepare",
-                        "ClassifierExportDictionaries",
-                        "PrcExportDictionaries",
-                        "TagsExportWords"
-                    ],
-                    "type": "string"
-                },
-                "ErrorMessages": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "ResultMessage": {
-                    "type": "string"
-                }
-            }
-        },
-        "ClassifierService": {
-            "required": [
-                "Name",
-                "Type"
-            ],
-            "type": "object",
-            "description": "For the common properties detail check the [Service](#/definitions/Service)\n",
-            "properties": {
-                "PrepareSettings": {
-                    "$ref": "#/definitions/ClassifierPrepareSettings"
-                },
-                "ActivateSettings": {
-                    "$ref": "#/definitions/ClassifierActivateSettings"
-                },
-                "Id": {
-                    "type": "string"
-                },
-                "Name": {
-                    "type": "string"
-                },
-                "Description": {
-                    "type": "string"
-                },
-                "Status": {
-                    "enum": [
-                        "New",
-                        "Busy",
-                        "Prepared",
-                        "Active"
-                    ],
-                    "type": "string"
-                },
-                "Type": {
-                    "enum": [
-                        "Classifier",
-                        "Prc"
-                    ],
-                    "description": "It's always Classifier for this type\n",
-                    "type": "string"
-                },
-                "ProcessIdList": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "ActualProcessId": {
-                    "type": "string"
-                }
-            }
-        },
-        "ClassifierPrepareSettings": {
-            "required": [
-                "DataSetName",
-                "NGramList"
-            ],
-            "type": "object",
-            "description": "These settings are required for the training (Prepare method)\n",
-            "properties": {
-                "DataSetName": {
-                    "type": "string",
-                    "description": "The DataSet name where the Classifier will be trained from\n"
-                },
-                "TagIdList": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "The list of the tag Ids which will be trained\n"
-                },
-                "NGramList": {
-                    "type": "array",
-                    "items": {
-                        "format": "int32",
-                        "type": "integer"
-                    },
-                    "description": "The list of the NGrams which will be trained. The maximum NGram can be the DataSet's NGram\n"
-                }
-            }
-        },
-        "ClassifierActivateSettings": {
-            "type": "object",
-            "description": "These settings are required for the recommendation (Recommend method)\n",
-            "properties": {
-                "EmphasizedTagIdList": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "The list of the tag Ids which will emphasized during the recommendation\n"
-                },
-                "TagIdList": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "The list of the tag Ids which will be activated (the recommendation will be contains these only)\n"
-                },
-                "NGramList": {
-                    "type": "array",
-                    "items": {
-                        "format": "int32",
-                        "type": "integer"
-                    },
-                    "description": "The list of the NGrams will be activated (the recommendation algorithm will be use these only)\n"
-                }
-            }
-        },
-        "ClassifierRecommendationRequest": {
-            "required": [
-                "Text"
-            ],
-            "type": "object",
-            "properties": {
-                "Text": {
-                    "type": "string",
-                    "description": "The text the you want to classify\n"
-                },
-                "Count": {
-                    "format": "int32",
-                    "type": "integer",
-                    "description": "How many results you want to see in the response (default value is 3)\n"
-                },
-                "UseEmphasizing": {
-                    "type": "boolean",
-                    "description": "Use emphasizing algorithm during this recommendation\n"
-                },
-                "NeedTagInResult": {
-                    "type": "boolean",
-                    "description": "If you want to see all the tag object in the response\n"
-                }
-            }
-        },
-        "ClassifierRecommendationResult": {
-            "type": "object",
-            "properties": {
-                "TagId": {
-                    "type": "string",
-                    "description": "The recommended tag id\n"
-                },
-                "Score": {
-                    "format": "double",
-                    "type": "number",
-                    "description": "The score that belongs to the tag id\n"
-                },
-                "Tag": {
-                    "$ref": "#/definitions/Tag"
-                }
-            }
-        },
-        "Tag": {
-            "required": [
-                "Id",
-                "Name"
-            ],
-            "type": "object",
-            "properties": {
-                "Id": {
-                    "description": "The identifier of the tag. It must be unique accross the DataSet\n",
-                    "type": "string"
-                },
-                "Name": {
-                    "description": "Name of the tag\n",
-                    "type": "string"
-                },
-                "ParentId": {
-                    "description": "The identifier of the parent of the tag. It must be the id of an existing tag\n",
-                    "type": "string"
-                },
-                "Properties": {
-                    "$ref": "#/definitions/TagProperties",
-                    "description": "These are read only calculated values\n"
-                }
-            }
-        },
-        "TagProperties": {
-            "description": "Some calculated values for the tag\n",
-            "readOnly": true,
-            "type": "object",
-            "properties": {
-                "Path": {
-                    "description": "A tag array contains parent path elements\n",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/PathItem"
-                    }
-                },
-                "Level": {
-                    "description": "The level of the tag in the hierarchy (root level is: 0)\n",
-                    "format": "int32",
-                    "type": "integer"
-                },
-                "IsLeaf": {
-                    "description": "If the tag is a leaf tag. Leaf tag means the tag is not a parent of any other tags\n",
-                    "type": "boolean"
-                },
-                "DocumentCount": {
-                    "description": "Document count for the tag\n",
-                    "format": "int32",
-                    "type": "integer"
-                },
-                "WordCount": {
-                    "description": "Word count for the tag\n",
-                    "format": "int32",
-                    "type": "integer"
-                }
-            }
-        },
-        "PathItem": {
-            "type": "object",
-            "description": "",
-            "properties": {
-                "Id": {
-                    "type": "string"
-                },
-                "Name": {
-                    "type": "string"
-                },
-                "Level": {
-                    "format": "int32",
-                    "type": "integer"
-                }
-            }
-        },
-        "ExportDictionariesSettings": {
-            "type": "object",
-            "properties": {
-                "TagIdList": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "NGramList": {
-                    "type": "array",
-                    "items": {
-                        "format": "int32",
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "Service": {
-            "required": [
-                "Name",
-                "Type"
-            ],
-            "type": "object",
-            "properties": {
-                "Id": {
-                    "type": "string"
-                },
-                "Name": {
-                    "type": "string"
-                },
-                "Description": {
-                    "type": "string"
-                },
-                "Status": {
-                    "enum": [
-                        "New",
-                        "Busy",
-                        "Prepared",
-                        "Active"
-                    ],
-                    "type": "string",
-                    "description": "New - the service was created | Busy - the service is working on something (e.g.: during the Prepare) | Prepared - the service was prepared so you can activate it to use | Active - the service so you can use it\n"
-                },
-                "Type": {
-                    "enum": [
-                        "Classifier",
-                        "Prc"
-                    ],
-                    "type": "string"
-                },
-                "ProcessIdList": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "contains all the process ids which belongs to this service\n"
-                },
-                "ActualProcessId": {
-                    "type": "string",
-                    "description": "the Id of the process which belongs to this service and is in progress right now\n"
                 }
             }
         },
@@ -1914,21 +2095,66 @@
                 }
             }
         },
+        "Service": {
+            "required": [
+                "Name",
+                "Type"
+            ],
+            "type": "object",
+            "properties": {
+                "Id": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Description": {
+                    "type": "string"
+                },
+                "Status": {
+                    "enum": [
+                        "New",
+                        "Busy",
+                        "Prepared",
+                        "Active"
+                    ],
+                    "type": "string",
+                    "description": "New - the service was created | Busy - the service is working on something (e.g.: during the Prepare) | Prepared - the service was prepared so you can activate it to use | Active - the service so you can use it\n"
+                },
+                "Type": {
+                    "enum": [
+                        "Classifier",
+                        "Prc"
+                    ],
+                    "type": "string"
+                },
+                "ProcessIdList": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "contains all the process ids which belongs to this service\n"
+                },
+                "ActualProcessId": {
+                    "type": "string"
+                }
+            }
+        },
         "Status": {
             "type": "object",
             "properties": {
+                "ApiVersion": {
+                    "type": "string"
+                },
                 "ProcessorCount": {
                     "format": "int32",
                     "type": "integer"
                 },
-                "AvailableFreeSpace": {
+                "CpuUsage": {
                     "format": "double",
                     "type": "number"
                 },
-                "ApiVersion": {
-                    "type": "string"
-                },
-                "CpuUsage": {
+                "AvailableFreeSpace": {
                     "format": "double",
                     "type": "number"
                 },
