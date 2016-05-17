@@ -165,7 +165,7 @@ Object  |   `object` for single JSON objects
         "luckyNumbers": {
             "type": "array",
             "items": {
-                type: "integer"
+                "type": "integer"
             }
         }
     }
@@ -212,17 +212,17 @@ Returns with:
     "IdField": "id",
     "TagField": "tag",
     "InterpretedFields": [
-    "title",
-    "desc"
+        "title",
+        "desc"
     ],
     "Statistics": {
-    "DocumentsCount": 3
+        "DocumentsCount": 3
     },
     "SampleDocument": {
-    "id": 1,
-    "title": "Example title",
-    "desc": "Example Description"
-    "tag": [1,2,3]
+        "id": 1,
+        "title": "Example title",
+        "desc": "Example Description",
+        "tag": [1,2,3]
     }
 }
 ```
@@ -257,7 +257,7 @@ Returns with:
     "SampleDocument": {
         "id": 1,
         "title": "Example title",
-        "desc": "Example Description"
+        "desc": "Example Description",
         "tags": [1,2,3]
     }
     },
@@ -276,7 +276,7 @@ Returns with:
     "SampleDocument": {
         "id": 1,
         "title": "Example title",
-        "desc": "Example Description"
+        "desc": "Example Description",
         "tags": [1,2,3]
     }
     }
@@ -791,7 +791,7 @@ You can update only the Name and the Description field.
 > HTTP/1.1 200 CREATED
 
 
-    ### Remove Service
+### Remove Service
 You remove a service anytime. If it's in Activated status then it will be Deactivated first. If it's in Busy status then it will be cancelled first.
 
 *Example REQUEST*
@@ -898,8 +898,7 @@ Built-in text classification engine. Uses the prepared Classifier dictionaries a
     "Text": "Lorem Ipsum Dolorem",
     "Count": "2",
     "UseEmphasizing": false,
-    "NeedTagInResults": true,
-    
+    "NeedTagInResults": true
 }
 ```
 
@@ -907,24 +906,24 @@ Built-in text classification engine. Uses the prepared Classifier dictionaries a
 ```JSON
 [
     {
-    "TagId": "324",
-    "Score": 0.35175663155586434,
-    "Tag": {
-        "Id": "324",
-        "Name": "Tag name",
-        "ParentId": "16",
-        "Properties": null
-    }
+        "TagId": "324",
+        "Score": 0.35175663155586434,
+        "Tag": {
+            "Id": "324",
+            "Name": "Tag name",
+            "ParentId": "16",
+            "Properties": null
+        }
     },
     {
-    "TagId": "232",
-    "Score": 0.30277479057126688,
-    "Tag": {
-        "Id": "232",
-        "Name": "Tag name",
-        "ParentId": "24",
-        "Properties": null
-    }
+        "TagId": "232",
+        "Score": 0.30277479057126688,
+        "Tag": {
+            "Id": "232",
+            "Name": "Tag name",
+            "ParentId": "24",
+            "Properties": null
+        }
     }
 ]
 ```
