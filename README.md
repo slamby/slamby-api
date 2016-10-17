@@ -1,5 +1,5 @@
 # Slamby API
 
-License
+## License
 
-*GNU AFFERO GENERAL PUBLIC LICENSE Version 3*
+This project is licensed under the GNU Affero General Public License 3.0.
