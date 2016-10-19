@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0-*",
+  "description": "Slamby.Tests Class Library",
+  "authors": [ "Zsolt Illes", "Attila Laszlo" ],
+  "projectUrl": "https://github.com/slamby/slamby-api",
+  "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+  "frameworks": {
+    "dnxcore50": {
+    }
+  },
+  "dependencies": {
+    "Microsoft.CSharp": "4.0.1-beta-23516",
+    "System.Collections": "4.0.11-beta-23516",
+    "System.Linq": "4.0.1-beta-23516",
+    "System.Runtime": "4.0.21-beta-23516",
+    "System.Threading": "4.0.11-beta-23516",
+    "Slamby.Common": "1.0.0-*",
+    "xunit": "2.1.0",
+    "xunit.runner.dnx": "2.1.0-rc1-build204",
+    "FluentAssertions": "4.4.0",
+    "moq.netcore": "4.4.0-beta8",
+    "Microsoft.AspNet.Http.Abstractions": "1.0.0-rc1-final",
+    "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc1-final",
+    "Slamby.API": "1.0.0-*"
+  },
+  "commands": {
+    "test": "xunit.runner.dnx -xml Slamby.Tests-testresult.xml",
+    "test_ci": "xunit.runner.dnx"
+  }
+}

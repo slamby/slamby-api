@@ -1,0 +1,72 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Slamby.API", "Slamby.API\Slamby.API.xproj", "{D6534685-64A4-4AFE-993D-C7AD1B6D489E}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Slamby.Elastic", "Slamby.Elastic\Slamby.Elastic.xproj", "{F20E2451-7F39-4DB0-B06D-BA62D031361D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{09A798C6-50A8-4F9B-B778-AE125C078C12}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Slamby.Cerebellum", "Slamby.Cerebellum\Slamby.Cerebellum.xproj", "{F152FF04-F967-45FA-9816-F2669B87BD47}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Slamby.Common", "Slamby.Common\Slamby.Common.xproj", "{C911131D-1159-4A39-8555-7E4BC594976B}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Slamby.Tests", "Slamby.Tests\Slamby.Tests.xproj", "{CB512B48-EEB6-4949-8B81-B7583DDF9720}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6534685-64A4-4AFE-993D-C7AD1B6D489E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6534685-64A4-4AFE-993D-C7AD1B6D489E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6534685-64A4-4AFE-993D-C7AD1B6D489E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6534685-64A4-4AFE-993D-C7AD1B6D489E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F20E2451-7F39-4DB0-B06D-BA62D031361D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F20E2451-7F39-4DB0-B06D-BA62D031361D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F20E2451-7F39-4DB0-B06D-BA62D031361D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F20E2451-7F39-4DB0-B06D-BA62D031361D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F152FF04-F967-45FA-9816-F2669B87BD47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F152FF04-F967-45FA-9816-F2669B87BD47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F152FF04-F967-45FA-9816-F2669B87BD47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F152FF04-F967-45FA-9816-F2669B87BD47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C911131D-1159-4A39-8555-7E4BC594976B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C911131D-1159-4A39-8555-7E4BC594976B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C911131D-1159-4A39-8555-7E4BC594976B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C911131D-1159-4A39-8555-7E4BC594976B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB512B48-EEB6-4949-8B81-B7583DDF9720}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB512B48-EEB6-4949-8B81-B7583DDF9720}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB512B48-EEB6-4949-8B81-B7583DDF9720}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB512B48-EEB6-4949-8B81-B7583DDF9720}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 6
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://slamby.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Slamby.API\\Slamby.API.xproj
+		SccProjectName1 = Slamby.API
+		SccLocalPath1 = Slamby.API
+		SccProjectUniqueName2 = Slamby.Cerebellum\\Slamby.Cerebellum.xproj
+		SccProjectName2 = Slamby.Cerebellum
+		SccLocalPath2 = Slamby.Cerebellum
+		SccProjectUniqueName3 = Slamby.Elastic\\Slamby.Elastic.xproj
+		SccProjectName3 = Slamby.Elastic
+		SccLocalPath3 = Slamby.Elastic
+		SccProjectUniqueName4 = Slamby.Common\\Slamby.Common.xproj
+		SccProjectName4 = Slamby.Common
+		SccLocalPath4 = Slamby.Common
+		SccProjectUniqueName5 = Slamby.Tests\\Slamby.Tests.xproj
+		SccProjectName5 = Slamby.Tests
+		SccLocalPath5 = Slamby.Tests
+	EndGlobalSection
+EndGlobal

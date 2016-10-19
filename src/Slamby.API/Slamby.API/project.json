@@ -1,0 +1,68 @@
+{
+  "version": "1.1.0",
+  "description": "Slamby.API ",
+  "authors": [ "Zsolt Illes", "Attila Laszlo" ],
+  "projectUrl": "https://github.com/slamby/slamby-api",
+  "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+  "compilationOptions": {
+    "emitEntryPoint": true
+  },
+
+  "dependencies": {
+    "Elasticsearch.Net": "2.1.1",
+    "FastMember": "1.1.0-beta1",
+    "Microsoft.AspNet.Cors": "6.0.0-rc1-final",
+    "Microsoft.AspNet.Diagnostics": "1.0.0-rc1-final",
+    "Microsoft.AspNet.Diagnostics.Elm": "1.0.0-rc1-final",
+    "Microsoft.AspNet.IISPlatformHandler": "1.0.0-rc1-final",
+    "Microsoft.AspNet.Mvc": "6.0.0-rc1-final",
+    "Microsoft.AspNet.Mvc.WebApiCompatShim": "6.0.0-rc1-final",
+    "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc1-final",
+    "Microsoft.AspNet.Session": "1.0.0-rc1-final",
+    "Microsoft.AspNet.StaticFiles": "1.0.0-rc1-final",
+    "Microsoft.Extensions.Configuration.FileProviderExtensions": "1.0.0-rc1-final",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc1-final",
+    "Microsoft.Extensions.Logging": "1.0.0-rc1-final",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc1-final",
+    "Microsoft.Extensions.Logging.Debug": "1.0.0-rc1-final",
+    "NEST": "2.1.1",
+    "protobuf-net": "2.1.0-alpha-1",
+    "Serilog.Extensions.Logging": "1.0.0-rc1-final-10092",
+    "Serilog.Sinks.Literate": "2.0.0-beta-21",
+    "Serilog.Sinks.RollingFile": "2.0.0-beta-700",
+    "Slamby.Cerebellum": "1.0.0-*",
+    "Slamby.Common": "1.0.0-*",
+    "Slamby.Elastic": "1.0.0-*",
+    "StackExchange.Redis": "1.1.572-alpha",
+    "Swashbuckle.SwaggerGen": "6.0.0-rc1-slamby",
+    "Swashbuckle.SwaggerUi": "6.0.0-rc1-slamby",
+    "System.IO": "4.0.11-beta-23516",
+    "System.IO.Compression.ZipFile": "4.0.1-beta-23516",
+    "System.Linq": "4.0.1-beta-23516",
+    "System.Linq.Parallel": "4.0.1-beta-23516",
+    "System.Linq.Queryable": "4.0.1-beta-23516",
+    "System.Reflection.Extensions": "4.0.1-beta-23516",
+    "System.Net.Security": "4.0.0-beta-23225",
+    "System.Collections.Immutable": "1.1.37"
+  },
+
+
+  "commands": {
+    "web": "Microsoft.AspNet.Server.Kestrel",
+    "test-server": "Microsoft.AspNet.Server.Kestrel --server.urls http://*:80"
+  },
+
+  "frameworks": {
+    "dnxcore50": {
+    }
+  },
+
+  "exclude": [
+    "wwwroot",
+    "node_modules"
+  ],
+  "publishExclude": [
+    "**.user",
+    "**.vspscc"
+  ]
+}
