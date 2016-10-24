@@ -1,0 +1,55 @@
+version: '2'
+services:
+  redis:
+    image: redis:3.0-32bit
+    restart: always
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+    cpu_shares: 512
+    volumes:
+      - /usr/share/redis/data:/data
+  elasticsearch:
+    restart: always
+    image: slamby/elasticsearch:1.0
+    mem_limit: 400m
+    ports:
+      - "9200:9200"
+    expose:
+      - "9200"
+    volumes:
+      - /usr/share/elasticsearch/data:/usr/share/elasticsearch/data
+    environment:
+      ES_HEAP_SIZE: 256m
+    oom_score_adj: -1000
+    cpu_shares: 512
+  slambyapi:
+    restart: always
+    image: dockerhub.slamby.com/slambyapi_dev:1.1.16292.01
+    command: /app/approot/prod-server
+    environment:
+      SlambyApi__ApiSecret: s3cr3t
+    volumes:
+      - /home/slamby:/Slamby
+    depends_on:
+      - elasticsearch
+      - redis
+    links:
+      - elasticsearch
+      - redis
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
+    oom_score_adj: -1000
+    cpu_shares: 1024
+  nginx:
+    image: slamby/nginx:1.0
+    restart: always
+    ports:
+      - "80:80"
+    links:
+      - slambyapi
+    cpu_shares: 512

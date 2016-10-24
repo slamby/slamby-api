@@ -49,7 +49,7 @@
 
   "commands": {
     "web": "Microsoft.AspNet.Server.Kestrel",
-    "test-server": "Microsoft.AspNet.Server.Kestrel --server.urls http://*:80"
+    "prod-server": "Microsoft.AspNet.Server.Kestrel --server.urls http://*:80"
   },
 
   "frameworks": {
