@@ -1,0 +1,7 @@
+FROM dockerhub.slamby.com/slambybase:1
+
+COPY . /app_code
+WORKDIR /app_code
+RUN ["dnu", "restore"]
+WORKDIR Slamby.Tests
+ENTRYPOINT ["dnx"]
