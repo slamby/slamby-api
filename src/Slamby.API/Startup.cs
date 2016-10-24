@@ -156,8 +156,15 @@ namespace Slamby.API
                 var machineResourceService = services.BuildServiceProvider().GetService<Common.Services.MachineResourceService>();
                 machineResourceService.UpdateResourcesManually();
 
-                maxIndexBulkSize = Convert.ToInt32(machineResourceService.Status.TotalMemory * 1024 * 1024 / 2 / 500);
-                maxIndexBulkCount = Convert.ToInt32(machineResourceService.Status.TotalMemory / 12);
+                if (machineResourceService.Status.TotalMemory > 0)
+                {
+                    maxIndexBulkSize = Convert.ToInt32(machineResourceService.Status.TotalMemory * 1024 * 1024 / 2 / 500);
+                    maxIndexBulkCount = Convert.ToInt32(machineResourceService.Status.TotalMemory / 12);
+                } else
+                {
+                    maxIndexBulkSize = 100000;
+                    maxIndexBulkCount = 50;
+                }
 
                 services.Configure<SiteConfig>(sc => sc.Resources.MaxIndexBulkSize = maxIndexBulkSize);
                 services.Configure<SiteConfig>(sc => sc.Resources.MaxIndexBulkCount = maxIndexBulkCount);

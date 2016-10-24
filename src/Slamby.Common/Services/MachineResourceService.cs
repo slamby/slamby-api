@@ -118,7 +118,7 @@ namespace Slamby.Common.Services
 
                         //set max request size to the percentage of the memory
                         MaxRequestSize = (Status.FreeMemory * siteConfig.Resources.MaxRequestSizeMemoryPercentage / 100).Round(0);
-                        //if the configuaration's limit is larger than this than set the limit 
+                        //if the configuration's limit is larger than this than set the limit 
                         if (MaxRequestSize == 0 || MaxRequestSize > siteConfig.Resources.MaxRequestSize) MaxRequestSize = siteConfig.Resources.MaxRequestSize;
                         MaxRequestSize = MaxRequestSize * 1024 * 1024;
                     }

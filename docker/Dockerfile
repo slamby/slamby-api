@@ -9,11 +9,7 @@ WORKDIR /app_code/Slamby.API
 
 RUN ["dnu", "publish", "--out", "/app", "--configuration",  "Release", "--no-source"]
 
-RUN apt-get update
-RUN apt-get -y install cron
-
 WORKDIR /app
-RUN ls
 
 RUN ["rm", "-r", "/app_code"]
 
