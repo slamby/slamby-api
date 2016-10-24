@@ -18,5 +18,6 @@ RUN ls
 RUN ["rm", "-r", "/app_code"]
 
 COPY ./scripts /app/scripts
+RUN chmod +x /app/scripts/*.sh
 
 CMD /app/scripts/start_resources.sh && /app/approot/prod-server
