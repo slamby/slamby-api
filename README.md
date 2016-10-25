@@ -95,44 +95,44 @@ Please note that if you use an operating system in which you can use `:` in the 
 
 Here is a list of the most important settings. You can find all the setting in the appsettings.json file.
 
-### SlambyApi__ApiSecret
+### `SlambyApi__ApiSecret`
 
 Default value: `s3cr3t` 
 
 This is the secret for your API. You have to use this to authenticate your requests.
 
-### SlambyApi__BaseUrlPrefix
+### `SlambyApi__BaseUrlPrefix`
 
 It's empty by default. 
 
 If you are using the API behind a reverse proxy, than you have to use this value. Because in that case, the hostname won't be accurate. 
 The API will put the http host of the request after it. 
 
-### ElasticSearch__Uris__NUMBER
+### `ElasticSearch__Uris__NUMBER`
 
 Note that this is an array configuration value. So you have to put 0, 1, 2... instead of the NUMBER. 
 
 There is a default one `ElasticSearch__Uris__0`, with default value: `'http://elasticsearch:9200/'`
 
-### SlambyApi__Serilog__Output
+### `SlambyApi__Serilog__Output`
 
 Default value: `/Slamby/Logs` 
 
 The output directory of the log files.
 
-### SlambyApi__Serilog__MinimumLevel
+### `SlambyApi__Serilog__MinimumLevel`
 
 Default value: `Information` 
 
 The minimum log level.
 
-### SlambyApi__Redis__Configuration
+### `SlambyApi__Redis__Configuration`
 
 Default value: `redis,abortConnect=false,ssl=false,syncTimeout=30000`
 
 The connection string for the Redis server.
 
-### SlambyApi__Parallel__ConcurrentTasksLimit
+### `SlambyApi__Parallel__ConcurrentTasksLimit`
 
 Default value: `0`
 
