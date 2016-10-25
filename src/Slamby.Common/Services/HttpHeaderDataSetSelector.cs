@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNet.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Slamby.Common.DI;
 using Slamby.Common.Services.Interfaces;
 using static Slamby.SDK.Net.Constants;

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Http;
 using Slamby.Common.Config;
 using Slamby.Common.DI;
+using Microsoft.AspNetCore.Http;
 
 namespace Slamby.Common.Services
 {

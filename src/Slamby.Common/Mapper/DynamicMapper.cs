@@ -44,7 +44,7 @@ namespace Slamby.Common.Mapper
             {
                 mapper.PrepareMappings(sourceType);
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 return null;
             }

@@ -1,62 +1,171 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyModel;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Slamby.Common.DI
 {
-    // http://dotnetliberty.com/index.php/2016/01/11/dependency-scanning-in-asp-net-5/
-    // http://dotnetliberty.com/index.php/2016/01/19/dependency-scanning-in-asp-net-5-part-2/
-    public class Scanner
+    /// <summary>
+    /// Discovers assemblies that are part of the application using the DependencyContext.
+    /// </summary>
+    /// <remarks>
+    /// Source: https://github.com/aspnet/Mvc/blob/760c8f38678118734399c58c2dac981ea6e47046/src/Microsoft.AspNetCore.Mvc.Core/Internal/DefaultAssemblyPartDiscoveryProvider.cs
+    /// </remarks>
+    internal static class Scanner
     {
-        private readonly ILibraryManager _libraryManager;
-        private readonly AssemblyName _thisAssemblyName;
-        private readonly List<string> _scannedAssembly = new List<string>();
 
-        public Scanner(ILibraryManager libraryManager)
+        internal static void RegisterAttributedDependencies(IServiceCollection services, string applicationName)
         {
-            _libraryManager = libraryManager;
-            _thisAssemblyName = new AssemblyName(GetType().GetTypeInfo().Assembly.FullName);
-        }
-
-        public void RegisterAllAssemblies(IServiceCollection services)
-        {
-            foreach (var assembly in GetAssembliesReferencingThis())
+            foreach (var assembly in DiscoverAssemblyParts(applicationName))
             {
-                RegisterAssembly(services, assembly);
-            }
-        }
-
-        public void RegisterAssembly(IServiceCollection services, AssemblyName assemblyName)
-        {
-            if (_scannedAssembly.Contains(assemblyName.FullName))
-            {
-                return;
-            }
-
-            var assembly = Assembly.Load(assemblyName);
-            foreach (var type in assembly.DefinedTypes)
-            {
-                var dependencyAttributes = type.GetCustomAttributes<DependencyAttribute>();
-                // Each dependency can be registered as various types
-                foreach (var dependencyAttribute in dependencyAttributes)
+                foreach (var type in assembly.GetTypes())
                 {
-                    var serviceDescriptor = dependencyAttribute.BuildServiceDescriptor(type);
-                    services.Add(serviceDescriptor);
+                    var typeInfo = type.GetTypeInfo();
+                    var dependencyAttributes = typeInfo.GetCustomAttributes<DependencyAttribute>();
+                    // Each dependency can be registered as various types
+                    foreach (var dependencyAttribute in dependencyAttributes)
+                    {
+                        var serviceDescriptor = dependencyAttribute.BuildServiceDescriptor(typeInfo);
+                        services.Add(serviceDescriptor);
+                    }
+                }
+            }
+        }
+
+        private static HashSet<string> ReferenceAssemblies { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Slamby.Common",
+            "Slamby.API",
+            "Slamby.Cerebellum",
+            "Slamby.Elastic"
+        };
+
+        private static IEnumerable<Assembly> DiscoverAssemblyParts(string entryPointAssemblyName)
+        {
+            var entryAssembly = Assembly.Load(new AssemblyName(entryPointAssemblyName));
+            var context = DependencyContext.Load(Assembly.Load(new AssemblyName(entryPointAssemblyName)));
+
+            return GetCandidateAssemblies(entryAssembly, context);
+        }
+
+        private static IEnumerable<Assembly> GetCandidateAssemblies(Assembly entryAssembly, DependencyContext dependencyContext)
+        {
+            if (dependencyContext == null)
+            {
+                // Use the entry assembly as the sole candidate.
+                return new[] { entryAssembly };
+            }
+
+            return GetCandidateLibraries(dependencyContext)
+                .SelectMany(library => library.GetDefaultAssemblyNames(dependencyContext))
+                .Select(Assembly.Load);
+        }
+
+        // Returns a list of libraries that references the assemblies in <see cref="ReferenceAssemblies"/>.
+        // By default it returns all assemblies that reference any of the primary MVC assemblies
+        // while ignoring MVC assemblies.
+        // Internal for unit testing
+        private static IEnumerable<RuntimeLibrary> GetCandidateLibraries(DependencyContext dependencyContext)
+        {
+            if (ReferenceAssemblies == null)
+            {
+                return Enumerable.Empty<RuntimeLibrary>();
+            }
+
+            var candidatesResolver = new CandidateResolver(dependencyContext.RuntimeLibraries, ReferenceAssemblies);
+            return candidatesResolver.GetCandidates();
+        }
+
+        private sealed class CandidateResolver
+        {
+            private readonly IDictionary<string, Dependency> _dependencies;
+
+            public CandidateResolver(IReadOnlyList<RuntimeLibrary> dependencies, ISet<string> referenceAssemblies)
+            {
+                _dependencies = dependencies
+                    .ToDictionary(d => d.Name, d => CreateDependency(d, referenceAssemblies), StringComparer.OrdinalIgnoreCase);
+            }
+
+            private Dependency CreateDependency(RuntimeLibrary library, ISet<string> referenceAssemblies)
+            {
+                var classification = DependencyClassification.Unknown;
+                if (referenceAssemblies.Contains(library.Name))
+                {
+                    classification = DependencyClassification.MvcReference;
+                }
+
+                return new Dependency(library, classification);
+            }
+
+            private DependencyClassification ComputeClassification(string dependency)
+            {
+                Debug.Assert(_dependencies.ContainsKey(dependency));
+
+                var candidateEntry = _dependencies[dependency];
+                if (candidateEntry.Classification != DependencyClassification.Unknown)
+                {
+                    return candidateEntry.Classification;
+                }
+                else
+                {
+                    var classification = DependencyClassification.NotCandidate;
+                    foreach (var candidateDependency in candidateEntry.Library.Dependencies)
+                    {
+                        var dependencyClassification = ComputeClassification(candidateDependency.Name);
+                        if (dependencyClassification == DependencyClassification.Candidate ||
+                            dependencyClassification == DependencyClassification.MvcReference)
+                        {
+                            classification = DependencyClassification.Candidate;
+                            break;
+                        }
+                    }
+
+                    candidateEntry.Classification = classification;
+
+                    return classification;
                 }
             }
 
-            _scannedAssembly.Add(assemblyName.FullName);
-        }
+            public IEnumerable<RuntimeLibrary> GetCandidates()
+            {
+                foreach (var dependency in _dependencies)
+                {
+                    if (ComputeClassification(dependency.Key) == DependencyClassification.Candidate)
+                    {
+                        yield return dependency.Value.Library;
+                    }
+                }
+            }
 
-        private IEnumerable<AssemblyName> GetAssembliesReferencingThis()
-        {
-            var assemblies = _libraryManager.GetReferencingLibraries(_thisAssemblyName.Name)
-                .SelectMany(library => library.Assemblies)
-                .Concat(new[] { _thisAssemblyName }); // And add self since 'Slamby.Common' is not just for DI stuff, it can contains dependencies also
+            private class Dependency
+            {
+                public Dependency(RuntimeLibrary library, DependencyClassification classification)
+                {
+                    Library = library;
+                    Classification = classification;
+                }
 
-            return assemblies;
+                public RuntimeLibrary Library { get; }
+
+                public DependencyClassification Classification { get; set; }
+
+                public override string ToString()
+                {
+                    return $"Library: {Library.Name}, Classification: {Classification}";
+                }
+            }
+
+            private enum DependencyClassification
+            {
+                Unknown = 0,
+                Candidate = 1,
+                NotCandidate = 2,
+                MvcReference = 3
+            }
         }
     }
 }

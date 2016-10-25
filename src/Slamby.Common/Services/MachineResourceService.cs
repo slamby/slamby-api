@@ -4,12 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.PlatformAbstractions;
 using Slamby.Common.Config;
 using Slamby.Common.DI;
 using Slamby.SDK.Net.Models;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Slamby.Common.Services
 {
@@ -28,7 +28,7 @@ namespace Slamby.Common.Services
         
         readonly SiteConfig siteConfig;
 
-        public MachineResourceService(ILogger<MachineResourceService> logger, SiteConfig siteConfig, IApplicationEnvironment env,
+        public MachineResourceService(ILogger<MachineResourceService> logger, SiteConfig siteConfig, ApplicationEnvironment env,
             IApplicationLifetime applicationLifetime)
         {
             this.siteConfig = siteConfig;
