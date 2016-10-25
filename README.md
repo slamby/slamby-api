@@ -23,7 +23,7 @@ We made a prepared Docker Compose file for the easy installation.
 
 3. Download our Docker Compose file
   ```
-  $ curl -L "https://raw.githubusercontent.com/slamby/slamby-api/master/docker/docker-compose.yml" > docker-compose.yml
+  $ curl -L "https://github.com/slamby/slamby-api/releases/download/v1.1.0/docker-compose.yml" > docker-compose.yml
   ``` 
 
 4. Compose the containers (run next to the compose file)
