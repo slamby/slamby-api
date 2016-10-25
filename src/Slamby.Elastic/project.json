@@ -2,21 +2,35 @@
   "version": "1.0.0-*",
   "description": "Slamby.Elastic Class Library",
   "authors": [ "Zsolt Illes", "Attila Laszlo" ],
-  "projectUrl": "https://github.com/slamby/slamby-api",
-  "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+  "packOptions": {
+    "repository": {
+      "url": "https://github.com/slamby/slamby-api",
+      "type": "git"
+    },
+    "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+    "owners": [ "Zsolt Illes", "Attila Laszlo" ]
+  },
+  "buildOptions": {
+    "warningsAsErrors": true
+  },
   "frameworks": {
-    "dnxcore50": { }
+    "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.6",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.1",
+          "type": "platform"
+        }
+      }
+    }
   },
   "dependencies": {
-    "System.Collections": "4.0.11-beta-23516",
-    "System.Linq": "4.0.1-beta-23516",
-    "System.Runtime": "4.0.21-beta-23516",
-    "System.Threading": "4.0.11-beta-23516",
     "protobuf-net": "2.1.0-alpha-1",
-    "Elasticsearch.Net": "2.1.1",
-    "NEST": "2.1.1",
-    "Slamby.Common": "1.0.0-*",
-    "System.Threading.Tasks.Parallel": "4.0.1-beta-23516",
-    "System.Threading.Thread": "4.0.0-beta-23516"
+    "Elasticsearch.Net": "2.4.6",
+    "NEST": "2.4.6",
+    "Slamby.Common": "1.0.0-*"
   }
 }
