@@ -83,7 +83,7 @@ docker run -d \
   --name slamby_api \
   -p 5000:5000 \
   -v /yourDataDirectory:/Slamby \
-  slamby/slamby.api
+  slamby/slamby.api:1.1.0
 ```
 
 ## Settings
