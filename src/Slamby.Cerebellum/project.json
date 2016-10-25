@@ -2,20 +2,33 @@
   "version": "1.0.0-*",
   "description": "Slamby.Cerebellum Class Library",
   "authors": [ "Zsolt Illes", "Attila Laszlo", "Zsolt Rabai", "Agnes Nagy", "Bela Soos", "Peter Mezei" ],
-  "projectUrl": "https://github.com/slamby/slamby-api",
-  "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
-
-  "frameworks": {
-    "dnxcore50": { }
+  "packOptions": {
+    "repository": {
+      "url": "https://github.com/slamby/slamby-api",
+      "type": "git"
+    },
+    "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+    "owners": [ "Zsolt Illes", "Attila Laszlo" ]
   },
-
+  "buildOptions": {
+    "warningsAsErrors": true
+  },
   "dependencies": {
-    "Microsoft.CSharp": "4.0.1-beta-23516",
-    "System.Collections": "4.0.11-beta-23516",
-    "System.Linq": "4.0.1-beta-23516",
-    "System.Runtime": "4.0.21-beta-23516",
-    "System.Threading": "4.0.11-beta-23516",
     "Slamby.Elastic": "1.0.0-*",
     "Slamby.Common": "1.0.0-*"
+  },
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.6",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.1",
+          "type": "platform"
+        }
+      }
+    }
   }
 }
