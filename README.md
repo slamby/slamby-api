@@ -46,7 +46,7 @@ $ curl localhost
 
 You can use Slamby API server without composing. But Slamby API has prerequisites.
 You have to give the settings to the Slamby API server via environment variables (these are like: `SlambyApi__...`). Note that if you run it in a container you have to set the environment variables to the container not the the host.
-if you use an operating system in which you can use `:` in the environment names than you have to use `:` instead of `__`.
+if you use an operating system in which you can use `:` in the environment variable names than you have to use `:` instead of `__`.
 
 
 #### Prerequisites
@@ -86,8 +86,51 @@ docker run -d \
   slamby/slamby.api
 ```
 
+The Slamby API is using the port 5000 by default, but you can bind it to whatever port you want on your Docker host. 
+
 ## Settings
 
+You can override the settings by environment variables.
+Please note that if you use an operating system in which you can use `:` in the environment variable names than you have to use `:` instead of `__`.
+
+Here is a list of the most important settings. You can find all the setting in the appsettings.json file.
+
+### SlambyApi__ApiSecret
+
+Default value: `s3cr3t` \
+This is the secret for your API. You have to use this to authenticate your requests.
+
+### SlambyApi__BaseUrlPrefix
+
+It's empty by default. \
+If you are using the API behind a reverse proxy, than you have to use this value. Because in that case the hostname won't be accurate. \
+The API will put the http host of the request after it. 
+
+### ElasticSearch__Uris__NUMBER
+
+Note that this is an array configuration value. So you have to put 0, 1, 2... instead of the NUMBER. \
+There is a default one `ElasticSearch__Uris__0`, with default value: `'http://elasticsearch:9200/'`
+
+### SlambyApi__Serilog__Output
+
+Default value: `/Slamby/Logs` \
+The output directory of the log files.
+
+### SlambyApi__Serilog__MinimumLevel
+
+Default value: `Information` \
+The minimum log level.
+
+### SlambyApi__Redis__Configuration
+
+Default value: `redis,abortConnect=false,ssl=false,syncTimeout=30000`
+The connection string for the Redis server.
+
+### SlambyApi__Parallel__ConcurrentTasksLimit
+
+Default value: `0` \
+The maximum limit of the used threads in each operation. If it's 0 than the API using _core number * 2_ for the best performance.
+Tip: you can limit it in each request header also. Check it in the API documentation. 
 
 
 ## Issues
