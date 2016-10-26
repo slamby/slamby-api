@@ -2,29 +2,44 @@
   "version": "1.0.0-*",
   "description": "Slamby.Tests Class Library",
   "authors": [ "Zsolt Illes", "Attila Laszlo" ],
-  "projectUrl": "https://github.com/slamby/slamby-api",
-  "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+  "packOptions": {
+    "repository": {
+      "url": "https://github.com/slamby/slamby-api",
+      "type": "git"
+    },
+    "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+    "owners": [ "Zsolt Illes", "Attila Laszlo" ]
+  },
+  "testRunner": "xunit",
+  "buildOptions": {
+    "warningsAsErrors": true
+  },
   "frameworks": {
-    "dnxcore50": {
+    "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.6",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.1",
+          "type": "platform"
+        }
+      }
     }
   },
   "dependencies": {
-    "Microsoft.CSharp": "4.0.1-beta-23516",
-    "System.Collections": "4.0.11-beta-23516",
-    "System.Linq": "4.0.1-beta-23516",
-    "System.Runtime": "4.0.21-beta-23516",
-    "System.Threading": "4.0.11-beta-23516",
     "Slamby.Common": "1.0.0-*",
-    "xunit": "2.1.0",
-    "xunit.runner.dnx": "2.1.0-rc1-build204",
+    "xunit": "2.2.0-beta2-build3300",
+    "dotnet-test-xunit": "2.2.0-preview2-build1029",
     "FluentAssertions": "4.4.0",
     "moq.netcore": "4.4.0-beta8",
-    "Microsoft.AspNet.Http.Abstractions": "1.0.0-rc1-final",
-    "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc1-final",
-    "Slamby.API": "1.0.0-*"
+    "Microsoft.AspNetCore.Http.Abstractions": "1.1.0-preview1-final",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.1",
+    "Slamby.API": "1.1.0-*",
+    "System.Diagnostics.TraceSource": "4.3.0-preview1-24530-04"
   },
-  "commands": {
-    "test": "xunit.runner.dnx -xml Slamby.Tests-testresult.xml",
-    "test_ci": "xunit.runner.dnx"
+  "tools": {
+    "dotnet-test-xunit": "2.2.0-preview2-build1029"
   }
 }
