@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using Microsoft.AspNet.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Slamby.API.Resources;
 using Slamby.Common.Config;
 using Slamby.SDK.Net;
@@ -25,7 +25,7 @@ namespace Slamby.API.Filters
 
                 if (!string.Equals(sdkVersion, apiVersion))
                 {
-                    context.Result = new Microsoft.AspNet.Mvc.BadRequestObjectResult(
+                    context.Result = new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(
                         ErrorsModel.Create(string.Format(GlobalResources.SdkApiVersionMismatch, sdkVersion, apiVersion))
                     );
 

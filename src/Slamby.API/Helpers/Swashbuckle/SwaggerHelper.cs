@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using Microsoft.AspNet.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Swashbuckle.SwaggerGen.Generator;
 
 namespace Slamby.API.Helpers.Swashbuckle

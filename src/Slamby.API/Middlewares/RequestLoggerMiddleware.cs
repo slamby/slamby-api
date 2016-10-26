@@ -2,10 +2,10 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Http.Features;
-using Microsoft.AspNet.WebUtilities;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Slamby.API.Helpers;
 using Slamby.Common.Config;
@@ -49,7 +49,7 @@ namespace Slamby.API.Middlewares
             await context.Request.Body.CopyToAsync(requestBodyStream);
 
             requestBodyStream.Seek(0, SeekOrigin.Begin);
-            _logger.LogVerbose(RequestLoggerHelper.Format(context.Request, requestId, requestBodyStream, siteConfig.BaseUrlPrefix));
+            _logger.LogTrace(RequestLoggerHelper.Format(context.Request, requestId, requestBodyStream, siteConfig.BaseUrlPrefix));
             requestBodyStream.Seek(0, SeekOrigin.Begin);
 
             context.Request.Body = requestBodyStream;
@@ -65,7 +65,7 @@ namespace Slamby.API.Middlewares
             context.Request.Body = originalRequestBody;
 
             responseBodyStream.Seek(0, SeekOrigin.Begin);
-            _logger.LogVerbose(RequestLoggerHelper.Format(context.Response, requestId, responseBodyStream));
+            _logger.LogTrace(RequestLoggerHelper.Format(context.Response, requestId, responseBodyStream));
             responseBodyStream.Seek(0, SeekOrigin.Begin);
 
             await responseBodyStream.CopyToAsync(bodyStream);
@@ -73,12 +73,12 @@ namespace Slamby.API.Middlewares
 
         private async Task LogWithoutContent(HttpContext context, string requestId)
         {
-            _logger.LogVerbose(RequestLoggerHelper.Format(context.Request, requestId, null, siteConfig.BaseUrlPrefix));
+            _logger.LogTrace(RequestLoggerHelper.Format(context.Request, requestId, null, siteConfig.BaseUrlPrefix));
 
             // Call next Middleware
             await next(context);
 
-            _logger.LogVerbose(RequestLoggerHelper.Format(context.Response, requestId, null));
+            _logger.LogTrace(RequestLoggerHelper.Format(context.Response, requestId, null));
         }
 
         

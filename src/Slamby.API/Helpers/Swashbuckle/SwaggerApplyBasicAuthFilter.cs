@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Swashbuckle.Swagger.Model;
 using Swashbuckle.SwaggerGen.Generator;
 
 namespace Slamby.API.Helpers.Swashbuckle
@@ -24,7 +26,7 @@ namespace Slamby.API.Helpers.Swashbuckle
             operation.Parameters.Add(new NonBodyParameter()
             {
                 Name = "Slamby",
-                In =  "header",
+                In = "header",
                 Description = "Http authentication. Ex: Authorization: Slamby <api_secret>",
                 Type = "string",
                 Required = true
