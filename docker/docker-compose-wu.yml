@@ -41,7 +41,7 @@ services:
     cpu_shares: 1024
   nginx:
     container_name: slamby_nginx
-    image: slamby/nginx:1.1
+    image: slamby/nginx:1.0-wu
     restart: always
     ports:
       - "80:80"
@@ -54,7 +54,7 @@ services:
     cpu_shares: 512
   slambyapiupdater:
     container_name: slamby_api_updater
-    image: slamby-api-updater:0.1
+    image: slamby/slamby.api-updater:0.1
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
