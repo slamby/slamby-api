@@ -17,13 +17,13 @@ We made a prepared Docker Compose file for the easy installation.
 
 #### Steps
 
-1. Install Docker on your machine: [Official Docker intallation guide](https://docs.docker.com/engine/installation)
+1. Install Docker on your machine: [Official Docker installation guide](https://docs.docker.com/engine/installation)
 
 2. Install Docker Compose on your machine (minimum 1.9.0 required): [Official Docker Compose installation guide](https://docs.docker.com/compose/install)
 
 3. Download our Docker Compose file
   ```
-  $ curl -L "https://raw.githubusercontent.com/slamby/slamby-api/master/docker/docker-compose.yml" > docker-compose.yml
+  $ curl -L "https://github.com/slamby/slamby-api/releases/download/v1.1.0/docker-compose.yml" > docker-compose.yml
   ``` 
 
 4. Compose the containers (run next to the compose file)
@@ -45,7 +45,7 @@ We made a prepared Docker Compose file for the easy installation.
 ### With Docker (advanced)
 
 You can use Slamby API server without composing. But Slamby API has prerequisites.
-You have to give the settings to the Slamby API server via environment variables (these are like: `SlambyApi__...`). Note that if you run it in a container you have to set the environment variables to the container not the the host.
+You have to give the settings to the Slamby API server via environment variables (these are like: `SlambyApi__...`). Note that if you run it in a container you have to set the environment variables to the container not to the host.
 if you use an operating system in which you can use `:` in the environment variable names than you have to use `:` instead of `__`.
 
 
@@ -59,8 +59,8 @@ Or if you have a cluster with multiple endpoints set all the endpoints to the `S
 
 ##### Redis
 
-Slamby API using Redis for preindexing and for save some metrics. Set the Redis connectionstring in the `SlambyApi__Redis__Configuration`.  
-You can even disable the usage of Redis if you want, set the are set `SlambyApi__Redis__Enabled` to `false`. (note that in that case you can't use some features like PRC preindexing).
+Slamby API using Redis for preindexing and for saving some metrics. Set the Redis connection string in the `SlambyApi__Redis__Configuration`.  
+You can even disable the usage of Redis if you want, set the are set `SlambyApi__Redis__Enabled` to `false`. (note that in that case, you can't use some features like PRC preindexing).
 
 ##### Nginx
 
@@ -95,48 +95,48 @@ Please note that if you use an operating system in which you can use `:` in the 
 
 Here is a list of the most important settings. You can find all the setting in the appsettings.json file.
 
-### SlambyApi__ApiSecret
+### `SlambyApi__ApiSecret`
 
 Default value: `s3cr3t` 
 
 This is the secret for your API. You have to use this to authenticate your requests.
 
-### SlambyApi__BaseUrlPrefix
+### `SlambyApi__BaseUrlPrefix`
 
 It's empty by default. 
 
-If you are using the API behind a reverse proxy, than you have to use this value. Because in that case the hostname won't be accurate. 
+If you are using the API behind a reverse proxy, than you have to use this value. Because in that case, the hostname won't be accurate. 
 The API will put the http host of the request after it. 
 
-### ElasticSearch__Uris__NUMBER
+### `ElasticSearch__Uris__NUMBER`
 
 Note that this is an array configuration value. So you have to put 0, 1, 2... instead of the NUMBER. 
 
 There is a default one `ElasticSearch__Uris__0`, with default value: `'http://elasticsearch:9200/'`
 
-### SlambyApi__Serilog__Output
+### `SlambyApi__Serilog__Output`
 
 Default value: `/Slamby/Logs` 
 
 The output directory of the log files.
 
-### SlambyApi__Serilog__MinimumLevel
+### `SlambyApi__Serilog__MinimumLevel`
 
 Default value: `Information` 
 
 The minimum log level.
 
-### SlambyApi__Redis__Configuration
+### `SlambyApi__Redis__Configuration`
 
 Default value: `redis,abortConnect=false,ssl=false,syncTimeout=30000`
 
 The connection string for the Redis server.
 
-### SlambyApi__Parallel__ConcurrentTasksLimit
+### `SlambyApi__Parallel__ConcurrentTasksLimit`
 
 Default value: `0`
 
-The maximum limit of the used threads in each operation. If it's 0 than the API using _core number * 2_ for the best performance.
+The maximum limit of the used threads in each operation. If it's 0 then the API using _core number * 2_ for the best performance.
 Tip: you can limit it in each request header also. Check it in the API documentation. 
 
 
