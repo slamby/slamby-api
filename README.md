@@ -152,7 +152,7 @@ Please check our contribution guide [here](https://github.com/slamby/slamby-api/
 
 This project is licensed under the GNU Affero General Public License version 3.0.
 
-For commercial use please contact us at hello@slamby.com and purchase commercial license.
+For commercial use please contact us at sales@slamby.com and purchase commercial license.
 
 ## Contact
 
