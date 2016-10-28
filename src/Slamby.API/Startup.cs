@@ -31,6 +31,7 @@ using Microsoft.Extensions.FileProviders;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using Newtonsoft.Json.Serialization;
 
 namespace Slamby.API
 {
@@ -269,7 +270,12 @@ namespace Slamby.API
                 mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(ThrottleActionFilter)));
             }
 
-            mvcBuilder.AddJsonOptions(o => o.SerializerSettings.Converters.Add(new StringEnumConverter()));
+            mvcBuilder.AddJsonOptions(o =>
+            {
+                o.SerializerSettings.Converters.Add(new StringEnumConverter());
+                //HACK: see https://github.com/aspnet/Mvc/issues/4842
+                o.SerializerSettings.ContractResolver = new DefaultContractResolver();
+            });
 
             services.AddRouting(routeOptions =>
             {
