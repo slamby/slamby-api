@@ -26,7 +26,6 @@ namespace Slamby.Common.DI
                 {
                     var typeInfo = type.GetTypeInfo();
                     var dependencyAttributes = typeInfo.GetCustomAttributes<DependencyAttribute>();
-                    // Each dependency can be registered as various types
                     foreach (var dependencyAttribute in dependencyAttributes)
                     {
                         var serviceDescriptor = dependencyAttribute.BuildServiceDescriptor(typeInfo);
@@ -66,9 +65,7 @@ namespace Slamby.Common.DI
         }
 
         // Returns a list of libraries that references the assemblies in <see cref="ReferenceAssemblies"/>.
-        // By default it returns all assemblies that reference any of the primary MVC assemblies
-        // while ignoring MVC assemblies.
-        // Internal for unit testing
+        // By default it returns all assemblies that reference any of the primary Slamby assemblies
         private static IEnumerable<RuntimeLibrary> GetCandidateLibraries(DependencyContext dependencyContext)
         {
             if (ReferenceAssemblies == null)
@@ -95,7 +92,8 @@ namespace Slamby.Common.DI
                 var classification = DependencyClassification.Unknown;
                 if (referenceAssemblies.Contains(library.Name))
                 {
-                    classification = DependencyClassification.MvcReference;
+                    //all Slamby assembly can be a candidate
+                    classification = DependencyClassification.Candidate;
                 }
 
                 return new Dependency(library, classification);
@@ -106,7 +104,7 @@ namespace Slamby.Common.DI
                 Debug.Assert(_dependencies.ContainsKey(dependency));
 
                 var candidateEntry = _dependencies[dependency];
-                if (candidateEntry.Classification != DependencyClassification.Unknown)
+                if (candidateEntry.Classification != DependencyClassification.Unknown) //if the entry is already classified
                 {
                     return candidateEntry.Classification;
                 }
@@ -116,8 +114,7 @@ namespace Slamby.Common.DI
                     foreach (var candidateDependency in candidateEntry.Library.Dependencies)
                     {
                         var dependencyClassification = ComputeClassification(candidateDependency.Name);
-                        if (dependencyClassification == DependencyClassification.Candidate ||
-                            dependencyClassification == DependencyClassification.MvcReference)
+                        if (dependencyClassification == DependencyClassification.Candidate)//if it references a candidate library than it can be also a candidate
                         {
                             classification = DependencyClassification.Candidate;
                             break;
@@ -163,8 +160,7 @@ namespace Slamby.Common.DI
             {
                 Unknown = 0,
                 Candidate = 1,
-                NotCandidate = 2,
-                MvcReference = 3
+                NotCandidate = 2
             }
         }
     }
