@@ -28,6 +28,9 @@ using Microsoft.AspNetCore.Builder;
 using Swashbuckle.Swagger.Model;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
+using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Slamby.API
 {
@@ -61,7 +64,7 @@ namespace Slamby.API
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-                
+
                 // Set up configuration sources.
                 var builder = new ConfigurationBuilder()
                     .SetBasePath(env.ContentRootPath)
@@ -153,7 +156,8 @@ namespace Slamby.API
                 {
                     maxIndexBulkSize = Convert.ToInt32(machineResourceService.Status.TotalMemory * 1024 * 1024 / 2 / 500);
                     maxIndexBulkCount = Convert.ToInt32(machineResourceService.Status.TotalMemory / 12);
-                } else
+                }
+                else
                 {
                     maxIndexBulkSize = 100000;
                     maxIndexBulkCount = 50;
@@ -177,22 +181,37 @@ namespace Slamby.API
             services.Configure<SiteConfig>(sc => sc.Version = Configuration["version"]);
         }
 
+        private async Task<string> GetIp(string hostname)
+             => (await Dns.GetHostEntryAsync(hostname)).AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork).ToString();
+
         private void ConfigureDependencies(IServiceCollection services)
         {
+            //see: https://github.com/aspnet/Hosting/issues/793
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddSingleton(sp => sp.GetService<IOptions<SiteConfig>>().Value);
             services.AddTransient(sp => ElasticClientFactory.GetClient(sp));
 
             //if (SiteConfig.Redis.Enabled)
             {
-                services.AddSingleton<ConnectionMultiplexer>(sp =>
+                var options = ConfigurationOptions.Parse(Configuration["SlambyApi:Redis:Configuration"]);
+                //HACK: https://github.com/dotnet/corefx/issues/8768
+                //this should be removed when https://github.com/dotnet/corefx/issues/11564 is closed
+                var dnsEndPoints = options.EndPoints.OfType<DnsEndPoint>().ToList();
+                foreach(var dnsEndPoint in dnsEndPoints)
                 {
-                    var options = ConfigurationOptions.Parse(Configuration["SlambyApi:Redis:Configuration"]);
-                    if (options.WriteBuffer < 64 * 1024)
-                    {
-                        options.WriteBuffer = 64 * 1024;
-                    }
-                    return ConnectionMultiplexer.Connect(options);
-                });
+                    options.EndPoints.Remove(dnsEndPoint);
+                    options.EndPoints.Add(GetIp(dnsEndPoint.Host).Result, dnsEndPoint.Port);
+                }
+                if (options.WriteBuffer < 64 * 1024)
+                {
+                    options.WriteBuffer = 64 * 1024;
+                }
+                options.ResolveDns = false; //re-resolve dns on re-connect
+                services.AddSingleton(options);
+                
+                services.AddSingleton<ConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(sp.GetService<ConfigurationOptions>()));
+
             }
 
             // Add DependencyAttribute (ScopedDependency, SingletonDependency, TransientDependency) to the class in order to be scanned
@@ -220,7 +239,7 @@ namespace Slamby.API
                 //options.SecurityDefinitions.Add(new KeyValuePair<string, SecurityScheme>("Slamby", new ApiKeyScheme() { Type = "apiKey", In = "header", Name = "api_secret", Description = "Http authentication. Ex: Authorization: Slamby <apisecret>" }));
                 //options.DocumentFilter(new SwaggerSchemaDocumentFilter(new List<string> { "http" }, "localhost:29689", "/"));
                 options.DescribeAllEnumsAsStrings();
-               
+
                 //TODO: check this
                 options.SchemaFilter<RegexSchemaFilter>();
                 options.OperationFilter<ApplySwaggerResponseFilterAttributesOperationFilter>();
@@ -260,7 +279,9 @@ namespace Slamby.API
 
             services.AddDistributedRedisCache(options =>
             {
-                options.Configuration = Configuration["Redis:Configuration"];
+                //HACK: https://github.com/dotnet/corefx/issues/8768
+                //this should be changed back to Configuration["SlambyApi:Redis:Configuration"] when https://github.com/dotnet/corefx/issues/11564 is closed
+                options.Configuration = services.BuildServiceProvider().GetService<ConfigurationOptions>().ToString();
             });
 
             services.AddSession(options =>
@@ -290,13 +311,14 @@ namespace Slamby.API
 
             app.UseRequestSizeLimit();
 
-            if (!string.IsNullOrEmpty(Configuration.GetValue("SlambyApi:Elm:Key", string.Empty))) {
+            if (!string.IsNullOrEmpty(Configuration.GetValue("SlambyApi:Elm:Key", string.Empty)))
+            {
                 app.UseElmSecurity();
                 app.UseElmStyleUrlFix();
                 app.UseElmPage(); // Shows the logs at the specified path
                 app.UseElmCapture(); // Adds the ElmLoggerProvider
             }
-            
+
             app.UseCors(builder => builder
                 .AllowAnyOrigin()
                 .AllowAnyHeader()

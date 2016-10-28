@@ -28,7 +28,7 @@ namespace Slamby.Common.Services
         
         readonly SiteConfig siteConfig;
 
-        public MachineResourceService(ILogger<MachineResourceService> logger, SiteConfig siteConfig, ApplicationEnvironment env,
+        public MachineResourceService(ILogger<MachineResourceService> logger, SiteConfig siteConfig, IHostingEnvironment env,
             IApplicationLifetime applicationLifetime)
         {
             this.siteConfig = siteConfig;
@@ -37,7 +37,7 @@ namespace Slamby.Common.Services
             path = siteConfig.Resources.LogPath;
             if (!Path.IsPathRooted(path))
             {
-                path = Path.GetFullPath(Path.Combine(env.ApplicationBasePath, path));
+                path = Path.GetFullPath(Path.Combine(env.ContentRootPath, path));
             }
 
             logger.LogInformation($"{nameof(MachineResourceService)} using resource path: {path}");
