@@ -37,7 +37,7 @@
     "Microsoft.Extensions.Logging.Debug": "1.0.0",
     "Microsoft.AspNetCore.Diagnostics.Elm": "0.2.0-preview1-final",
     "NEST": "2.4.6",
-    "protobuf-net": "2.1.0-alpha-1",
+    "protobuf-net": "2.1.0",
     "Serilog.Extensions.Logging": "1.2.0",
     "Serilog.Sinks.Literate": "2.0.0",
     "Serilog.Sinks.RollingFile": "2.0.0",

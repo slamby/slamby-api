@@ -24,7 +24,7 @@
     }
   },
   "dependencies": {
-    "protobuf-net": "2.1.0-alpha-1",
+    "protobuf-net": "2.1.0",
     "Elasticsearch.Net": "2.4.6",
     "NEST": "2.4.6",
     "Slamby.Common": "1.0.0-*"
