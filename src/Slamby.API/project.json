@@ -72,6 +72,21 @@
     "exclude": [
       "wwwroot",
       "node_modules"
+    ],
+    "include": [
+      "appsettings.json",
+      "docker-compose.yml",
+      "Dockerfile",
+      ".dockerignore"
     ]
+  },
+  "buildOptions": {
+    "debugType": "portable",
+    "emitEntryPoint": true,
+    "preserveCompilationContext": true,
+    "warningsAsErrors": true
+  },
+  "tooling": {
+    "defaultNamespace": "Slamby.API"
   }
 }
