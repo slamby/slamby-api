@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNet.Http;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using Slamby.API.Helpers;
 using Slamby.API.Models;

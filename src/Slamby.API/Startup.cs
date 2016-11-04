@@ -1,35 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
-using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.FileProviders;
-using Microsoft.AspNet.Hosting;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Http.Features;
-using Microsoft.AspNet.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.OptionsModel;
-using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Serilog;
-using Serilog.Events;
 using Serilog.Sinks.RollingFile;
 using Slamby.API.Filters;
 using Slamby.API.Helpers;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Middlewares;
+using Microsoft.AspNetCore.Hosting;
+using System.Globalization;
+using System.Collections.Generic;
+using System;
 using Slamby.Common.Config;
-using Slamby.Common.DI;
+using System.IO;
 using Slamby.Common.Helpers;
+using Serilog.Events;
+using Serilog;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Slamby.Elastic.Factories;
 using StackExchange.Redis;
-using Swashbuckle.SwaggerGen.Generator;
+using Slamby.Common.DI;
+using Microsoft.AspNetCore.Builder;
+using Swashbuckle.Swagger.Model;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
+using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
+using Newtonsoft.Json.Serialization;
 
 namespace Slamby.API
 {
@@ -51,7 +53,6 @@ namespace Slamby.API
 
         public IConfigurationRoot Configuration { get; set; }
 
-        public IHostingEnvironment HostingEnvironment { get; set; }
 
         public ILoggerFactory LoggerFactory { get; private set; }
 
@@ -59,26 +60,23 @@ namespace Slamby.API
 
         #endregion
 
-        public Startup(IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationEnvironment app)
+        public Startup(IHostingEnvironment env)
         {
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-                
-                HostingEnvironment = env;
-                LoggerFactory = loggerFactory;
 
                 // Set up configuration sources.
                 var builder = new ConfigurationBuilder()
+                    .SetBasePath(env.ContentRootPath)
                     .AddJsonFile("appsettings.json")
                     .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                    .AddJsonFile("project.json")
                     .AddEnvironmentVariables();
 
                 Configuration = builder.Build();
                 Configuration.GetSection("SlambyApi").Bind(SiteConfig);
 
-                StartupLogger(app, env);
+                StartupLogger(env);
             }
             catch (Exception ex)
             {
@@ -88,22 +86,22 @@ namespace Slamby.API
 
         #region Startup
 
-        private void StartupLogger(IApplicationEnvironment env, IHostingEnvironment hostingEnv)
+        private void StartupLogger(IHostingEnvironment env)
         {
             var minimumLevel = Configuration.GetEnumValue("SlambyApi:Serilog:MinimumLevel", LogEventLevel.Debug);
-            var retainedFileCountLimit = Configuration.Get("SlambyApi:Serilog:RetainedFileCountLimit", 7);
+            var retainedFileCountLimit = Configuration.GetValue("SlambyApi:Serilog:RetainedFileCountLimit", 7);
             var output = Configuration["SlambyApi:Serilog:Output"];
 
             var loggerConfiguration = new LoggerConfiguration()
                .MinimumLevel.Is(minimumLevel)
                .Enrich.FromLogContext();
-            if (hostingEnv.IsDevelopment()) loggerConfiguration.WriteTo.LiterateConsole(minimumLevel);
+            if (env.IsDevelopment()) loggerConfiguration.WriteTo.LiterateConsole(minimumLevel);
 
             if (!string.IsNullOrWhiteSpace(output))
             {
                 if (!Path.IsPathRooted(output))
                 {
-                    output = Path.GetFullPath(Path.Combine(env.ApplicationBasePath, output));
+                    output = Path.GetFullPath(Path.Combine(env.ContentRootPath, output));
                 }
 
                 loggerConfiguration.WriteTo.RollingFile(
@@ -123,10 +121,9 @@ namespace Slamby.API
         {
             try
             {
-                if (!string.IsNullOrEmpty(Configuration.Get("SlambyApi:Elm:Key", string.Empty)))
+                if (!string.IsNullOrEmpty(Configuration.GetValue("SlambyApi:Elm:Key", string.Empty)))
                 {
-                    services.AddElm();
-                    services.ConfigureElm(options =>
+                    services.AddElm(options =>
                     {
                         options.Path = new PathString("/elm");
                         options.Filter = (name, level) => level >= LogLevel.Information;
@@ -147,9 +144,9 @@ namespace Slamby.API
 
         private void ConfigureResourceDependentVars(IServiceCollection services)
         {
-            var maxIndexBulkSize = Configuration.Get("SlambyApi:Resources:MaxIndexBulkSize", 0);
-            var maxIndexBulkCount = Configuration.Get("SlambyApi:Resources:MaxIndexBulkCount", 0);
-            var maxSearchBulkCount = Configuration.Get("SlambyApi:Resources:MaxSearchBulkCount", 0);
+            var maxIndexBulkSize = Configuration.GetValue("SlambyApi:Resources:MaxIndexBulkSize", 0);
+            var maxIndexBulkCount = Configuration.GetValue("SlambyApi:Resources:MaxIndexBulkCount", 0);
+            var maxSearchBulkCount = Configuration.GetValue("SlambyApi:Resources:MaxSearchBulkCount", 0);
 
             if (maxIndexBulkSize == 0 || maxIndexBulkCount == 0 || maxSearchBulkCount == 0)
             {
@@ -160,7 +157,8 @@ namespace Slamby.API
                 {
                     maxIndexBulkSize = Convert.ToInt32(machineResourceService.Status.TotalMemory * 1024 * 1024 / 2 / 500);
                     maxIndexBulkCount = Convert.ToInt32(machineResourceService.Status.TotalMemory / 12);
-                } else
+                }
+                else
                 {
                     maxIndexBulkSize = 100000;
                     maxIndexBulkCount = 50;
@@ -184,27 +182,41 @@ namespace Slamby.API
             services.Configure<SiteConfig>(sc => sc.Version = Configuration["version"]);
         }
 
+        private async Task<string> GetIp(string hostname)
+             => (await Dns.GetHostEntryAsync(hostname)).AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork).ToString();
+
         private void ConfigureDependencies(IServiceCollection services)
         {
+            //see: https://github.com/aspnet/Hosting/issues/793
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddSingleton(sp => sp.GetService<IOptions<SiteConfig>>().Value);
             services.AddTransient(sp => ElasticClientFactory.GetClient(sp));
 
             //if (SiteConfig.Redis.Enabled)
             {
-                services.AddSingleton<ConnectionMultiplexer>(sp =>
+                var options = ConfigurationOptions.Parse(Configuration["SlambyApi:Redis:Configuration"]);
+                //HACK: https://github.com/dotnet/corefx/issues/8768
+                //this should be removed when https://github.com/dotnet/corefx/issues/11564 is closed
+                var dnsEndPoints = options.EndPoints.OfType<DnsEndPoint>().ToList();
+                foreach(var dnsEndPoint in dnsEndPoints)
                 {
-                    var options = ConfigurationOptions.Parse(Configuration["SlambyApi:Redis:Configuration"]);
-                    if (options.WriteBuffer < 64 * 1024)
-                    {
-                        options.WriteBuffer = 64 * 1024;
-                    }
-                    return ConnectionMultiplexer.Connect(options);
-                });
+                    options.EndPoints.Remove(dnsEndPoint);
+                    options.EndPoints.Add(GetIp(dnsEndPoint.Host).Result, dnsEndPoint.Port);
+                }
+                if (options.WriteBuffer < 64 * 1024)
+                {
+                    options.WriteBuffer = 64 * 1024;
+                }
+                options.ResolveDns = false; //re-resolve dns on re-connect
+                services.AddSingleton(options);
+                
+                services.AddSingleton<ConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(sp.GetService<ConfigurationOptions>()));
+
             }
 
             // Add DependencyAttribute (ScopedDependency, SingletonDependency, TransientDependency) to the class in order to be scanned
-            services.AddDependencyScanning()
-                .Scan();
+            services.ConfigureAttributedDependencies();
 
             //services.Dump();
         }
@@ -222,11 +234,16 @@ namespace Slamby.API
                     TermsOfService = "None"
                 });
                 //options.OrderActionGroupsBy(new SwaggerGroupNameComparer());
+
                 options.GroupActionsBy(SwaggerHelper.GetActionGroup);
+
                 //options.SecurityDefinitions.Add(new KeyValuePair<string, SecurityScheme>("Slamby", new ApiKeyScheme() { Type = "apiKey", In = "header", Name = "api_secret", Description = "Http authentication. Ex: Authorization: Slamby <apisecret>" }));
                 //options.DocumentFilter(new SwaggerSchemaDocumentFilter(new List<string> { "http" }, "localhost:29689", "/"));
                 options.DescribeAllEnumsAsStrings();
-                options.ModelFilter<RegexModelFilter>();
+
+                //TODO: check this
+                options.SchemaFilter<RegexSchemaFilter>();
+                options.OperationFilter<ApplySwaggerResponseFilterAttributesOperationFilter>();
 
                 var sdkXmlDocumentation = typeof(SDK.Net.ApiClient)
                     .GetTypeInfo()
@@ -245,23 +262,34 @@ namespace Slamby.API
             //{
             //    mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(SdkVersionFilter)));
             //}
-            mvcBuilder.AddMvcOptions(o => o.Filters.Add(new ModelValidationFilter()));
-            mvcBuilder.AddMvcOptions(o => o.Filters.Add(new GlobalExceptionFilter(LoggerFactory, SiteConfig)));
+            mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(ModelValidationFilter)));
+            mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(GlobalExceptionFilter)));
 
             if (SiteConfig.Redis.Enabled)
             {
                 mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(ThrottleActionFilter)));
             }
 
-            mvcBuilder.AddJsonOptions(o => o.SerializerSettings.Converters.Add(new StringEnumConverter()));
+            mvcBuilder.AddJsonOptions(o =>
+            {
+                o.SerializerSettings.Converters.Add(new StringEnumConverter());
+                //HACK: see https://github.com/aspnet/Mvc/issues/4842
+                o.SerializerSettings.ContractResolver = new DefaultContractResolver();
+            });
 
-            services.ConfigureRouting(routeOptions =>
+            services.AddRouting(routeOptions =>
             {
                 routeOptions.AppendTrailingSlash = true;
                 routeOptions.LowercaseUrls = true;
             });
 
-            services.AddCaching();
+            services.AddDistributedRedisCache(options =>
+            {
+                //HACK: https://github.com/dotnet/corefx/issues/8768
+                //this should be changed back to Configuration["SlambyApi:Redis:Configuration"] when https://github.com/dotnet/corefx/issues/11564 is closed
+                options.Configuration = services.BuildServiceProvider().GetService<ConfigurationOptions>().ToString();
+            });
+
             services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -289,13 +317,14 @@ namespace Slamby.API
 
             app.UseRequestSizeLimit();
 
-            if (!string.IsNullOrEmpty(Configuration.Get("SlambyApi:Elm:Key", string.Empty))) {
+            if (!string.IsNullOrEmpty(Configuration.GetValue("SlambyApi:Elm:Key", string.Empty)))
+            {
                 app.UseElmSecurity();
                 app.UseElmStyleUrlFix();
                 app.UseElmPage(); // Shows the logs at the specified path
                 app.UseElmCapture(); // Adds the ElmLoggerProvider
             }
-            
+
             app.UseCors(builder => builder
                 .AllowAnyOrigin()
                 .AllowAnyHeader()
@@ -313,15 +342,15 @@ namespace Slamby.API
             {
                 startupService.Startup();
 
-                app.UseIISPlatformHandler();
 
                 if (env.IsDevelopment())
                 {
-                    app.UseSwaggerGen();
+                    app.UseSwagger();
                     app.UseSwaggerUi("swagger/ui", "/swagger/latest/swagger.json");
                 }
 
                 app.UseGzip();
+
                 app.UseRequestLogger();
 
                 // Set up custom content types - associating file extension to MIME type
@@ -336,7 +365,6 @@ namespace Slamby.API
                 app.UseApiHeaderVersion();
                 app.UseApiHeaderAuthentication();
                 app.UseElapsedTime();
-
                 app.UseMvc();
 
                 app.UseNotFound();
@@ -352,8 +380,5 @@ namespace Slamby.API
                 app.WriteExceptionResponse(logger, ex, "Startup Runtime Error");
             }
         }
-
-        // Entry point for the application.
-        public static void Main(string[] args) => WebApplication.Run<Startup>(args);
     }
 }

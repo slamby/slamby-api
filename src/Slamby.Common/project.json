@@ -2,35 +2,36 @@
   "version": "1.0.0-*",
   "description": "Slamby.Common Class Library",
   "authors": [ "zsolt.illes" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
+  "packOptions": {
+    "repository": {
+      "url": "https://github.com/slamby/slamby-api",
+      "type": "git"
+    },
+    "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+    "owners": [ "Zsolt Illes", "Attila Laszlo" ]
+  },
+  "buildOptions": {
+    "warningsAsErrors": true
+  },
   "frameworks": {
-    "dnxcore50": {
+   "netstandard1.6": {
+      "imports": [
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "NETStandard.Library": "1.6.0"
+      }
     }
   },
   "dependencies": {
-    "FastMember": "1.1.0-beta1",
-    "Microsoft.AspNet.Http.Abstractions": "1.0.0-rc1-final",
-    "Microsoft.AspNet.Mvc.Abstractions": "6.0.0-rc1-final",
-    "Microsoft.AspNet.Mvc.Core": "6.0.0-rc1-final",
-    "Microsoft.CSharp": "4.0.1-beta-23516",
-    "Microsoft.Extensions.DependencyInjection": "1.0.0-rc1-final",
-    "Microsoft.Extensions.Logging": "1.0.0-rc1-final",
-    "Microsoft.Extensions.OptionsModel": "1.0.0-rc1-final",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
-    "NEST": "2.1.1",
-    "NETStandard.Library": "1.5.0-rc3-24015-00",
+    "FastMember": "1.1.0",
+    "Microsoft.AspNetCore.Mvc": "1.0.1",
+    "Microsoft.Extensions.DependencyInjection": "1.0.0",
+    "Microsoft.Extensions.Logging": "1.0.0",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
+    "NEST": "2.4.6",
     "NJsonSchema": "3.3.6061.16591",
     "Slamby.SDK.Net": "1.0.2",
-    "System.Collections": "4.0.11-beta-23516",
-    "System.ComponentModel.Annotations": "4.0.11-beta-23516",
-    "System.Diagnostics.Process": "4.1.0-beta-23516",
-    "System.IO": "4.0.11-beta-23516",
-    "System.IO.FileSystem.DriveInfo": "4.0.0-beta-23516",
-    "System.Linq": "4.0.1-beta-23516",
-    "System.Runtime": "4.0.21-beta-23516",
-    "System.Threading": "4.0.11-beta-23516",
-    "System.Threading.Tasks.Parallel": "4.0.1-beta-23516"
+    "System.IO.FileSystem.DriveInfo": "4.0.0"
   }
 }

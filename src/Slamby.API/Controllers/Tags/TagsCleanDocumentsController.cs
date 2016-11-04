@@ -1,6 +1,6 @@
 ﻿using System.Linq;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Filters;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Services.Interfaces;
@@ -35,7 +35,7 @@ namespace Slamby.API.Controllers
             var tagIds = tagQuery.GetAll().Items.Select(i => i.Id).ToList();
             documentService.CleanDocuments(dataSetSelector.DataSetName, tagIds);
 
-            return new HttpStatusCodeResult(StatusCodes.Status200OK);
+            return new StatusCodeResult(StatusCodes.Status200OK);
         }
     }
 }

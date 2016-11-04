@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using Microsoft.AspNet.Mvc;
-using Microsoft.AspNet.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Slamby.API.Services.Interfaces;
 using Slamby.SDK.Net.Models;
 using static Slamby.API.Resources.GlobalResources;

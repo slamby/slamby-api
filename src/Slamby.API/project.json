@@ -1,68 +1,99 @@
 {
   "version": "1.1.0",
   "description": "Slamby.API ",
-  "authors": [ "Zsolt Illes", "Attila Laszlo" ],
-  "projectUrl": "https://github.com/slamby/slamby-api",
-  "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
-  "compilationOptions": {
-    "emitEntryPoint": true
+  "authors": [
+    "Zsolt Illes",
+    "Attila Laszlo"
+  ],
+  "packOptions": {
+    "repository": {
+      "url": "https://github.com/slamby/slamby-api",
+      "type": "git"
+    },
+    "licenseUrl": "https://raw.githubusercontent.com/slamby/slamby-api/master/LICENSE",
+    "owners": [
+      "Zsolt Illes",
+      "Attila Laszlo"
+    ]
   },
-
   "dependencies": {
-    "Elasticsearch.Net": "2.1.1",
-    "FastMember": "1.1.0-beta1",
-    "Microsoft.AspNet.Cors": "6.0.0-rc1-final",
-    "Microsoft.AspNet.Diagnostics": "1.0.0-rc1-final",
-    "Microsoft.AspNet.Diagnostics.Elm": "1.0.0-rc1-final",
-    "Microsoft.AspNet.IISPlatformHandler": "1.0.0-rc1-final",
-    "Microsoft.AspNet.Mvc": "6.0.0-rc1-final",
-    "Microsoft.AspNet.Mvc.WebApiCompatShim": "6.0.0-rc1-final",
-    "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc1-final",
-    "Microsoft.AspNet.Session": "1.0.0-rc1-final",
-    "Microsoft.AspNet.StaticFiles": "1.0.0-rc1-final",
-    "Microsoft.Extensions.Configuration.FileProviderExtensions": "1.0.0-rc1-final",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc1-final",
-    "Microsoft.Extensions.Logging": "1.0.0-rc1-final",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc1-final",
-    "Microsoft.Extensions.Logging.Debug": "1.0.0-rc1-final",
-    "NEST": "2.1.1",
-    "protobuf-net": "2.1.0-alpha-1",
-    "Serilog.Extensions.Logging": "1.0.0-rc1-final-10092",
-    "Serilog.Sinks.Literate": "2.0.0-beta-21",
-    "Serilog.Sinks.RollingFile": "2.0.0-beta-700",
+    "Elasticsearch.Net": "2.4.6",
+    "FastMember": "1.1.0",
+    "Microsoft.AspNetCore.Diagnostics": "1.0.0",
+    "Microsoft.AspNetCore.Mvc": "1.0.1",
+    "Microsoft.AspNetCore.Cors": "1.0.0",
+    "Microsoft.Extensions.Caching.Redis": "1.1.0-preview1-final",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0",
+    "Microsoft.AspNetCore.Server.IISIntegration": "1.0.0",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.1",
+    "Microsoft.AspNetCore.Authentication.Cookies": "1.0.0",
+    "Microsoft.AspNetCore.StaticFiles": "1.0.0",
+    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0",
+    "Microsoft.Extensions.Configuration.CommandLine": "1.0.0",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.1.0-preview1-final",
+    "Microsoft.Extensions.Logging": "1.0.0",
+    "Microsoft.Extensions.Logging.Console": "1.0.0",
+    "Microsoft.Extensions.Logging.Debug": "1.0.0",
+    "Microsoft.AspNetCore.Diagnostics.Elm": "0.2.0-preview1-final",
+    "NEST": "2.4.6",
+    "protobuf-net": "2.1.0",
+    "Serilog.Extensions.Logging": "1.2.0",
+    "Serilog.Sinks.Literate": "2.0.0",
+    "Serilog.Sinks.RollingFile": "2.0.0",
     "Slamby.Cerebellum": "1.0.0-*",
     "Slamby.Common": "1.0.0-*",
     "Slamby.Elastic": "1.0.0-*",
-    "StackExchange.Redis": "1.1.572-alpha",
-    "Swashbuckle.SwaggerGen": "6.0.0-rc1-slamby",
-    "Swashbuckle.SwaggerUi": "6.0.0-rc1-slamby",
-    "System.IO": "4.0.11-beta-23516",
-    "System.IO.Compression.ZipFile": "4.0.1-beta-23516",
-    "System.Linq": "4.0.1-beta-23516",
-    "System.Linq.Parallel": "4.0.1-beta-23516",
-    "System.Linq.Queryable": "4.0.1-beta-23516",
-    "System.Reflection.Extensions": "4.0.1-beta-23516",
-    "System.Net.Security": "4.0.0-beta-23225",
-    "System.Collections.Immutable": "1.1.37"
+    "StackExchange.Redis.StrongName": "1.1.605",
+    "Swashbuckle.SwaggerGen": "6.0.0-beta902",
+    "Swashbuckle.SwaggerUi": "6.0.0-beta902",
+    "Microsoft.Extensions.Configuration.Binder": "1.1.0-preview1-final",
+    "Microsoft.AspNetCore.Session": "1.0.0"
+
   },
-
-
-  "commands": {
-    "web": "Microsoft.AspNet.Server.Kestrel",
-    "prod-server": "Microsoft.AspNet.Server.Kestrel --server.urls http://*:80"
+  "tools": {
+    "Microsoft.AspNetCore.Razor.Tools": "1.0.0-preview2-final",
+    "Microsoft.AspNetCore.Server.IISIntegration.Tools": "1.0.0-preview2-final",
+    "Microsoft.DotNet.Watcher.Tools": "1.0.0-preview2-final"
   },
-
-  "frameworks": {
-    "dnxcore50": {
+  "runtimeOptions": {
+    "configProperties": {
+      "System.GC.Server": true
     }
   },
-
-  "exclude": [
-    "wwwroot",
-    "node_modules"
-  ],
-  "publishExclude": [
-    "**.user",
-    "**.vspscc"
-  ]
+  "frameworks": {
+    "netcoreapp1.1": {
+      "imports": [
+        "dotnet5.6",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.1.0-preview1-001100-00",
+          "type": "platform"
+        }
+      }
+    }
+  },
+  "publishOptions": {
+    "exclude": [
+      "wwwroot",
+      "node_modules"
+    ],
+    "include": [
+      "appsettings.json",
+      "docker-compose.yml",
+      "Dockerfile",
+      ".dockerignore"
+    ]
+  },
+  "buildOptions": {
+    "debugType": "portable",
+    "emitEntryPoint": true,
+    "preserveCompilationContext": true,
+    "warningsAsErrors": true
+  },
+  "tooling": {
+    "defaultNamespace": "Slamby.API"
+  }
 }

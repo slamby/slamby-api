@@ -209,7 +209,9 @@ namespace Slamby.Elastic.Queries
                     SampleDocument = sampleDynamicDocument,
                     Schema = schema,
                     TagField = tagField,
+#pragma warning disable CS0618 // Type or member is obsolete
                     DBVersion = Common.Constants.DBVersion,
+#pragma warning restore CS0618 // Type or member is obsolete
                     Name = name
                 }
             });

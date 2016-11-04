@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Filters;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Resources;
@@ -34,7 +34,7 @@ namespace Slamby.API.Controllers
         {
             var tags = tagService.GetTagModels(DataSetName, withDetails);
 
-            return new HttpOkObjectResult(tags);
+            return new OkObjectResult(tags);
         }
 
         [HttpGet("{id}", Name = "GetTag")]
@@ -51,7 +51,7 @@ namespace Slamby.API.Controllers
 
             var tag = tagService.GetTagModel(DataSetName, id, withDetails);
 
-            return new HttpOkObjectResult(tag);
+            return new OkObjectResult(tag);
         }
 
         [HttpPost]
@@ -128,7 +128,7 @@ namespace Slamby.API.Controllers
 
             tagService.Update(DataSetName, id, tag);
 
-            return new HttpOkResult();
+            return new OkResult();
         }
 
         // DELETE api/values/5
@@ -155,7 +155,7 @@ namespace Slamby.API.Controllers
 
             tagService.Delete(DataSetName, id, force, cleanDocuments);
 
-            return new HttpOkResult();
+            return new OkResult();
         }
     }
 }

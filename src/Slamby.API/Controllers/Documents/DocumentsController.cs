@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Filters;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Resources;
@@ -40,7 +40,7 @@ namespace Slamby.API.Controllers
                     string.Format(DocumentResources.DocumentWithId_0_DoesNotFound, id));
             }
 
-            return new HttpOkObjectResult(documentElastic.DocumentObject);
+            return new OkObjectResult(documentElastic.DocumentObject);
         }
 
         [HttpPost]
@@ -53,7 +53,7 @@ namespace Slamby.API.Controllers
             var validateResult = documentService.ValidateDocument(DataSetName, document);
             if (validateResult.IsFailure)
             {
-                return HttpBadRequest(ErrorsModel.Create(validateResult.Error));
+                return BadRequest(ErrorsModel.Create(validateResult.Error));
             }
 
             var id = documentService.GetIdValue(DataSetName, document);
@@ -69,7 +69,7 @@ namespace Slamby.API.Controllers
                 return HttpErrorResult(StatusCodes.Status400BadRequest, indexResult.Error);
             }
 
-            return new HttpStatusCodeResult(StatusCodes.Status201Created);
+            return new StatusCodeResult(StatusCodes.Status201Created);
         }
 
         [HttpPut("{id}")]
@@ -89,7 +89,7 @@ namespace Slamby.API.Controllers
             var validateResult = documentService.ValidateUpdateDocument(DataSetName, document);
             if (validateResult.IsFailure)
             {
-                return HttpBadRequest(ErrorsModel.Create(validateResult.Error));
+                return BadRequest(ErrorsModel.Create(validateResult.Error));
             }
 
             var newId = documentService.GetIdValue(DataSetName, document)?? id;
@@ -99,7 +99,7 @@ namespace Slamby.API.Controllers
                 return HttpErrorResult(StatusCodes.Status400BadRequest, updateResult.Error);
             }
             
-            return new HttpOkObjectResult(documentService.Get(DataSetName, newId)?.DocumentObject);
+            return new OkObjectResult(documentService.Get(DataSetName, newId)?.DocumentObject);
         }
 
         /*
@@ -112,7 +112,7 @@ namespace Slamby.API.Controllers
             var documentElastic = docQuery.Get(id);
             if (documentElastic == null)
             {
-                return new HttpStatusCodeResult(StatusCodes.Status404NotFound);
+                return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
             document.ApplyTo(documentElastic.DocumentObject);
             var newId = ObjectAccessor.Create(document)[DataSet.IdField].ToString(); // ez nem jó a nested fields miatt
@@ -136,7 +136,7 @@ namespace Slamby.API.Controllers
                     string.Format(DocumentResources.DocumentWithId_0_DoesNotFound, id));
             }
             documentService.Delete(DataSetName, id);
-            return new HttpStatusCodeResult(StatusCodes.Status200OK);
+            return new StatusCodeResult(StatusCodes.Status200OK);
         }
     }
 }

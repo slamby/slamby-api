@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Helpers.Services;
 using Slamby.Elastic.Models;
 using Slamby.Elastic.Queries;
@@ -44,7 +44,7 @@ namespace Slamby.API.Controllers
                 return service;
             });
 
-            return new HttpOkObjectResult(services);
+            return new OkObjectResult(services);
         }
 
         [HttpGet("{id}", Name = "GetService")]
@@ -56,11 +56,11 @@ namespace Slamby.API.Controllers
             var serviceElastic = serviceQuery.Get(id);
             if (serviceElastic == null)
             {
-                return new HttpStatusCodeResult(StatusCodes.Status404NotFound);
+                return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
             var service = serviceElastic.ToServiceModel<Service>();
             service.ActualProcessId = serviceElastic.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
-            return new HttpOkObjectResult(service);
+            return new OkObjectResult(service);
         }
 
         [HttpPost]
@@ -71,15 +71,15 @@ namespace Slamby.API.Controllers
         {
             if (!string.IsNullOrEmpty(service.Id))
             {
-                return new HttpStatusCodeResult(StatusCodes.Status400BadRequest);
+                return new StatusCodeResult(StatusCodes.Status400BadRequest);
             }
             if (string.IsNullOrEmpty(service.Name))
             {
-                return new HttpStatusCodeResult(StatusCodes.Status400BadRequest);
+                return new StatusCodeResult(StatusCodes.Status400BadRequest);
             }
             if (!Enum.IsDefined(typeof(ServiceTypeEnum), service.Type))
             {
-                return new HttpStatusCodeResult(StatusCodes.Status400BadRequest);
+                return new StatusCodeResult(StatusCodes.Status400BadRequest);
             }
 
             var serviceElastic = ServiceElastic.Create(service.Name, service.Type, service.Alias, service.Description);
@@ -114,7 +114,7 @@ namespace Slamby.API.Controllers
             var serviceElastic = serviceQuery.Get(id);
             if (serviceElastic == null)
             {
-                return new HttpStatusCodeResult(StatusCodes.Status404NotFound);
+                return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
 
             if (!string.IsNullOrEmpty(service.Name))
@@ -135,7 +135,7 @@ namespace Slamby.API.Controllers
 
             GlobalStore.ServiceAliases.Set(serviceElastic.Alias, serviceElastic.Id);
 
-            return new HttpStatusCodeResult(StatusCodes.Status200OK);
+            return new StatusCodeResult(StatusCodes.Status200OK);
         }
 
         [HttpDelete("{id}")]
@@ -147,7 +147,7 @@ namespace Slamby.API.Controllers
             var service = serviceQuery.Get(id);
             if (service == null)
             {
-                return new HttpStatusCodeResult(StatusCodes.Status404NotFound);
+                return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
 
             switch (service.Type)
@@ -173,7 +173,7 @@ namespace Slamby.API.Controllers
                 processQuery.Delete(service.ProcessIdList);
             }
 
-            return new HttpStatusCodeResult(StatusCodes.Status200OK);
+            return new StatusCodeResult(StatusCodes.Status200OK);
         }
     }
 }

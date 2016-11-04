@@ -1,6 +1,6 @@
 ﻿using System.Linq;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Filters;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Resources;
@@ -44,7 +44,7 @@ namespace Slamby.API.Controllers
             {
                 if (!string.IsNullOrWhiteSpace(scrollId))
                 {
-                    return new HttpOkObjectResult(documentService.GetScrolled(dataSetName, scrollId));
+                    return new OkObjectResult(documentService.GetScrolled(dataSetName, scrollId));
                 }
 
                 if (!string.IsNullOrEmpty(filterSettings.Order?.OrderByField))
@@ -75,7 +75,7 @@ namespace Slamby.API.Controllers
                         filterSettings?.Order?.OrderDirection == OrderDirectionEnum.Desc,
                         filterSettings?.FieldList);
 
-                return new HttpOkObjectResult(paginatedList);
+                return new OkObjectResult(paginatedList);
             }
             catch (ElasticSearchException ex) 
                 when (ex.ServerError.Error.Type == "search_phase_execution_exception" &&

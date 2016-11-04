@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Resources;
@@ -35,7 +35,7 @@ namespace Slamby.API.Controllers
         {
             var dataSets = dataSetService.Get();
 
-            return new HttpOkObjectResult(dataSets);
+            return new OkObjectResult(dataSets);
         }
 
         [HttpGet("{name}")]
@@ -57,7 +57,7 @@ namespace Slamby.API.Controllers
 
             var dataSet = dataSetService.Get(name);
 
-            return new HttpOkObjectResult(dataSet);
+            return new OkObjectResult(dataSet);
         }
 
         [HttpPost]
@@ -82,18 +82,18 @@ namespace Slamby.API.Controllers
 
             if (dataSet.SampleDocument == null)
             {
-                return HttpBadRequest(ErrorsModel.Create(DataSetResources.SampleDocumentIsEmpty));
+                return BadRequest(ErrorsModel.Create(DataSetResources.SampleDocumentIsEmpty));
             }
 
             var validateResult = documentService.ValidateSampleDocument(dataSet);
             if (validateResult.IsFailure)
             {
-                return HttpBadRequest(ErrorsModel.Create(validateResult.Error));
+                return BadRequest(ErrorsModel.Create(validateResult.Error));
             }
 
             dataSetService.Create(dataSet, withSchema: false);
 
-            return new HttpStatusCodeResult(StatusCodes.Status201Created);
+            return new StatusCodeResult(StatusCodes.Status201Created);
         }
 
         [HttpPost("Schema")]
@@ -118,13 +118,13 @@ namespace Slamby.API.Controllers
 
             if (dataSet.Schema == null)
             {
-                return HttpBadRequest(ErrorsModel.Create(DataSetResources.SchemaIsEmpty));
+                return BadRequest(ErrorsModel.Create(DataSetResources.SchemaIsEmpty));
             }
 
             var validateResult = jsonValidator.Validate(dataSet.Schema);
             if (validateResult.Any())
             {
-                return HttpBadRequest(ErrorsModel.Create(validateResult.Select(error =>
+                return BadRequest(ErrorsModel.Create(validateResult.Select(error =>
                     string.Format(DocumentResources.JsonSchemaValidationError_0, error)
                 )));
             }
@@ -132,12 +132,12 @@ namespace Slamby.API.Controllers
             var validateSchemaResult = documentService.ValidateSchema(dataSet);
             if (validateSchemaResult.IsFailure)
             {
-                return HttpBadRequest(ErrorsModel.Create(validateSchemaResult.Error));
+                return BadRequest(ErrorsModel.Create(validateSchemaResult.Error));
             }
 
             dataSetService.Create(dataSet, withSchema: true);
 
-            return new HttpStatusCodeResult(StatusCodes.Status201Created);
+            return new StatusCodeResult(StatusCodes.Status201Created);
         }
 
         [HttpPut("{existingName}")]
@@ -157,7 +157,7 @@ namespace Slamby.API.Controllers
 
             if (string.CompareOrdinal(existingName, dataSetUpdate.Name) == 0)
             {
-                return new HttpStatusCodeResult(StatusCodes.Status304NotModified);
+                return new StatusCodeResult(StatusCodes.Status304NotModified);
             }
 
             if (!dataSetService.IsExists(existingName))
@@ -174,7 +174,7 @@ namespace Slamby.API.Controllers
 
             dataSetService.Update(existingName, dataSetUpdate.Name);
 
-            return new HttpStatusCodeResult(StatusCodes.Status200OK);
+            return new StatusCodeResult(StatusCodes.Status200OK);
         }
 
         // DELETE api/values/5
@@ -203,7 +203,7 @@ namespace Slamby.API.Controllers
 
             dataSetService.Delete(name);
 
-            return new HttpStatusCodeResult(StatusCodes.Status200OK);
+            return new StatusCodeResult(StatusCodes.Status200OK);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Slamby.Common.Helpers
         public static T GetEnumValue<T>(this IConfigurationRoot configuration, string key, T defaultValue) where T: struct
         {
             T result;
-            return Enum.TryParse(configuration.Get<string>(key), out result) ? result : defaultValue;
+            return Enum.TryParse(configuration[key], out result) ? result : defaultValue;
         }
     }
 }

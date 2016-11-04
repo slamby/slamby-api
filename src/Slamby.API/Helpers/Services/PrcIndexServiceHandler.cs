@@ -96,7 +96,7 @@ namespace Slamby.API.Helpers.Services
                         return;
                     }
 
-                    logger.LogVerbose($"{logPrefix} preparing Tag: `{tagId}`");
+                    logger.LogTrace($"{logPrefix} preparing Tag: `{tagId}`");
 
                     var globalSubset = GlobalStore.ActivatedPrcs.Get(prcSettings.ServiceId).PrcSubsets[tagId];
                     if (globalSubset.WordsWithOccurences == null)
@@ -127,7 +127,7 @@ namespace Slamby.API.Helpers.Services
 
                         try
                         {
-                            logger.LogVerbose($"{logPrefix} preparing Document: `{documentId}`/`{tagId}`");
+                            logger.LogTrace($"{logPrefix} preparing Document: `{documentId}`/`{tagId}`");
 
                             // kiszámoljuk az aktuális doksi base dictionary - jét
                             var scorer = GetScorer(globalSubset, wwoDocuments[documentId], cleanedTextDocuments[documentId], GlobalStore.ActivatedPrcs.Get(prcSettings.ServiceId).PrcScorers[tagId]);
@@ -157,7 +157,7 @@ namespace Slamby.API.Helpers.Services
                         }
                         finally
                         {
-                            logger.LogVerbose($"{logPrefix} prepared Document: `{documentId}`/`{tagId}`");
+                            logger.LogTrace($"{logPrefix} prepared Document: `{documentId}`/`{tagId}`");
 
                             allDocProgress.Step();
                             var value = docProgress.Step();
@@ -168,8 +168,8 @@ namespace Slamby.API.Helpers.Services
                                     processHandler.Changed(processId, allDocProgress.Percent.Round(6));
                                 }
 
-                                logger.LogVerbose($"{logPrefix} progress {docProgress} in `{tagId}`");
-                                logger.LogVerbose($"{logPrefix} total progress is {allDocProgress}");
+                                logger.LogTrace($"{logPrefix} progress {docProgress} in `{tagId}`");
+                                logger.LogTrace($"{logPrefix} total progress is {allDocProgress}");
                             }
                             if (value % 1000 == 0)
                             {
@@ -269,7 +269,7 @@ namespace Slamby.API.Helpers.Services
                         }
                         try
                         {
-                            logger.LogVerbose($"{logPrefix} preparing Document: `{documentId}`/`{tagId}`");
+                            logger.LogTrace($"{logPrefix} preparing Document: `{documentId}`/`{tagId}`");
 
                             var scorer = GetScorer(globalSubset, wwoDocuments[documentId], cleanedTextDocuments[documentId], GlobalStore.ActivatedPrcs.Get(prcSettings.ServiceId).PrcScorers[tagId]);
                             if (scorer == null)
@@ -341,7 +341,7 @@ namespace Slamby.API.Helpers.Services
                         }
                         finally
                         {
-                            logger.LogVerbose($"{logPrefix} prepared Document: `{documentId}`/`{tagId}`");
+                            logger.LogTrace($"{logPrefix} prepared Document: `{documentId}`/`{tagId}`");
                         }
                     });
 

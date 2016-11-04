@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Helpers;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Resources;
@@ -36,7 +36,7 @@ namespace Slamby.API.Controllers
                 ? processQuery.GetAll() 
                 : processQuery.GetActives();
 
-            return new HttpOkObjectResult(processes.Select(ModelHelper.ToProcessModel));
+            return new OkObjectResult(processes.Select(ModelHelper.ToProcessModel));
         }
 
         [HttpGet("{id}")]
@@ -52,7 +52,7 @@ namespace Slamby.API.Controllers
                     string.Format(ProcessResources.ProcessWithId_0_DoesNotFound, id));
             }
 
-            return new HttpOkObjectResult(process.ToProcessModel());
+            return new OkObjectResult(process.ToProcessModel());
         }
 
         [HttpPost("{id}/Cancel")]
@@ -74,7 +74,7 @@ namespace Slamby.API.Controllers
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ProcessResources.InvalidStatusOnlyProcessesWithInProgressCanBeCancelled);
             }
             processHandler.Cancel(process.Id);
-            return new HttpStatusCodeResult(StatusCodes.Status202Accepted);
+            return new StatusCodeResult(StatusCodes.Status202Accepted);
         }
     }
 }
