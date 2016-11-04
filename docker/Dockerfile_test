@@ -1,4 +1,4 @@
-FROM aspnet/aspnet-docker:1.1.0-preview1
+FROM microsoft/aspnetcore-build:1.1.0-preview1
 
 COPY ./src /app_code
 WORKDIR /app_code
