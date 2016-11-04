@@ -71,6 +71,7 @@ namespace Slamby.API
                     .SetBasePath(env.ContentRootPath)
                     .AddJsonFile("appsettings.json")
                     .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                    .AddJsonFile("project.json")
                     .AddEnvironmentVariables();
 
                 Configuration = builder.Build();
