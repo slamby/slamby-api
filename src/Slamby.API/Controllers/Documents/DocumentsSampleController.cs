@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Filters;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Resources;
@@ -50,7 +50,7 @@ namespace Slamby.API.Controllers
                 ? documentService.Sample(dataSetName, sampleSettings.Id, sampleSettings.TagIdList, sampleSettings.Size, sampleSettings?.FieldList) 
                 : documentService.Sample(dataSetName, sampleSettings.Id, sampleSettings.TagIdList, sampleSettings.Percent, sampleSettings?.FieldList);
 
-            return new HttpOkObjectResult(results);
+            return new OkObjectResult(results);
         }
     }
 }

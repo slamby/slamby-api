@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Helpers;
 using Slamby.API.Helpers.Services;
 using Slamby.API.Helpers.Swashbuckle;
@@ -53,7 +53,7 @@ namespace Slamby.API.Controllers
             var service = serviceQuery.Get(id);
             if (service == null)
             {
-                return new HttpStatusCodeResult(StatusCodes.Status404NotFound);
+                return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
             if (service.Type != (int)ServiceTypeEnum.Classifier)
             {
@@ -93,7 +93,7 @@ namespace Slamby.API.Controllers
             respService.ActivateSettings = activateSettings;
             respService.PrepareSettings = prepareSettings;
 
-            return new HttpOkObjectResult(respService);
+            return new OkObjectResult(respService);
         }
 
         [HttpPost("{id}/Prepare")]
@@ -291,7 +291,7 @@ namespace Slamby.API.Controllers
             service.Status = (int)ServiceStatusEnum.Prepared;
             serviceQuery.Update(service.Id, service);
 
-            return new HttpOkResult();
+            return new OkResult();
         }
 
         [HttpPost("{id}/Recommend")]
@@ -346,7 +346,7 @@ namespace Slamby.API.Controllers
                 Tag = request.NeedTagInResult ? GlobalStore.ActivatedClassifiers.Get(id).ClassifiersTags[r.Key] : null,
                 IsEmphasized = request.UseEmphasizing && emphasizedCategoriesDictionary.ContainsKey(r.Key)
             });
-            return new HttpOkObjectResult(results);
+            return new OkObjectResult(results);
         }
 
         [HttpPost("{id}/ExportDictionaries")]

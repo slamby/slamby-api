@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Helpers;
 using Slamby.API.Helpers.Services;
 using Slamby.API.Helpers.Swashbuckle;
@@ -61,7 +61,7 @@ namespace Slamby.API.Controllers.Services
             var service = serviceQuery.Get(id);
             if (service == null)
             {
-                return new HttpStatusCodeResult(StatusCodes.Status404NotFound);
+                return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
             if (service.Type != (int)ServiceTypeEnum.Prc)
             {
@@ -112,7 +112,7 @@ namespace Slamby.API.Controllers.Services
             respService.PrepareSettings = prepareSettings;
             respService.IndexSettings = indexSettings;
 
-            return new HttpOkObjectResult(respService);
+            return new OkObjectResult(respService);
         }
 
         [HttpPost("{id}/Prepare")]
@@ -273,7 +273,7 @@ namespace Slamby.API.Controllers.Services
             service.Status = (int)ServiceStatusEnum.Prepared;
             serviceQuery.Update(service.Id, service);
 
-            return new HttpOkResult();
+            return new OkResult();
         }
 
         [HttpPost("{id}/Keywords")]
@@ -325,7 +325,7 @@ namespace Slamby.API.Controllers.Services
                 var avg = baseDic.Sum(d => d.Value) / baseDic.Count;
                 baseDic.RemoveAll(d => d.Value < avg);
             }
-            return new HttpOkObjectResult(baseDic.Select(d => new PrcKeywordsResult { Word = d.Key, Score = d.Value }));
+            return new OkObjectResult(baseDic.Select(d => new PrcKeywordsResult { Word = d.Key, Score = d.Value }));
         }
 
         [HttpPost("{id}/Recommend")]
@@ -335,7 +335,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status406NotAcceptable)]
         public IActionResult Recommend(string id, [FromBody]PrcRecommendationRequest request)
         {
-            if (request == null) return new HttpStatusCodeResult(StatusCodes.Status400BadRequest);
+            if (request == null) return new StatusCodeResult(StatusCodes.Status400BadRequest);
             // If Id is Alias, translate to Id
             if (GlobalStore.ServiceAliases.IsExist(id))
             {
@@ -374,7 +374,7 @@ namespace Slamby.API.Controllers.Services
                     allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
                 }
                 var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
-                if (resultsList.Count == 0) return new HttpOkObjectResult(new List<PrcRecommendationResult>());
+                if (resultsList.Count == 0) return new OkObjectResult(new List<PrcRecommendationResult>());
                 tagId = resultsList.First().Key;
             }
             
@@ -421,7 +421,7 @@ namespace Slamby.API.Controllers.Services
 
             if (baseScore == 0 || globalScore == 0)
             {
-                return new HttpOkObjectResult(results);
+                return new OkObjectResult(results);
             }
 
             var query = request.Filter != null ? request.Filter.Query : string.Empty;
@@ -500,7 +500,7 @@ namespace Slamby.API.Controllers.Services
                 ? resultDic.Select(r => documentElastics.First(d => d.Id == r.Key)).ToDictionary(d => d.Id, d => d) 
                 : null;
 
-            return new HttpOkObjectResult(resultDic.Select(kvp => new PrcRecommendationResult {
+            return new OkObjectResult(resultDic.Select(kvp => new PrcRecommendationResult {
                 DocumentId = kvp.Key,
                 Score = kvp.Value,
                 Document = request.NeedDocumentInResult ? docsDic[kvp.Key].DocumentObject : null
@@ -621,7 +621,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         public IActionResult RecommendById(string id, [FromBody]PrcRecommendationByIdRequest request)
         {
-            if (request == null) return new HttpStatusCodeResult(StatusCodes.Status400BadRequest);
+            if (request == null) return new StatusCodeResult(StatusCodes.Status400BadRequest);
             // If Id is Alias, translate to Id
             if (GlobalStore.ServiceAliases.IsExist(id))
             {
@@ -640,7 +640,7 @@ namespace Slamby.API.Controllers.Services
             var prcSettings = GlobalStore.ActivatedPrcs.Get(id).PrcsSettings;
             var result = prcIndexHandler.RecommendById(id, prcSettings, request);
 
-            return new HttpOkObjectResult(result);
+            return new OkObjectResult(result);
         }
 
         [HttpPost("{id}/ExportDictionaries")]

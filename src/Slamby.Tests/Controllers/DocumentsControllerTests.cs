@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Slamby.API.Controllers;
 using Slamby.API.Models;
@@ -63,8 +63,8 @@ namespace Slamby.Tests.Controllers
             var response = controller.Get("found");
 
             // Assert
-            Assert.IsType<HttpOkObjectResult>(response);
-            Assert.Equal(document, (response as HttpOkObjectResult).Value);
+            Assert.IsType<OkObjectResult>(response);
+            Assert.Equal(document, (response as OkObjectResult).Value);
         }
     }
 }

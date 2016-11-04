@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Logging;
 using NJsonSchema;
 using NJsonSchema.Validation;
 using Slamby.Common.DI;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Slamby.Common.Services
 {

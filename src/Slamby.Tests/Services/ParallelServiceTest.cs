@@ -1,11 +1,11 @@
 ﻿using System;
 using FluentAssertions;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Server.Kestrel.Http;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using Slamby.Common.Config;
 using Slamby.Common.Services;
 using Xunit;
+using Microsoft.AspNetCore.Server.Kestrel.Internal.Http;
 
 namespace Slamby.Tests
 {

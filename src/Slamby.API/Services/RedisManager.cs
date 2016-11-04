@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.OptionsModel;
 using MoreLinq;
 using Slamby.Common.Config;
 using Slamby.Common.DI;
