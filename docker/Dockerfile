@@ -1,13 +1,13 @@
-FROM dockerhub.slamby.com/slambybase:1
+FROM microsoft/aspnetcore-build:1.1.0-preview1
 
 COPY ./src /app_code
 
 WORKDIR /app_code
-RUN ["dnu", "restore","--runtime=ubuntu.14.04-x64"]
+RUN ["dotnet", "restore"]
 
 WORKDIR /app_code/Slamby.API
 
-RUN ["dnu", "publish", "--out", "/app", "--configuration",  "Release", "--no-source"]
+RUN ["dotnet", "publish", "--output", "/app", "--configuration",  "Release"]
 
 WORKDIR /app
 
@@ -16,4 +16,4 @@ RUN ["rm", "-r", "/app_code"]
 COPY ./scripts /app/scripts
 RUN chmod +x /app/scripts/*.sh
 
-CMD /app/scripts/start_resources.sh && /app/approot/prod-server
+CMD /app/scripts/start_resources.sh && dotnet /app/Slamby.API.dll
