@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Linq;
-using Microsoft.AspNet.Http;
 
 namespace Slamby.Common.Helpers
 {

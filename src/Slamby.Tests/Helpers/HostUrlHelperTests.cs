@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNet.Http;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using Slamby.API.Helpers;
 using Xunit;

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Resources;
 using Slamby.Common.Helpers;
@@ -32,7 +32,7 @@ namespace Slamby.API.Controllers
         {
             if (fileParser?.Content == null)
             {
-                return HttpBadRequest(
+                return BadRequest(
                     ErrorsModel.Create(
                         string.Format(GlobalResources.TheArgumentCannotBeNull_0, nameof(FileParser.Content))
                         ));
@@ -41,7 +41,7 @@ namespace Slamby.API.Controllers
             var content = fileParser.Content.CleanBase64();
             if (!content.IsBase64())
             {
-                return HttpBadRequest(
+                return BadRequest(
                     ErrorsModel.Create(
                         string.Format(GlobalResources.TheArgument_0_IsNot_1_Type, nameof(FileParser.Content), "base64")
                         ));

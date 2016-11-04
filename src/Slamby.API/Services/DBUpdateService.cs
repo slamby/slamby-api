@@ -143,21 +143,31 @@ namespace Slamby.API.Services
 
                 var propertiesElastic = hits[indexName].Source;
 
+#pragma warning disable CS0618 // Type or member is obsolete
                 if (propertiesElastic.DBVersion < Constants.DBVersion)
+#pragma warning restore CS0618 // Type or member is obsolete
                 {
                     logger.LogInformation("Elasticsearch database is not at the latest version");
 
                     // Update from 1 -> 2
+#pragma warning disable CS0618 // Type or member is obsolete
                     if (propertiesElastic.DBVersion == 1)
+#pragma warning restore CS0618 // Type or member is obsolete
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         logger.LogInformation($"Updating from version {propertiesElastic.DBVersion}...");
+#pragma warning restore CS0618 // Type or member is obsolete
                         propertiesElastic.Name = string.Empty;
+#pragma warning disable CS0618 // Type or member is obsolete
                         propertiesElastic.DBVersion = 2;
+#pragma warning restore CS0618 // Type or member is obsolete
 
                         elasticClient.Index(propertiesElastic, desc => desc.Id(hits[indexName].Id));
                         elasticClient.Flush(indexName);
 
+#pragma warning disable CS0618 // Type or member is obsolete
                         logger.LogInformation($"Updated to version {propertiesElastic.DBVersion} successfully");
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                 }
             }
