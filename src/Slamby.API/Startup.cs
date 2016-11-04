@@ -1,55 +1,41 @@
-﻿using System.Linq;
+﻿using System;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Serilog.Sinks.RollingFile;
+using Newtonsoft.Json.Serialization;
+using Serilog;
+using Serilog.Events;
 using Slamby.API.Filters;
 using Slamby.API.Helpers;
 using Slamby.API.Helpers.Swashbuckle;
 using Slamby.API.Middlewares;
-using Microsoft.AspNetCore.Hosting;
-using System.Globalization;
-using System.Collections.Generic;
-using System;
 using Slamby.Common.Config;
-using System.IO;
+using Slamby.Common.DI;
 using Slamby.Common.Helpers;
-using Serilog.Events;
-using Serilog;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using Slamby.Elastic.Factories;
 using StackExchange.Redis;
-using Slamby.Common.DI;
-using Microsoft.AspNetCore.Builder;
 using Swashbuckle.Swagger.Model;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.FileProviders;
-using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
-using Newtonsoft.Json.Serialization;
 
 namespace Slamby.API
 {
     public class Startup
     {
         #region Local variables 
-
-        /// <summary>
-        /// https://blog.kloud.com.au/2016/03/23/aspnet-core-tips-and-tricks-global-exception-handling/
-        /// </summary>
-        private const string ExceptionsOnStartup = "Startup";
-        private const string ExceptionsOnConfigureServices = "ConfigureServices";
-
-        private readonly Dictionary<string, List<Exception>> Exceptions = new Dictionary<string, List<Exception>>
-                                   {
-                                       { ExceptionsOnStartup, new List<Exception>() },
-                                       { ExceptionsOnConfigureServices, new List<Exception>() },
-                                   };
 
         public IConfigurationRoot Configuration { get; set; }
 
@@ -62,27 +48,20 @@ namespace Slamby.API
 
         public Startup(IHostingEnvironment env)
         {
-            try
-            {
-                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
-                // Set up configuration sources.
-                var builder = new ConfigurationBuilder()
-                    .SetBasePath(env.ContentRootPath)
-                    .AddJsonFile("appsettings.json")
-                    .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                    .AddJsonFile("project.json")
-                    .AddEnvironmentVariables();
+            // Set up configuration sources.
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json")
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddJsonFile("project.json")
+                .AddEnvironmentVariables();
 
-                Configuration = builder.Build();
-                Configuration.GetSection("SlambyApi").Bind(SiteConfig);
+            Configuration = builder.Build();
+            Configuration.GetSection("SlambyApi").Bind(SiteConfig);
 
-                StartupLogger(env);
-            }
-            catch (Exception ex)
-            {
-                Exceptions[ExceptionsOnStartup].Add(ex);
-            }
+            StartupLogger(env);
         }
 
         #region Startup
@@ -139,35 +118,8 @@ namespace Slamby.API
             }
             catch (Exception ex)
             {
-                Exceptions[ExceptionsOnConfigureServices].Add(ex);
-            }
-        }
-
-        private void ConfigureResourceDependentVars(IServiceCollection services)
-        {
-            var maxIndexBulkSize = Configuration.GetValue("SlambyApi:Resources:MaxIndexBulkSize", 0);
-            var maxIndexBulkCount = Configuration.GetValue("SlambyApi:Resources:MaxIndexBulkCount", 0);
-            var maxSearchBulkCount = Configuration.GetValue("SlambyApi:Resources:MaxSearchBulkCount", 0);
-
-            if (maxIndexBulkSize == 0 || maxIndexBulkCount == 0 || maxSearchBulkCount == 0)
-            {
-                var machineResourceService = services.BuildServiceProvider().GetService<Common.Services.MachineResourceService>();
-                machineResourceService.UpdateResourcesManually();
-
-                if (machineResourceService.Status.TotalMemory > 0)
-                {
-                    maxIndexBulkSize = Convert.ToInt32(machineResourceService.Status.TotalMemory * 1024 * 1024 / 2 / 500);
-                    maxIndexBulkCount = Convert.ToInt32(machineResourceService.Status.TotalMemory / 12);
-                }
-                else
-                {
-                    maxIndexBulkSize = 100000;
-                    maxIndexBulkCount = 50;
-                }
-
-                services.Configure<SiteConfig>(sc => sc.Resources.MaxIndexBulkSize = maxIndexBulkSize);
-                services.Configure<SiteConfig>(sc => sc.Resources.MaxIndexBulkCount = maxIndexBulkCount);
-                services.Configure<SiteConfig>(sc => sc.Resources.MaxSearchBulkCount = maxIndexBulkCount);
+                Log.Logger.Fatal(ex, "Fatal error occured at ConfigureServices");
+                throw;
             }
         }
 
@@ -194,7 +146,9 @@ namespace Slamby.API
             services.AddSingleton(sp => sp.GetService<IOptions<SiteConfig>>().Value);
             services.AddTransient(sp => ElasticClientFactory.GetClient(sp));
 
-            //if (SiteConfig.Redis.Enabled)
+            // Add DependencyAttribute (ScopedDependency, SingletonDependency, TransientDependency) to the class in order to be scanned
+            services.ConfigureAttributedDependencies();
+
             {
                 var options = ConfigurationOptions.Parse(Configuration["SlambyApi:Redis:Configuration"]);
                 //HACK: https://github.com/dotnet/corefx/issues/8768
@@ -213,13 +167,7 @@ namespace Slamby.API
                 services.AddSingleton(options);
                 
                 services.AddSingleton<ConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(sp.GetService<ConfigurationOptions>()));
-
             }
-
-            // Add DependencyAttribute (ScopedDependency, SingletonDependency, TransientDependency) to the class in order to be scanned
-            services.ConfigureAttributedDependencies();
-
-            //services.Dump();
         }
 
         private void ConfigureSwagger(IServiceCollection services)
@@ -300,6 +248,34 @@ namespace Slamby.API
             services.AddCors();
         }
 
+        private void ConfigureResourceDependentVars(IServiceCollection services)
+        {
+            var maxIndexBulkSize = Configuration.GetValue("SlambyApi:Resources:MaxIndexBulkSize", 0);
+            var maxIndexBulkCount = Configuration.GetValue("SlambyApi:Resources:MaxIndexBulkCount", 0);
+            var maxSearchBulkCount = Configuration.GetValue("SlambyApi:Resources:MaxSearchBulkCount", 0);
+
+            if (maxIndexBulkSize == 0 || maxIndexBulkCount == 0 || maxSearchBulkCount == 0)
+            {
+                var machineResourceService = services.BuildServiceProvider().GetService<Common.Services.MachineResourceService>();
+                machineResourceService.UpdateResourcesManually();
+
+                if (machineResourceService.Status.TotalMemory > 0)
+                {
+                    maxIndexBulkSize = Convert.ToInt32(machineResourceService.Status.TotalMemory * 1024 * 1024 / 2 / 500);
+                    maxIndexBulkCount = Convert.ToInt32(machineResourceService.Status.TotalMemory / 12);
+                }
+                else
+                {
+                    maxIndexBulkSize = 100000;
+                    maxIndexBulkCount = 50;
+                }
+
+                services.Configure<SiteConfig>(sc => sc.Resources.MaxIndexBulkSize = maxIndexBulkSize);
+                services.Configure<SiteConfig>(sc => sc.Resources.MaxIndexBulkCount = maxIndexBulkCount);
+                services.Configure<SiteConfig>(sc => sc.Resources.MaxSearchBulkCount = maxIndexBulkCount);
+            }
+        }
+
         #endregion
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -332,12 +308,6 @@ namespace Slamby.API
                 .AllowAnyMethod());
 
             var logger = loggerFactory.CreateLogger<Startup>();
-
-            if (Exceptions.Any(p => p.Value.Any()))
-            {
-                app.WriteExceptionsResponse(logger, Exceptions, "Startup Error");
-                return;
-            }
 
             try
             {
