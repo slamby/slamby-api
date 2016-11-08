@@ -46,6 +46,8 @@ namespace Slamby.API
 
         #endregion
 
+        private IHostingEnvironment CurrentEnvironment { get; set; }
+
         public Startup(IHostingEnvironment env)
         {
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
@@ -62,6 +64,8 @@ namespace Slamby.API
             Configuration.GetSection("SlambyApi").Bind(SiteConfig);
 
             StartupLogger(env);
+
+            CurrentEnvironment = env;
         }
 
         #region Startup
@@ -111,7 +115,7 @@ namespace Slamby.API
                 }
 
                 ConfigureMvc(services);
-                ConfigureSwagger(services);
+                if (CurrentEnvironment.IsDevelopment()) ConfigureSwagger(services);
                 ConfigureOptions(services);
                 ConfigureDependencies(services);
                 ConfigureResourceDependentVars(services);

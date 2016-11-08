@@ -76,12 +76,13 @@
   },
   "publishOptions": {
     "exclude": [
-      "wwwroot",
       "node_modules"
     ],
     "include": [
+      "wwwroot",
       "appsettings.json",
       "appsettings.*.json",
+      "project.json",
       "docker-compose.yml",
       "Dockerfile",
       ".dockerignore"
