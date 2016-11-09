@@ -9,11 +9,9 @@ namespace Slamby.API.Controllers
     public class SetupController : Controller
     {
         readonly SecretManager secretManager;
-        readonly SiteConfig siteConfig;
 
-        public SetupController(SecretManager secretManager, SiteConfig siteConfig)
+        public SetupController(SecretManager secretManager)
         {
-            this.siteConfig = siteConfig;
             this.secretManager = secretManager;
         }
         
@@ -22,7 +20,6 @@ namespace Slamby.API.Controllers
         {
             var model = new SetupModel()
             {
-                Version = siteConfig.Version,
                 Secret = string.Empty,
                 SecretMinLength = SecretManager.SecretMinLength,
                 SecretMaxLength = SecretManager.SecretMaxLength

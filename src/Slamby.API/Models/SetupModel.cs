@@ -2,8 +2,6 @@
 {
     public class SetupModel
     {
-        public string Version { get; set; }
-
         public string Secret { get; set; }
 
         public int SecretMinLength { get; set; }

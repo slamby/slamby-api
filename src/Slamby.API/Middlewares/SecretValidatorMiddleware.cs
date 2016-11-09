@@ -1,11 +1,12 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Slamby.Common.Services;
 using Newtonsoft.Json;
-using Slamby.SDK.Net.Models;
-using Slamby.Common.Config;
 using Slamby.API.Helpers;
+using Slamby.API.Resources;
+using Slamby.Common.Config;
+using Slamby.Common.Services;
+using Slamby.SDK.Net.Models;
 
 namespace Slamby.API.Middlewares
 {
@@ -23,7 +24,7 @@ namespace Slamby.API.Middlewares
             if (!secretManager.IsSet() && !IsPathInWhiteList(context.Request.Path))
             {
                 var hostUrl = HostUrlHelper.GetHostUrl(context.Request, siteConfig.BaseUrlPrefix);
-                var model = ErrorsModel.Create(string.Format(SecretIsNotSetVisit_0_ForSetup, $"{hostUrl}/setup"));
+                var model = ErrorsModel.Create(string.Format(GlobalResources.SecretIsNotSetVisit_0_ForSetup, $"{hostUrl}/setup"));
                 var response = JsonConvert.SerializeObject(model);
 
                 context.Response.StatusCode = StatusCodes.Status412PreconditionFailed;
