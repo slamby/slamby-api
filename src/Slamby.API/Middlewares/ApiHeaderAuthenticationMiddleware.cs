@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Slamby.Common.Services;
+using Slamby.Common.Services.Interfaces;
 using Slamby.SDK.Net;
 
 namespace Slamby.API.Middlewares
@@ -15,7 +15,7 @@ namespace Slamby.API.Middlewares
             _next = next;
         }
 
-        public async Task Invoke(HttpContext context, SecretManager secretManager)
+        public async Task Invoke(HttpContext context, ISecretManager secretManager)
         {
             // Validate Authentication header only on /api/...
             if (!context.Request.Path.StartsWithSegments("/api"))

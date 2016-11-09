@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Models;
-using Slamby.Common.Config;
 using Slamby.Common.Services;
+using Slamby.Common.Services.Interfaces;
 
 namespace Slamby.API.Controllers
 {
     [Route("[controller]")]
     public class SetupController : Controller
     {
-        readonly SecretManager secretManager;
+        readonly ISecretManager secretManager;
 
-        public SetupController(SecretManager secretManager)
+        public SetupController(ISecretManager secretManager)
         {
             this.secretManager = secretManager;
         }

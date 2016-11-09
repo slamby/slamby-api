@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
@@ -109,6 +111,7 @@ namespace Slamby.API
                     });
                 }
 
+                ConfigureDataProtection(services);
                 ConfigureMvc(services);
                 ConfigureSwagger(services);
                 ConfigureOptions(services);
@@ -123,6 +126,18 @@ namespace Slamby.API
         }
 
         #region ConfigureServices
+
+        private void ConfigureDataProtection(IServiceCollection services)
+        {
+            var keysPath = Path.Combine(Configuration.GetValue("SlambyApi:Directory:User", "/Slamby/User"), "Keys");
+            services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+                .UseCryptographicAlgorithms(new AuthenticatedEncryptionSettings()
+                {
+                    EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+                    ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+                });
+        }
 
         private void ConfigureOptions(IServiceCollection services)
         {

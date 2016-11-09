@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using Slamby.API.Helpers;
 using Slamby.API.Resources;
 using Slamby.Common.Config;
-using Slamby.Common.Services;
+using Slamby.Common.Services.Interfaces;
 using Slamby.SDK.Net.Models;
 
 namespace Slamby.API.Middlewares
@@ -19,7 +19,7 @@ namespace Slamby.API.Middlewares
             _next = next;
         }
 
-        public async Task Invoke(HttpContext context, [FromServices]SiteConfig siteConfig, [FromServices]SecretManager secretManager)
+        public async Task Invoke(HttpContext context, [FromServices]SiteConfig siteConfig, [FromServices]ISecretManager secretManager)
         {
             if (!secretManager.IsSet() && !IsPathInWhiteList(context.Request.Path))
             {

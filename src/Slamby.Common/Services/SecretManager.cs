@@ -2,13 +2,15 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.AspNetCore.DataProtection;
 using Slamby.Common.Config;
 using Slamby.Common.DI;
+using Slamby.Common.Services.Interfaces;
 
 namespace Slamby.Common.Services
 {
-    [SingletonDependency]
-    public class SecretManager
+    [SingletonDependency(ServiceType = typeof(ISecretManager))]
+    public class SecretManager : ISecretManager
     {
         public const int SecretMinLength = 8;
         public const int SecretMaxLength = 32;
@@ -18,15 +20,23 @@ namespace Slamby.Common.Services
         public bool IsSet() => !string.IsNullOrWhiteSpace(ApiSecret);
         string SecretFilename { get { return Path.Combine(siteConfig.Directory.User, ".secret"); } }
 
-        public SecretManager(SiteConfig siteConfig)
+        readonly IDataProtector protector;
+
+        public SecretManager(SiteConfig siteConfig, IDataProtectionProvider provider)
         {
+            this.protector = provider.CreateProtector("SecretManager");
             this.siteConfig = siteConfig;
             Load();
         }
 
         public void Load()
         {
-            this.ApiSecret = Read();
+            var secret = Read();
+            if (!string.IsNullOrWhiteSpace(secret))
+            {
+                secret = protector.Unprotect(secret);
+            }
+            this.ApiSecret = secret;
         }
 
         private string Read()
@@ -41,8 +51,9 @@ namespace Slamby.Common.Services
 
         public void Change(string secret)
         {
-            File.WriteAllText(SecretFilename, secret, Encoding.UTF8);
-            Load();
+            var encryptedSecret = protector.Protect(secret);
+            File.WriteAllText(SecretFilename, encryptedSecret, Encoding.UTF8);
+            this.ApiSecret = secret;
         }
 
         public bool IsMatch(string text)
