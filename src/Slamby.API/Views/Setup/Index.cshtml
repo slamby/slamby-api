@@ -1,0 +1,33 @@
+﻿@model Slamby.API.Models.SetupModel
+@{
+    ViewData["Title"] = "Setup";
+}
+
+<div class="row">
+    <div class="col-sm-6 col-sm-offset-3">
+        <div class="page-header">
+            <h1>Slamby API <small>v@(Model.Version)</small></h1>
+        </div>
+        <div class="well">
+            <h3>Setup Options</h3>
+            <br />
+            <br />
+            <form asp-action="Index" method="post" class="form-horizontal" data-toggle="validator">
+                <div class="form-group">
+                    <label asp-for="Secret" class="col-sm-2 control-label">Secret</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" asp-for="Secret" placeholder="Secret" required minlength="@Model.SecretMinLength" data-minlength="@Model.SecretMinLength" maxlength="@Model.SecretMaxLength" data-error="Secret must be at least @Model.SecretMinLength characters long.">
+                        <div class="help-block with-errors"></div>
+                        <span asp-validation-for="Secret" class="text-danger"></span>
+                    </div>
+                </div>
+                <br />
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

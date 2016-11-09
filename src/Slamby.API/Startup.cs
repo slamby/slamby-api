@@ -55,7 +55,6 @@ namespace Slamby.API
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddJsonFile("project.json")
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
@@ -132,7 +131,7 @@ namespace Slamby.API
 
             // Add settings from configuration
             services.Configure<SiteConfig>(Configuration.GetSection("SlambyApi"));
-            services.Configure<SiteConfig>(sc => sc.Version = Configuration["version"]);
+            services.Configure<SiteConfig>(sc => sc.Version = VersionHelper.GetProductVersion(typeof(Startup)));
         }
 
         private async Task<string> GetIp(string hostname)
@@ -292,6 +291,7 @@ namespace Slamby.API
 
             app.UseSession();
 
+            app.UseSecretValidator();
             app.UseRequestSizeLimit();
 
             if (!string.IsNullOrEmpty(Configuration.GetValue("SlambyApi:Elm:Key", string.Empty)))
@@ -330,6 +330,12 @@ namespace Slamby.API
                 {
                     FileProvider = new PhysicalFileProvider(siteConfig.Directory.User),
                     RequestPath = new PathString(Common.Constants.FilesPath),
+                    ContentTypeProvider = provider
+                });
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(Path.Combine(env.WebRootPath, "assets")),
+                    RequestPath = new PathString("/assets"),
                     ContentTypeProvider = provider
                 });
 

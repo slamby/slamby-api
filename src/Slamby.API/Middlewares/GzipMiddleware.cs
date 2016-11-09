@@ -22,6 +22,16 @@ namespace Slamby.API.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
+            // Swagger UI replaces stream with a CanRead=false MemoryStream, so we cannot gzip that stream
+            if (!context.IsRequestHeaderContains(HeaderNames.AcceptEncoding, "gzip") ||
+                context.Request.Path.StartsWithSegments("/swagger") ||
+                context.Request.Path.StartsWithSegments(Common.Constants.FilesPath) ||
+                context.Request.Path.StartsWithSegments(Common.Constants.AssetsPath))
+            {
+                await _next(context);
+                return;
+            }
+
             if (context.IsRequestHeaderContains(HeaderNames.ContentEncoding, "gzip"))
             {
                 var requestStream = new MemoryStream();
@@ -33,15 +43,6 @@ namespace Slamby.API.Middlewares
 
                 requestStream.Position = 0;
                 context.Request.Body = requestStream;
-            }
-
-            // Swagger UI replaces stream with a CanRead=false MemoryStream, so we cannot gzip that stream
-            if (!context.IsRequestHeaderContains(HeaderNames.AcceptEncoding, "gzip") ||
-                context.Request.Path.StartsWithSegments("/swagger") ||
-                context.Request.Path.StartsWithSegments("/files"))
-            {
-                await _next(context);
-                return;
             }
 
             using (var responseStream = new MemoryStream())

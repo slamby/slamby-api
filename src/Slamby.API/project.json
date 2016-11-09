@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.1.0-prerelease-123456",
   "description": "Slamby.API ",
   "authors": [
     "Zsolt Illes",
@@ -76,10 +76,10 @@
   },
   "publishOptions": {
     "exclude": [
-      "wwwroot",
       "node_modules"
     ],
     "include": [
+      "wwwroot",
       "appsettings.json",
       "appsettings.*.json",
       "docker-compose.yml",
@@ -91,7 +91,7 @@
     "debugType": "portable",
     "emitEntryPoint": true,
     "preserveCompilationContext": true,
-    "warningsAsErrors": true
+    "warningsAsErrors": false
   },
   "tooling": {
     "defaultNamespace": "Slamby.API"

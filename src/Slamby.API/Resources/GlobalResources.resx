@@ -144,6 +144,9 @@
   <data name="SdkApiVersionMismatch" xml:space="preserve">
     <value>SDK {0} &lt;--&gt; API {1} version mismatch</value>
   </data>
+  <data name="SecretIsNotSetVisit_0_ForSetup" xml:space="preserve">
+    <value>API Secret is not set! Please visit {0} to complete the setup process.</value>
+  </data>
   <data name="TheArgumentCannotBeNull_0" xml:space="preserve">
     <value>The argument cannot be null: {0}</value>
   </data>
