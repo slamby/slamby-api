@@ -1,9 +1,6 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using static Slamby.API.Resources.GlobalResources;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using Slamby.Common.Services;
 using Newtonsoft.Json;
 using Slamby.SDK.Net.Models;
@@ -21,9 +18,9 @@ namespace Slamby.API.Middlewares
             _next = next;
         }
 
-        public async Task Invoke(HttpContext context, [FromServices]SiteConfig siteConfig)
+        public async Task Invoke(HttpContext context, [FromServices]SiteConfig siteConfig, [FromServices]SecretManager secretManager)
         {
-            if (string.IsNullOrWhiteSpace(siteConfig.ApiSecret) && !IsPathInWhiteList(context.Request.Path))
+            if (!secretManager.IsSet() && !IsPathInWhiteList(context.Request.Path))
             {
                 var hostUrl = HostUrlHelper.GetHostUrl(context.Request, siteConfig.BaseUrlPrefix);
                 var model = ErrorsModel.Create(string.Format(SecretIsNotSetVisit_0_ForSetup, $"{hostUrl}/setup"));

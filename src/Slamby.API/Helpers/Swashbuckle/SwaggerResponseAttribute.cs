@@ -1,10 +1,6 @@
-﻿using Swashbuckle.SwaggerGen.Annotations;
-using Swashbuckle.SwaggerGen.Generator;
+﻿using Swashbuckle.SwaggerGen.Generator;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using Swashbuckle.Swagger.Model;
 
 namespace Slamby.API.Helpers.Swashbuckle

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Slamby.Common.Config;
+using Slamby.Common.Services;
 using Slamby.SDK.Net;
 
 namespace Slamby.API.Middlewares
@@ -16,7 +15,7 @@ namespace Slamby.API.Middlewares
             _next = next;
         }
 
-        public async Task Invoke(HttpContext context, SiteConfig siteConfig)
+        public async Task Invoke(HttpContext context, SecretManager secretManager)
         {
             // Validate Authentication header only on /api/...
             if (!context.Request.Path.StartsWithSegments("/api"))
@@ -38,7 +37,7 @@ namespace Slamby.API.Middlewares
 
             if (authorizationValues.Length < 2 ||
                 !string.Equals(authorizationValues[0], Constants.AuthorizationMethodSlamby, StringComparison.OrdinalIgnoreCase) ||
-                !string.Equals(authorizationValues[1], siteConfig.ApiSecret, StringComparison.Ordinal))
+                !secretManager.IsMatch(authorizationValues[1]))
             {
                 context.Response.StatusCode = 401;
                 return;

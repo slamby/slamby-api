@@ -2,8 +2,6 @@
 {
     public class SiteConfig
     {
-        public string ApiSecret { get; set; }
-
         public string BaseUrlPrefix { get; set; }
 
         public string Version { get; set; } = "0.0.0.0";

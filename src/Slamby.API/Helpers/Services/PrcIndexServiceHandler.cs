@@ -9,7 +9,6 @@ using Slamby.API.Services;
 using Slamby.API.Services.Interfaces;
 using Slamby.Cerebellum;
 using Slamby.Cerebellum.Dictionary;
-using Slamby.Cerebellum.Dictionary.Models;
 using Slamby.Cerebellum.Scorer;
 using Slamby.Common.DI;
 using Slamby.Common.Services;
