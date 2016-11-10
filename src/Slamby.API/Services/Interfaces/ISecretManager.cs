@@ -1,4 +1,6 @@
-﻿namespace Slamby.Common.Services.Interfaces
+﻿using Slamby.Common.Helpers;
+
+namespace Slamby.API.Services.Interfaces
 {
     public interface ISecretManager
     {
@@ -6,6 +8,6 @@
         bool IsMatch(string text);
         bool IsSet();
         void Load();
-        bool Validate(string secret);
+        Result Validate(string secret);
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Slamby.API.Models;
-using Slamby.Common.Services;
-using Slamby.Common.Services.Interfaces;
+using Slamby.API.Services;
+using Slamby.API.Services.Interfaces;
 
 namespace Slamby.API.Controllers
 {
@@ -36,7 +36,8 @@ namespace Slamby.API.Controllers
         [HttpPost]
         public IActionResult Index(SetupModel model)
         {
-            if (secretManager.Validate(model.Secret))
+            var result = secretManager.Validate(model.Secret);
+            if (result.IsSuccess && !secretManager.IsSet())
             {
                 secretManager.Change(model.Secret);
             }

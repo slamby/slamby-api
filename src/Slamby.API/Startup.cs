@@ -129,8 +129,10 @@ namespace Slamby.API
 
         private void ConfigureDataProtection(IServiceCollection services)
         {
-            var keysPath = Path.Combine(Configuration.GetValue("SlambyApi:Directory:User", "/Slamby/User"), "Keys");
+            var keysPath = Path.Combine(Configuration.GetValue("SlambyApi:Directory:Sys", "/Slamby/Sys"), "Keys");
             services.AddDataProtection()
+                .SetApplicationName("Slamby.API")
+                .SetDefaultKeyLifetime(TimeSpan.FromDays(180))
                 .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
                 .UseCryptographicAlgorithms(new AuthenticatedEncryptionSettings()
                 {

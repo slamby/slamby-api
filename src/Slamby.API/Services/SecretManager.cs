@@ -5,27 +5,30 @@ using System.Text;
 using Microsoft.AspNetCore.DataProtection;
 using Slamby.Common.Config;
 using Slamby.Common.DI;
-using Slamby.Common.Services.Interfaces;
+using Slamby.Common.Helpers;
+using Slamby.API.Resources;
+using Slamby.API.Services.Interfaces;
 
-namespace Slamby.Common.Services
+namespace Slamby.API.Services
 {
     [SingletonDependency(ServiceType = typeof(ISecretManager))]
     public class SecretManager : ISecretManager
     {
         public const int SecretMinLength = 8;
         public const int SecretMaxLength = 32;
-
-        readonly SiteConfig siteConfig;
+        
         private string ApiSecret = string.Empty;
+        private string SecretFilename = string.Empty;
+
         public bool IsSet() => !string.IsNullOrWhiteSpace(ApiSecret);
-        string SecretFilename { get { return Path.Combine(siteConfig.Directory.User, ".secret"); } }
 
         readonly IDataProtector protector;
 
         public SecretManager(SiteConfig siteConfig, IDataProtectionProvider provider)
         {
+            this.SecretFilename = Path.Combine(siteConfig.Directory.Sys, ".secret");
             this.protector = provider.CreateProtector("SecretManager");
-            this.siteConfig = siteConfig;
+
             Load();
         }
 
@@ -61,11 +64,16 @@ namespace Slamby.Common.Services
             return string.Equals(ApiSecret, text, StringComparison.Ordinal);
         }
 
-        public bool Validate(string secret)
+        public Result Validate(string secret)
         {
-            return !string.IsNullOrEmpty(secret) && 
-                secret.Length >= SecretMinLength && 
-                secret.Length <= SecretMaxLength;
+            if (string.IsNullOrEmpty(secret) ||
+                secret.Length < SecretMinLength ||
+                secret.Length > SecretMaxLength)
+            {
+                return Result.Fail(string.Format(GlobalResources.SecretMustBeAtLeast_0_CharactersLong, SecretMinLength));
+            }
+
+            return Result.Ok();
         }
     }
 }

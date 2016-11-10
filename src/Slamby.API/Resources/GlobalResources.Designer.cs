@@ -150,6 +150,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to Secret must be at least {0} characters long..
+        /// </summary>
+        public static string SecretMustBeAtLeast_0_CharactersLong {
+            get {
+                return ResourceManager.GetString("SecretMustBeAtLeast_0_CharactersLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to The argument {0} is not {1} type.
         /// </summary>
         public static string TheArgument_0_IsNot_1_Type {

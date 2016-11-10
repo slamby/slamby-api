@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Slamby.Common.Services.Interfaces;
+using Slamby.API.Services.Interfaces;
 using Slamby.SDK.Net;
 
 namespace Slamby.API.Middlewares

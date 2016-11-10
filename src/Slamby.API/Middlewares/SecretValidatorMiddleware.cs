@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Slamby.API.Helpers;
 using Slamby.API.Resources;
+using Slamby.API.Services.Interfaces;
 using Slamby.Common.Config;
-using Slamby.Common.Services.Interfaces;
 using Slamby.SDK.Net.Models;
 
 namespace Slamby.API.Middlewares

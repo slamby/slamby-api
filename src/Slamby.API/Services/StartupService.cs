@@ -1,11 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using Slamby.API.Services;
 using Slamby.Common.Config;
 using Slamby.Common.DI;
-using Slamby.Elastic.Factories;
 using Slamby.Common.Services;
-using System;
+using Slamby.Elastic.Factories;
 
 namespace Slamby.API.Helpers
 {
@@ -113,10 +114,16 @@ namespace Slamby.API.Helpers
 
         private void CreateDirectories()
         {
-            Directory.CreateDirectory(siteConfig.Directory.Classifier);
-            Directory.CreateDirectory(siteConfig.Directory.Prc);
-            Directory.CreateDirectory(siteConfig.Directory.User);
-            Directory.CreateDirectory(siteConfig.Directory.Temp);
+            var dirs = new List<string>()
+            {
+                siteConfig.Directory.Classifier,
+                siteConfig.Directory.Prc,
+                siteConfig.Directory.User,
+                siteConfig.Directory.Temp,
+                siteConfig.Directory.Sys
+            };
+
+            dirs.ForEach((dir) => Directory.CreateDirectory(dir));
         }
 
         private void InitMachineResources()
