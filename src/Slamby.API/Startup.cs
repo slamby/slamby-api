@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
@@ -57,7 +59,6 @@ namespace Slamby.API
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddJsonFile("project.json")
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
@@ -114,6 +115,7 @@ namespace Slamby.API
                     });
                 }
 
+                ConfigureDataProtection(services);
                 ConfigureMvc(services);
                 if (CurrentEnvironment.IsDevelopment()) ConfigureSwagger(services);
                 ConfigureOptions(services);
@@ -129,6 +131,20 @@ namespace Slamby.API
 
         #region ConfigureServices
 
+        private void ConfigureDataProtection(IServiceCollection services)
+        {
+            var keysPath = Path.Combine(Configuration.GetValue("SlambyApi:Directory:Sys", "/Slamby/Sys"), "Keys");
+            services.AddDataProtection()
+                .SetApplicationName("Slamby.API")
+                .SetDefaultKeyLifetime(TimeSpan.FromDays(180))
+                .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+                .UseCryptographicAlgorithms(new AuthenticatedEncryptionSettings()
+                {
+                    EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+                    ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+                });
+        }
+
         private void ConfigureOptions(IServiceCollection services)
         {
             // Required to use the Options<T> pattern
@@ -136,7 +152,7 @@ namespace Slamby.API
 
             // Add settings from configuration
             services.Configure<SiteConfig>(Configuration.GetSection("SlambyApi"));
-            services.Configure<SiteConfig>(sc => sc.Version = Configuration["version"]);
+            services.Configure<SiteConfig>(sc => sc.Version = VersionHelper.GetProductVersion(typeof(Startup)));
         }
 
         private async Task<string> GetIp(string hostname)
@@ -296,6 +312,7 @@ namespace Slamby.API
 
             app.UseSession();
 
+            app.UseSecretValidator();
             app.UseRequestSizeLimit();
 
             if (!string.IsNullOrEmpty(Configuration.GetValue("SlambyApi:Elm:Key", string.Empty)))
@@ -334,6 +351,12 @@ namespace Slamby.API
                 {
                     FileProvider = new PhysicalFileProvider(siteConfig.Directory.User),
                     RequestPath = new PathString(Common.Constants.FilesPath),
+                    ContentTypeProvider = provider
+                });
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(Path.Combine(env.WebRootPath, "assets")),
+                    RequestPath = new PathString("/assets"),
                     ContentTypeProvider = provider
                 });
 

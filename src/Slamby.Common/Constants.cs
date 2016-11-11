@@ -3,6 +3,8 @@
     public static class Constants
     {
         public const string FilesPath = "/files";
+        public const string SetupPath = "/setup";
+        public const string AssetsPath = "/assets";
 
         /// <summary>
         /// Current API Elasticsearch DB version (DataSet)

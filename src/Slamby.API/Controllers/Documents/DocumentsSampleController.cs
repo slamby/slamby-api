@@ -6,7 +6,6 @@ using Slamby.API.Resources;
 using Slamby.API.Services.Interfaces;
 using Slamby.SDK.Net.Models;
 using Swashbuckle.SwaggerGen.Annotations;
-using System.Collections.Generic;
 using Slamby.Common.Services.Interfaces;
 
 namespace Slamby.API.Controllers

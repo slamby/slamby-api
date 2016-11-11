@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
-using Slamby.Common.Config;
 using Slamby.Common.DI;
 using StackExchange.Redis;
 

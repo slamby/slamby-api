@@ -16,7 +16,6 @@ using Slamby.SDK.Net.Models;
 using Slamby.SDK.Net.Models.Enums;
 using Slamby.SDK.Net.Models.Services;
 using Swashbuckle.SwaggerGen.Annotations;
-using Microsoft.Extensions.Logging;
 using Slamby.Common.Services;
 using System.Collections.Concurrent;
 using Slamby.API.Services.Interfaces;
