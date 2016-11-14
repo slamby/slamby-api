@@ -9,9 +9,11 @@ namespace Slamby.API.Controllers
     public class SetupController : Controller
     {
         readonly ISecretManager secretManager;
+        readonly ILicenseManager licenseManager;
 
-        public SetupController(ISecretManager secretManager)
+        public SetupController(ISecretManager secretManager, ILicenseManager licenseManager)
         {
+            this.licenseManager = licenseManager;
             this.secretManager = secretManager;
         }
         
@@ -20,6 +22,7 @@ namespace Slamby.API.Controllers
         {
             var model = new SetupModel()
             {
+                ApplicationId = licenseManager.ApplicationId,
                 Secret = string.Empty,
                 SecretMinLength = SecretManager.SecretMinLength,
                 SecretMaxLength = SecretManager.SecretMaxLength

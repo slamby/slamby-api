@@ -123,6 +123,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to Please enter a valid email address.
+        /// </summary>
+        public static string PleaseEnterAValidEmailAddress {
+            get {
+                return ResourceManager.GetString("PleaseEnterAValidEmailAddress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Server resource error. Request entity is too large. Maximum value according to the server resources is {0} bytes.
         /// </summary>
         public static string Request_Is_Too_Large_0 {

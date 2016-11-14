@@ -12,9 +12,9 @@ namespace Slamby.API.Controllers
     [SwaggerResponseRemoveDefaults]
     public class MaintenanceController : BaseController
     {
-        [HttpPut()]
+        [HttpPost()]
         [SwaggerOperation("ChangeSecret")]
-        [SwaggerResponse(StatusCodes.Status200OK, "", typeof(Status))]
+        [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status406NotAcceptable, "", typeof(ErrorsModel))]
         public IActionResult ChangeSecret([FromBody]ChangeSecret secret, [FromServices]ISecretManager secretManager)
         {

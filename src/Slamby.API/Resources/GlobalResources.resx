@@ -138,6 +138,9 @@
   <data name="NGramValuesShouldBeBetween1And6" xml:space="preserve">
     <value>NGram values should be between 1 and 6</value>
   </data>
+  <data name="PleaseEnterAValidEmailAddress" xml:space="preserve">
+    <value>Please enter a valid email address</value>
+  </data>
   <data name="Request_Is_Too_Large_0" xml:space="preserve">
     <value>Server resource error. Request entity is too large. Maximum value according to the server resources is {0} bytes</value>
   </data>
