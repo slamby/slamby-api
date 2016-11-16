@@ -47,7 +47,7 @@ namespace Slamby.API.Helpers
             logger.LogInformation($"MaxSearchBulkCount set to {siteConfig.Resources.MaxSearchBulkCount}");
 
             CreateDirectories();
-            serverIdManager.EnsureCreated();
+            serverIdManager.EnsureAppIdCreated();
 
             logger.LogInformation("Waiting ElasticSearch to start...");
             WaitForElastic();

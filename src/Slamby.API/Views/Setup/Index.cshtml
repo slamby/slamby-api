@@ -38,7 +38,8 @@
                 </div>
             </div>
             <br />
-            <form asp-action="Index" method="post" class="form-horizontal" data-toggle="validator">
+            <form asp-action="Index" asp-controller="Setup" method="post" class="form-horizontal" data-toggle="validator">
+               
                 <div class="form-group">
                     <label asp-for="ApplicationId" class="col-sm-2 control-label">Application Id</label>
                     <div class="col-sm-10">
@@ -56,9 +57,9 @@
                 <div class="form-group">
                     <label asp-for="LicenseKey" class="col-sm-2 control-label">License Key</label>
                     <div class="col-sm-10">
-                        <textarea class="form-control" asp-for="LicenseKey" placeholder="License Key" rows="8"></textarea>
+                        <textarea class="form-control" asp-for="LicenseKey" placeholder="License Key" rows="8" required></textarea>
                         <div class="help-block with-errors"></div>
-                        <span asp-validation-for="Secret" class="text-danger"></span>
+                        <div asp-validation-summary="All" class="text-danger"></div>
                     </div>
                 </div>
                 <br />
