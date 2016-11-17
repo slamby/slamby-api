@@ -53,5 +53,10 @@ namespace Slamby.API.Middlewares
         {
             return builder.UseMiddleware<SecretValidatorMiddleware>();
         }
+
+        public static IApplicationBuilder UseTerminal(this IApplicationBuilder builder)
+        {
+            return builder.UseMiddleware<TerminalMiddleware>();
+        }
     }
 }

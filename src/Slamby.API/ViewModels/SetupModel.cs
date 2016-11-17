@@ -1,4 +1,4 @@
-﻿namespace Slamby.API.Models
+﻿namespace Slamby.API.ViewModels
 {
     public class SetupModel
     {
@@ -11,5 +11,7 @@
         public int SecretMaxLength { get; set; }
 
         public string LicenseKey { get; set; }
+
+        public AlertModel Alert { get; set; }
     }
 }

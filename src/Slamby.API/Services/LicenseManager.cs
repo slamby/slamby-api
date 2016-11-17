@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -20,49 +19,39 @@ using Slamby.Common.Services.Interfaces;
 using Slamby.Elastic.Factories;
 using Slamby.License.Core;
 using Slamby.License.Core.Validation;
+using Slamby.License.Core.Models;
+using System.Threading;
 
 namespace Slamby.API.Services
 {
     [SingletonDependency(ServiceType = typeof(ILicenseManager))]
     public class LicenseManager : ILicenseManager
     {
+        readonly Uri LicenseServerUri = new Uri("https://license.slamby.com/");
+
         /// <summary>
-        /// Installation Id (persistent)
+        /// Instance Id (persistent)
         /// Created at first startup
         /// </summary>
-        public string ApplicationId { get; private set; }
-
-        /// <summary>
-        /// Instance Id (volatile)
-        /// Generated at every startup
-        /// </summary>
-        public string InstanceId
-        {
-            get
-            {
-                return StartupTime.ToString(CultureInfo.InvariantCulture.DateTimeFormat.RFC1123Pattern);
-            }
-        }
-
-        const string LicenseServerUri = "https://license.slamby.com/";
+        public string InstanceId { get; private set; }
 
         string publicKey = string.Empty;
 
         /// <summary>
         /// Startup time
-        /// Used for creating InstanceId
         /// </summary>
         public DateTime StartupTime { get; } = DateTime.UtcNow;
 
-        IStore applicationIdStore;
-        IStore licenseStore;
+        readonly IStore applicationIdStore;
+        readonly IStore licenseStore;
         readonly ElasticClientFactory clientFactory;
+        private CancellationToken StopToken;
+        private License.Core.License ApplicationLicense;
 
-        public LicenseManager(IOptions<SiteConfig> siteConfig, IDataProtectionProvider provider, IHostingEnvironment env, ElasticClientFactory clientFactory)
+        public LicenseManager(IOptions<SiteConfig> siteConfig, IDataProtectionProvider provider, IHostingEnvironment env, ElasticClientFactory clientFactory,
+            IApplicationLifetime applicationLifetime)
         {
             this.clientFactory = clientFactory;
-            var publicKeyStore = new FileStore(Path.Combine(env.WebRootPath, "publicKey"));
-            publicKey = publicKeyStore.Read();
 
             var protector = provider.CreateProtector("ServerIdManager");
             var appIdPath = Path.Combine(siteConfig.Value.Directory.Sys, ".appid");
@@ -70,6 +59,45 @@ namespace Slamby.API.Services
 
             applicationIdStore = new FileStore(appIdPath);
             licenseStore = new FileStore(licensePath);
+
+            var publicKeyStore = new FileStore(Path.Combine(env.WebRootPath, "publicKey"));
+            publicKey = publicKeyStore.Read();
+
+            var licenseKeyXml = licenseStore.Read();
+            if (!string.IsNullOrEmpty(licenseKeyXml))
+            {
+                ApplicationLicense = License.Core.License.Load(licenseKeyXml);
+            }
+
+            StopToken = applicationLifetime.ApplicationStopping;
+            StartBackgroundValidator();
+        }
+
+        private void StartBackgroundValidator()
+        {
+            new TaskFactory()
+                .StartNew(
+                    async () => { await ValidatePeriodically(); },
+                    TaskCreationOptions.LongRunning);
+        }
+
+        private async Task ValidatePeriodically()
+        {
+            while (!StopToken.IsCancellationRequested)
+            {
+                var validaton = await ValidateAsync(licenseStore.Read());
+
+                try
+                {
+                    Task.Delay(TimeSpan.FromHours(1))
+                        .Wait(StopToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // If token cancelled OperationCanceledException is thrown, but it is expected exception
+                    break;
+                }
+            }
         }
 
         public void EnsureAppIdCreated()
@@ -82,7 +110,7 @@ namespace Slamby.API.Services
                 applicationIdStore.Write(appId);
             }
 
-            ApplicationId = appId;
+            InstanceId = appId;
         }
 
         public string Get()
@@ -103,6 +131,12 @@ namespace Slamby.API.Services
                 ? UnwrapBase64(licenseKey)
                 : licenseKey;
 
+            // broken base64 string and not XML
+            if (licenseKeyXml.IndexOf('<') == -1)
+            {
+                return new List<ValidationFailure>() { new ValidationFailure() { Message = "The entered key is partial. Please paste full license key." } };
+            }
+
             var validation = await ValidateAsync(licenseKeyXml);
             if (validation.Any())
             {
@@ -110,6 +144,8 @@ namespace Slamby.API.Services
             }
 
             licenseStore.Write(licenseKeyXml);
+
+            ApplicationLicense = License.Core.License.Load(licenseKeyXml);
 
             return Enumerable.Empty<ValidationFailure>();
         }
@@ -159,18 +195,13 @@ namespace Slamby.API.Services
             {
                 var elasticName = clientFactory.GetClient().RootNodeInfo()?.Name ?? string.Empty;
 
-                using (var client = new HttpClient())
+                using (var client = CreateHttpClient())
                 {
-                    client.BaseAddress = new Uri(LicenseServerUri);
-
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                    var model = new License.Models.CheckRequestModel()
+                    var model = new CheckRequestModel()
                     {
-                        Id = Guid.Parse(ApplicationId),
+                        Id = Guid.Parse(InstanceId),
                         License = WrapBase64(xmlText),
-                        Details = new License.Models.CheckDetailsModel()
+                        Details = new CheckDetailsModel()
                         {
                             LaunchTime = StartupTime,
                             Cores = Environment.ProcessorCount,
@@ -189,7 +220,7 @@ namespace Slamby.API.Services
                     }
 
                     var responseBody = await response.Content.ReadAsStringAsync();
-                    var checkResponse = JsonConvert.DeserializeObject<License.Models.CheckResponseModel>(responseBody);
+                    var checkResponse = JsonConvert.DeserializeObject<CheckResponseModel>(responseBody);
 
                     if (checkResponse.IsValid)
                     {
@@ -216,7 +247,7 @@ namespace Slamby.API.Services
                 {
                     validationFailures = license.Validate()
                         .Signature(publicKey)
-                        .And().Id(ApplicationId)
+                        .And().Id(InstanceId)
                         .And().ExpirationDate()
                         .And().Cores(Environment.ProcessorCount)
                         .AssertValidLicense()
@@ -226,7 +257,7 @@ namespace Slamby.API.Services
                 {
                     validationFailures = license.Validate()
                         .Signature(publicKey)
-                        .And().Id(ApplicationId)
+                        .And().Id(InstanceId)
                         .AssertValidLicense()
                         .ToList();
                 }
@@ -237,6 +268,51 @@ namespace Slamby.API.Services
             {
                 return new List<ValidationFailure>() { new ValidationFailure() { Message = "Invaid XML format", HowToResolve = ex.Message } };
             }
+        }
+
+        public async Task<CreateResponseModel> Create(string email)
+        {
+            try
+            {
+                using (var client = CreateHttpClient())
+                {
+                    var model = new CreateOpenSourceModel()
+                    {
+                        Id = Guid.Parse(InstanceId),
+                        Email = email
+                    };
+
+                    var json = JsonConvert.SerializeObject(model);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    var response = await client.PostAsync("api/create", content);
+
+                    if (response.StatusCode != System.Net.HttpStatusCode.BadRequest &&
+                        response.StatusCode != System.Net.HttpStatusCode.OK)
+                    {
+                        return null;
+                    }
+
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    var createResponse = JsonConvert.DeserializeObject<CreateResponseModel>(responseBody);
+
+                    return createResponse;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private HttpClient CreateHttpClient()
+        {
+            var client = new HttpClient();
+
+            client.BaseAddress = LicenseServerUri;
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            return client;
         }
     }
 }

@@ -17,7 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Serilog;
@@ -299,7 +298,7 @@ namespace Slamby.API
         #endregion
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, StartupService startupService, SiteConfig siteConfig)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, StartupService startupService)
         {
             loggerFactory.AddSerilog();
 
@@ -349,7 +348,7 @@ namespace Slamby.API
                 var provider = new FileExtensionContentTypeProvider();
                 app.UseStaticFiles(new StaticFileOptions
                 {
-                    FileProvider = new PhysicalFileProvider(siteConfig.Directory.User),
+                    FileProvider = new PhysicalFileProvider(SiteConfig.Directory.User),
                     RequestPath = new PathString(Common.Constants.FilesPath),
                     ContentTypeProvider = provider
                 });
@@ -366,12 +365,7 @@ namespace Slamby.API
                 app.UseMvc();
 
                 app.UseNotFound();
-                app.Run(async (context) =>
-                {
-                    var response = JsonConvert.SerializeObject(new { Name = "Slamby.API", Version = siteConfig.Version }, Formatting.Indented);
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsync(response);
-                });
+                app.UseTerminal();
             }
             catch (Exception ex)
             {

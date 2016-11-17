@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Slamby.API.Models;
+using Slamby.API.ViewModels;
 using Slamby.API.Services;
 using Slamby.API.Services.Interfaces;
 using Slamby.License.Core.Validation;
@@ -33,8 +33,16 @@ namespace Slamby.API.Controllers
                 foreach (var item in validationFailures)
                 {
                     ModelState.AddModelError("", item.Message);
-                    ModelState.AddModelError("", item.HowToResolve);
+                    if (!string.IsNullOrEmpty(item.HowToResolve))
+                    {
+                        ModelState.AddModelError("", item.HowToResolve);
+                    }
                 }
+            }
+
+            if (TempData["RequestLicense"] != null)
+            {
+                model.Alert = JsonConvert.DeserializeObject<AlertModel>(TempData["RequestLicense"].ToString());
             }
 
             if (secretManager.IsSet())
@@ -45,11 +53,12 @@ namespace Slamby.API.Controllers
             return View("Index", model);
         }
 
+        [NonAction]
         private SetupModel GetModel()
         {
             return new SetupModel()
             {
-                ApplicationId = licenseManager.ApplicationId,
+                ApplicationId = licenseManager.InstanceId,
                 Secret = string.Empty,
                 SecretMinLength = SecretManager.SecretMinLength,
                 SecretMaxLength = SecretManager.SecretMaxLength,
@@ -72,6 +81,34 @@ namespace Slamby.API.Controllers
             if (result.IsSuccess && !secretManager.IsSet())
             {
                 secretManager.Change(model.Secret);
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost("RequestOpenSourceLicense")]
+        public async Task<IActionResult> RequestOpenSourceLicense(RequestLicenseModel model)
+        {
+            var licenseResponse = await licenseManager.Create(model.Email);
+            AlertModel alert;
+
+            if (licenseResponse == null)
+            {
+                alert = new AlertModel() { ClassName = "alert-danger", Message = "Unable to request license." };
+            }
+            else if (licenseResponse.Failures?.Any() == true)
+            {
+                var failure = licenseResponse.Failures.First();
+                alert = new AlertModel() { ClassName = "alert-danger", Message = failure.Message + " " + failure.HowToResolve};
+            }
+            else
+            {
+                alert = new AlertModel() { ClassName = "alert-success", Message = $"License is sent to {model.Email}" };
+            }
+
+            if (alert != null)
+            {
+                TempData["RequestLicense"] = JsonConvert.SerializeObject(alert);
             }
 
             return RedirectToAction("Index");
