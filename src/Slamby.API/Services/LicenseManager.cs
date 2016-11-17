@@ -191,6 +191,41 @@ namespace Slamby.API.Services
         {
             var unknownFailure = new List<ValidationFailure>() { new ValidationFailure() { Message = "Failed to validate Online" } };
 
+            var checkResponse = await RequestCheck(xmlText);
+
+            if (checkResponse == null)
+            {
+                return new Tuple<bool, IEnumerable<ValidationFailure>>(false, unknownFailure);
+            }
+
+            if (checkResponse.IsValid)
+            {
+                return new Tuple<bool, IEnumerable<ValidationFailure>>(true, Enumerable.Empty<ValidationFailure>());
+            }
+
+            // we got new refreshed license
+            if (!string.IsNullOrEmpty(checkResponse.License))
+            {
+                xmlText = UnwrapBase64(checkResponse.License);
+
+                checkResponse = await RequestCheck(xmlText);
+
+                if (checkResponse == null)
+                {
+                    return new Tuple<bool, IEnumerable<ValidationFailure>>(false, unknownFailure);
+                }
+
+                if (checkResponse.IsValid)
+                {
+                    return new Tuple<bool, IEnumerable<ValidationFailure>>(true, Enumerable.Empty<ValidationFailure>());
+                }
+            }
+
+            return new Tuple<bool, IEnumerable<ValidationFailure>>(true, checkResponse.Failures ?? unknownFailure);
+        }
+
+        private async Task<CheckResponseModel> RequestCheck(string xmlText)
+        {
             try
             {
                 var elasticName = clientFactory.GetClient().RootNodeInfo()?.Name ?? string.Empty;
@@ -216,23 +251,18 @@ namespace Slamby.API.Services
                     if (response.StatusCode != System.Net.HttpStatusCode.BadRequest &&
                         response.StatusCode != System.Net.HttpStatusCode.OK)
                     {
-                        return new Tuple<bool, IEnumerable<ValidationFailure>>(false, unknownFailure);
+                        return null;
                     }
 
                     var responseBody = await response.Content.ReadAsStringAsync();
                     var checkResponse = JsonConvert.DeserializeObject<CheckResponseModel>(responseBody);
 
-                    if (checkResponse.IsValid)
-                    {
-                        return new Tuple<bool, IEnumerable<ValidationFailure>>(true, Enumerable.Empty<ValidationFailure>());
-                    }
-
-                    return new Tuple<bool, IEnumerable<ValidationFailure>>(true, checkResponse.Failures ?? unknownFailure);
+                    return checkResponse;
                 }
             }
             catch (Exception)
             {
-                return new Tuple<bool, IEnumerable<ValidationFailure>>(false, unknownFailure);
+                return null;
             }
         }
 
