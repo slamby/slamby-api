@@ -123,6 +123,9 @@
   <data name="DataSet_0_NotFound" xml:space="preserve">
     <value>DataSet '{0}' not found!</value>
   </data>
+  <data name="LicenseIsEmpty" xml:space="preserve">
+    <value>License is empty</value>
+  </data>
   <data name="Missing_0_Header" xml:space="preserve">
     <value>Missing '{0}' header!</value>
   </data>

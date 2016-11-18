@@ -78,6 +78,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to License is empty.
+        /// </summary>
+        public static string LicenseIsEmpty {
+            get {
+                return ResourceManager.GetString("LicenseIsEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Missing &apos;{0}&apos; header!.
         /// </summary>
         public static string Missing_0_Header {

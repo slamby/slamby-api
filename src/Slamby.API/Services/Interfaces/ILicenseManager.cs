@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Slamby.License.Core.Models;
 using Slamby.License.Core.Validation;
@@ -7,8 +8,12 @@ namespace Slamby.API.Services
 {
     public interface ILicenseManager
     {
-        string InstanceId { get; }
-        
+        Guid InstanceId { get; }
+
+        License.Core.License ApplicationLicense { get; }
+
+        IEnumerable<ValidationFailure> ApplicationLicenseValidation { get; }
+
         void EnsureAppIdCreated();
 
         string Get();

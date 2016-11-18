@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Slamby.Common.Helpers
@@ -77,7 +78,17 @@ namespace Slamby.Common.Helpers
 
         public static bool IsBase64(this string text)
         {
-            return (text.Length % 4 == 0) && Regex.IsMatch(text, @"^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.None);
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            return (text.Length % 4 == 0) && ContainsBase64Chars(text);
+        }
+
+        public static bool ContainsBase64Chars(this string text)
+        {
+            return Regex.IsMatch(text, @"^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.None);
         }
 
         public static string CleanBase64(this string text)
@@ -85,6 +96,16 @@ namespace Slamby.Common.Helpers
             return text.Replace(" ", "")
                 .Replace("\n", "")
                 .Replace("\r", "");
+        }
+
+        public static string ToBase64(this string text)
+        {
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(text));
+        }
+
+        public static string FromBase64(this string base64)
+        {
+            return Encoding.UTF8.GetString(Convert.FromBase64String(base64.CleanBase64()));
         }
 
         public static bool EqualsOrdinalIgnoreCase(this string str1, string str2)

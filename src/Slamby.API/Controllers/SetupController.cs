@@ -58,7 +58,7 @@ namespace Slamby.API.Controllers
         {
             return new SetupModel()
             {
-                ApplicationId = licenseManager.InstanceId,
+                ApplicationId = licenseManager.InstanceId.ToString(),
                 Secret = string.Empty,
                 SecretMinLength = SecretManager.SecretMinLength,
                 SecretMaxLength = SecretManager.SecretMaxLength,
