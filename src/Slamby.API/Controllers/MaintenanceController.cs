@@ -18,13 +18,13 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status406NotAcceptable, "", typeof(ErrorsModel))]
         public IActionResult ChangeSecret([FromBody]ChangeSecret secret, [FromServices]ISecretManager secretManager)
         {
-            var result = secretManager.Validate(secret.NewSecret);
+            var result = secretManager.Validate(secret.Secret);
             if (result.IsFailure)
             {
                 return HttpErrorResult(StatusCodes.Status406NotAcceptable, result.Error);
             }
 
-            secretManager.Change(secret.NewSecret);
+            secretManager.Change(secret.Secret);
 
             return Ok();
         }
