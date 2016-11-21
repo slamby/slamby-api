@@ -11,6 +11,7 @@ using Slamby.License.Core.Validation;
 namespace Slamby.API.Controllers
 {
     [Route("[controller]")]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class SetupController : Controller
     {
         readonly ISecretManager secretManager;
