@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Swashbuckle.SwaggerGen.Generator;
 
@@ -13,15 +14,12 @@ namespace Slamby.API.Helpers.Swashbuckle
                 .OfType<SwaggerGroupAttribute>()
                 .FirstOrDefault();
 
-            if (groupAttribute != null)
+            if (groupAttribute == null)
             {
-                return groupAttribute.Group;
+                throw new NotSupportedException($"{desc.RelativePath} does not have SwaggerGroupAttribute");
             }
 
-            var split = desc.RelativePath.Split('/');
-            var group = split[1];
-
-            return group;
+            return groupAttribute.Group;
         }
     }
 }

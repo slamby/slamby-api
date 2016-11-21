@@ -45,6 +45,8 @@ namespace Slamby.API
 
         public SiteConfig SiteConfig { get; set; } = new SiteConfig();
 
+        public string ApiVersion { get; set; } = VersionHelper.GetProductVersion(typeof(Startup));
+
         #endregion
 
         private IHostingEnvironment CurrentEnvironment { get; set; }
@@ -151,7 +153,7 @@ namespace Slamby.API
 
             // Add settings from configuration
             services.Configure<SiteConfig>(Configuration.GetSection("SlambyApi"));
-            services.Configure<SiteConfig>(sc => sc.Version = VersionHelper.GetProductVersion(typeof(Startup)));
+            services.Configure<SiteConfig>(sc => sc.Version = this.ApiVersion);
         }
 
         private async Task<string> GetIp(string hostname)
@@ -196,7 +198,7 @@ namespace Slamby.API
             {
                 options.SingleApiVersion(new Info
                 {
-                    Version = "latest",
+                    Version = ApiVersion,
                     Title = "Slamby API",
                     Description = "Slamby API",
                     TermsOfService = "None"
@@ -333,11 +335,10 @@ namespace Slamby.API
             {
                 startupService.Startup();
 
-
                 if (env.IsDevelopment())
                 {
                     app.UseSwagger();
-                    app.UseSwaggerUi("swagger/ui", "/swagger/latest/swagger.json");
+                    app.UseSwaggerUi("swagger/ui", $"/swagger/{ApiVersion}/swagger.json");
                 }
 
                 app.UseGzip();

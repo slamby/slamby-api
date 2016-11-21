@@ -12,7 +12,7 @@ using Swashbuckle.SwaggerGen.Annotations;
 namespace Slamby.API.Controllers
 {
     [Route("api/[controller]")]
-    [SwaggerGroup("Status")]
+    [SwaggerGroup("License")]
     [SwaggerResponseRemoveDefaults]
     public class LicenseController : BaseController
     {

@@ -47,7 +47,7 @@
     "Slamby.Cerebellum": "1.0.0-*",
     "Slamby.Common": "1.0.0-*",
     "Slamby.Elastic": "1.0.0-*",
-    "Slamby.License.Core": "0.3.0",
+    "Slamby.License.Core": "0.4.0",
     "StackExchange.Redis.StrongName": "1.1.605",
     "Swashbuckle.SwaggerGen": "6.0.0-beta902",
     "Swashbuckle.SwaggerUi": "6.0.0-beta902"
