@@ -25,6 +25,10 @@
     "Microsoft.AspNetCore.Diagnostics": "1.1.0",
     "Microsoft.AspNetCore.Diagnostics.Elm": "0.2.0",
     "Microsoft.AspNetCore.Mvc": "1.1.0",
+    "Microsoft.AspNetCore.Razor.Tools": {
+      "type": "build",
+      "version": "1.1.0-preview4-final"
+    },
     "Microsoft.AspNetCore.Server.IISIntegration": "1.1.0",
     "Microsoft.AspNetCore.Server.Kestrel": "1.1.0",
     "Microsoft.AspNetCore.Session": "1.1.0",
@@ -53,9 +57,9 @@
     "Swashbuckle.SwaggerUi": "6.0.0-beta902"
   },
   "tools": {
-    "Microsoft.AspNetCore.Razor.Tools": "1.0.0-preview2-final",
-    "Microsoft.AspNetCore.Server.IISIntegration.Tools": "1.0.0-preview2-final",
-    "Microsoft.DotNet.Watcher.Tools": "1.0.0-preview2-final"
+    "Microsoft.AspNetCore.Razor.Tools": "1.1.0-preview4-final",
+    "Microsoft.AspNetCore.Server.IISIntegration.Tools": "1.1.0-preview4-final",
+    "Microsoft.DotNet.Watcher.Tools": "1.1.0-preview4-final"
   },
   "runtimeOptions": {
     "configProperties": {
@@ -86,7 +90,8 @@
       "appsettings.*.json",
       "docker-compose.yml",
       "Dockerfile",
-      ".dockerignore"
+      ".dockerignore",
+      "**/*.cshtml"
     ]
   },
   "buildOptions": {
