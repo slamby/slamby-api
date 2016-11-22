@@ -69,7 +69,7 @@ namespace Slamby.Cerebellum.Dictionary
             if (_chunkAveragePMI)
             {
                 tdeList.RemoveAll(tde => tde.PMI <= avgPMI);
-                avgPMI = tdeList.Select(tde => tde.PMI).Average();
+                avgPMI = tdeList.Count == 0 ? 0 : tdeList.Select(tde => tde.PMI).Average();
             }
             foreach (var tde in tdeList)
             {
