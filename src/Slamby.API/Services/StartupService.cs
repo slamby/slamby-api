@@ -21,14 +21,14 @@ namespace Slamby.API.Helpers
         readonly DBUpdateService dbUpdateService;
         readonly MachineResourceService machineResourceService;
         readonly ServiceManager serviceManager;
-        readonly ILicenseManager serverIdManager;
+        readonly ILicenseManager licenseManager;
 
         public StartupService(SiteConfig siteConfig, ILogger<StartupService> logger,
             ElasticClientFactory elasticClientFactory, DataSetService dataSetService, 
             DBUpdateService dbUpdateService, MachineResourceService machineResourceService,
-            ServiceManager serviceManager, ILicenseManager serverIdManager)
+            ServiceManager serviceManager, ILicenseManager licenseManager)
         {
-            this.serverIdManager = serverIdManager;
+            this.licenseManager = licenseManager;
             this.serviceManager = serviceManager;
             this.dbUpdateService = dbUpdateService;
             this.dataSetService = dataSetService;
@@ -47,7 +47,8 @@ namespace Slamby.API.Helpers
             logger.LogInformation($"MaxSearchBulkCount set to {siteConfig.Resources.MaxSearchBulkCount}");
 
             CreateDirectories();
-            serverIdManager.EnsureAppIdCreated();
+            licenseManager.EnsureAppIdCreated();
+            licenseManager.StartBackgroundValidator();
 
             logger.LogInformation("Waiting ElasticSearch to start...");
             WaitForElastic();

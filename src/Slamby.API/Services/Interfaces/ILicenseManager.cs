@@ -23,5 +23,7 @@ namespace Slamby.API.Services
         Task<IEnumerable<ValidationFailure>> ValidateAsync(string licenseKey);
 
         Task<CreateResponseModel> Create(string email);
+
+        void StartBackgroundValidator();
     }
 }

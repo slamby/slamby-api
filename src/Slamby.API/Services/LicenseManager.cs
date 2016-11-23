@@ -54,8 +54,6 @@ namespace Slamby.API.Services
             InitStores(siteConfig, provider);
             LoadPublicKey(env);
             LoadLicenseKey();
-
-            StartBackgroundValidator();
         }
 
         private void InitStores(IOptions<SiteConfig> siteConfig, IDataProtectionProvider provider)
@@ -83,7 +81,7 @@ namespace Slamby.API.Services
             }
         }
 
-        private void StartBackgroundValidator()
+        public void StartBackgroundValidator()
         {
             new TaskFactory()
                 .StartNew(
