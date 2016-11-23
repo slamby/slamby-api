@@ -153,12 +153,17 @@ namespace Slamby.API.Services
                 return validation;
             }
 
+            StoreLicenseKey(licenseKeyXml);
+
+            return Enumerable.Empty<ValidationFailure>();
+        }
+
+        private void StoreLicenseKey(string licenseKeyXml)
+        {
             licenseStore.Write(licenseKeyXml);
 
             ApplicationLicense = License.Core.License.Load(licenseKeyXml);
-            ApplicationLicenseValidation = validation;
-
-            return Enumerable.Empty<ValidationFailure>();
+            ApplicationLicenseValidation = Enumerable.Empty<ValidationFailure>();
         }
 
         public async Task<IEnumerable<ValidationFailure>> ValidateAsync(string licenseKey)
@@ -215,6 +220,8 @@ namespace Slamby.API.Services
 
                 if (checkResponse.IsValid)
                 {
+                    StoreLicenseKey(xmlText);
+
                     return new Tuple<bool, IEnumerable<ValidationFailure>>(true, Enumerable.Empty<ValidationFailure>());
                 }
             }
