@@ -18,10 +18,12 @@ namespace Slamby.API.Services
         readonly Uri LicenseServerUri = new Uri("https://license.slamby.com/");
 
         readonly ElasticClientFactory clientFactory;
+        readonly MPService mpService;
 
-        public LicenseServerClient(ElasticClientFactory clientFactory)
+        public LicenseServerClient(ElasticClientFactory clientFactory, MPService mpService)
         {
             this.clientFactory = clientFactory;
+            this.mpService = mpService;
         }
 
         public async Task<CheckResponseModel> RequestCheck(string xmlText, Guid instanceId, DateTime launchTime)
@@ -80,7 +82,7 @@ namespace Slamby.API.Services
 
                     var json = JsonConvert.SerializeObject(model);
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    var response = await client.PostAsync("api/create", content);
+                    var response = await client.PostAsync(mpService.IsMP() ? "api/createmp" : "api/create", content);
 
                     if (response.StatusCode != System.Net.HttpStatusCode.BadRequest &&
                         response.StatusCode != System.Net.HttpStatusCode.OK)

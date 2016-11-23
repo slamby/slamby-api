@@ -13,5 +13,7 @@
         public string LicenseKey { get; set; }
 
         public AlertModel Alert { get; set; }
+
+        public bool IsMP { get; set; }
     }
 }

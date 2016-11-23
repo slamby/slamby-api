@@ -16,11 +16,13 @@ namespace Slamby.API.Controllers
     {
         readonly ISecretManager secretManager;
         readonly ILicenseManager licenseManager;
+        readonly MPService mpService;
 
-        public SetupController(ISecretManager secretManager, ILicenseManager licenseManager)
+        public SetupController(ISecretManager secretManager, ILicenseManager licenseManager, MPService mpService)
         {
             this.licenseManager = licenseManager;
             this.secretManager = secretManager;
+            this.mpService = mpService;
         }
         
         [HttpGet]
@@ -50,7 +52,7 @@ namespace Slamby.API.Controllers
             {
                 return View("Completed");
             }
-
+            
             return View("Index", model);
         }
 
@@ -63,7 +65,8 @@ namespace Slamby.API.Controllers
                 Secret = string.Empty,
                 SecretMinLength = SecretManager.SecretMinLength,
                 SecretMaxLength = SecretManager.SecretMaxLength,
-                LicenseKey = licenseManager.Get()
+                LicenseKey = licenseManager.Get(),
+                IsMP = mpService.IsMP()
             };
         }
 

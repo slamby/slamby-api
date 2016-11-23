@@ -163,6 +163,7 @@ namespace Slamby.API.Services
 
         public async Task<IEnumerable<ValidationFailure>> ValidateAsync(string licenseKey)
         {
+            if (string.IsNullOrEmpty(licenseKey)) return Enumerable.Empty<ValidationFailure>();
             var validationOnline = await ValidateOnlineAsync(licenseKey);
 
             // Could not validate online, let's validate offline
