@@ -17,7 +17,7 @@ namespace Slamby.API.Services
             this.logger = loggerFactory.CreateLogger<ThrottleService>();
         }
         
-        public void SaveRequest(string host, string endpoint)
+        public void SaveRequest(string instanceId, string endpoint)
         {
             if (!redis.IsConnected)
             {
@@ -28,7 +28,7 @@ namespace Slamby.API.Services
             var date = DateTime.UtcNow.ToString("yyyy-MM");
             var db = redis.GetDatabase();
 
-            db.SortedSetIncrement(host, $"{date}:{endpoint}", 1, CommandFlags.FireAndForget);
+            db.SortedSetIncrement(instanceId, $"{date}:{endpoint}", 1, CommandFlags.FireAndForget);
         }
     }
 }

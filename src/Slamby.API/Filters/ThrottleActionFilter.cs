@@ -12,14 +12,16 @@ namespace Slamby.API.Filters
     {
         readonly ThrottleService throttleService;
         readonly SiteConfig siteConfig;
+        readonly ILicenseManager licenseManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ThrottleActionFilter"/> class.
         /// </summary>
-        public ThrottleActionFilter(ThrottleService throttleService, SiteConfig siteConfig)
+        public ThrottleActionFilter(ThrottleService throttleService, SiteConfig siteConfig, ILicenseManager licenseManager)
         {
             this.siteConfig = siteConfig;
             this.throttleService = throttleService;
+            this.licenseManager = licenseManager;
         }
 
         /// <summary>
@@ -30,10 +32,8 @@ namespace Slamby.API.Filters
         {
             base.OnActionExecuting(context);
 
-            var request = context.HttpContext.Request;
-            var endpoint = context.HttpContext.Request.Path.ToString();
-
-            throttleService.SaveRequest(HostUrlHelper.GetHostUrl(request, siteConfig.BaseUrlPrefix), endpoint);
+            var endpoint = $"{context.RouteData?.Values?["controller"]}/{context.RouteData?.Values?["action"]}";
+            throttleService.SaveRequest(licenseManager.InstanceId.ToString(), endpoint);
         }
     }
 }
