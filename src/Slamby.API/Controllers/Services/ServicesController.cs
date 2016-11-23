@@ -155,12 +155,12 @@ namespace Slamby.API.Controllers
                 case (int)ServiceTypeEnum.Classifier:
                     var classifierHandler = serviceProvider.GetService<ClassifierServiceHandler>();
                     classifierHandler.Delete(service);
-                    serviceQuery.DeleteSettings<ClassifierSettingsElastic>(id);
+                    serviceQuery.DeleteSettings<ClassifierSettingsElastic>(service.Id);
                     break;
                 case (int)ServiceTypeEnum.Prc:
                     var prcHandler = serviceProvider.GetService <PrcServiceHandler>();
                     prcHandler.Delete(service);
-                    serviceQuery.DeleteSettings<PrcSettingsElastic>(id);
+                    serviceQuery.DeleteSettings<PrcSettingsElastic>(service.Id);
                     break;
             }
 
