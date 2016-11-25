@@ -14,6 +14,7 @@ namespace Slamby.Common.Config
         public class RedisConfig
         {
             public string Configuration { get; set; }
+            public Dictionary<string,string> CommandMap { get; set; }
         }
     }
     

@@ -5,6 +5,7 @@ using StackExchange.Redis;
 using Slamby.Common.Config;
 using System.Net;
 using Slamby.API.Helpers;
+using System.Collections.Generic;
 
 namespace Slamby.API.Services
 {
@@ -19,7 +20,10 @@ namespace Slamby.API.Services
         {
             if (siteConfig.Stats != null && siteConfig.Stats.Enabled)
             {
-                var options = RedisDnsHelper.CorrectOption(ConfigurationOptions.Parse(siteConfig.Stats.Redis.Configuration));
+                var options = ConfigurationOptions.Parse(siteConfig.Stats.Redis.Configuration);
+                options.CommandMap = CommandMap.Create(siteConfig.Stats.Redis.CommandMap);
+
+                options = RedisDnsHelper.CorrectOption(options);
                 centralRedis = ConnectionMultiplexer.Connect(options);
             }
 
