@@ -6,7 +6,7 @@ namespace Slamby.Cerebellum.Scorer
 {
     public class PeSScorer : BaseScorer
     {
-        public PeSScorer(Dictionary<int, Dictionary<string, double>> dictionaries):base(dictionaries) {}
+        public PeSScorer(Dictionary<int, Dictionary<string, double>> dictionaries) : base(dictionaries) { }
 
         public override double GetScore(string text, double nGramMultiplier, bool normalized = true)
         {
@@ -17,7 +17,8 @@ namespace Slamby.Cerebellum.Scorer
             do
             {
                 words = Helpers.NGramMaker.GetNgrams(text, maxN).ToList();
-                if (words.Count == 0) {
+                if (words.Count == 0)
+                {
                     keys.Remove(maxN--);
                 }
             } while (words.Count == 0 && maxN > 0);
@@ -46,28 +47,25 @@ namespace Slamby.Cerebellum.Scorer
             var actualNGram = keys.First();
             var td = _dictionaries[actualNGram];
             var score = 0.0;
-            if (td != null && td.Any())
+            var foundWords = words.Where(w => td.ContainsKey(w)).ToList();
+
+            //weighting the n-grams
+            var blockFoundWordsWithValue = foundWords.Select(bfw =>
+                new KeyValuePair<string, double>(
+                    bfw,
+                    td[bfw] * Math.Pow(nGramMultiplier, actualNGram - 1))).ToList();
+
+            score = blockFoundWordsWithValue.Sum(bfwv => bfwv.Value);
+
+            var missings = foundWords.Aggregate(words.ToList(), (l, e) => { l.Remove(e); return l; }).ToList(); // setB - setA
+            if (keys.Count > 1)
             {
-                var foundWords = words.Where(w => td.ContainsKey(w)).ToList();
+                words = new List<string>();
+                missings.ForEach(w => words.AddRange(Helpers.NGramMaker.GetNgrams(w, actualNGram - 1)));
+                keys.Remove(actualNGram);
 
-                //weighting the n-grams
-                var blockFoundWordsWithValue = foundWords.Select(bfw =>
-                    new KeyValuePair<string, double>(
-                        bfw,
-                        td[bfw] * Math.Pow(nGramMultiplier, actualNGram - 1))).ToList();
-
-                score = blockFoundWordsWithValue.Sum(bfwv => bfwv.Value);
-
-                var missings = foundWords.Aggregate(words.ToList(), (l, e) => { l.Remove(e); return l; }).ToList(); // setB - setA
-                if (keys.Count > 1)
-                {
-                    words = new List<string>();
-                    missings.ForEach(w => words.AddRange(Helpers.NGramMaker.GetNgrams(w, actualNGram - 1)));
-                    keys.Remove(actualNGram);
-
-                    var gotScore = _getScore(words, keys, nGramMultiplier);
-                    score += gotScore;
-                }
+                var gotScore = _getScore(words, keys, nGramMultiplier);
+                score += gotScore;
             }
             return score;
         }

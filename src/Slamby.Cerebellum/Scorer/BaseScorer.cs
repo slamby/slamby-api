@@ -9,11 +9,11 @@ namespace Slamby.Cerebellum.Scorer
         protected Dictionary<int, double> _maxValues;
         public BaseScorer(Dictionary<int, Dictionary<string, double>> dictionaries)
         {
-            _dictionaries = dictionaries;
-            _maxValues = dictionaries.ToDictionary(d => d.Key, d => (d.Value == null || !d.Value.Any()) ? 0.0 : d.Value.Values.Max());
+            _dictionaries = dictionaries.Where(d => d.Value != null && d.Value.Any()).ToDictionary(d => d.Key, d => d.Value);
+            _maxValues = _dictionaries.ToDictionary(d => d.Key, d => (d.Value == null || !d.Value.Any()) ? 0.0 : d.Value.Values.Max());
         }
         public abstract double GetScore(string text, double nGramMultiplier, bool normalized);
 
-        
+
     }
 }
