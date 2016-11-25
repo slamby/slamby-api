@@ -16,6 +16,8 @@
 
         public RedisConfig Redis { get; set; } = new RedisConfig();
 
+        public StatsConfig Stats { get; set; } = new StatsConfig();
+
         public ElmConfig Elm { get; set; } = new ElmConfig();
 
         public ResourcesConfig Resources { get; set; } = new ResourcesConfig();

@@ -235,7 +235,7 @@ namespace Slamby.API
             mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(ModelValidationFilter)));
             mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(GlobalExceptionFilter)));
 
-            if (SiteConfig.Redis.Enabled)
+            if (SiteConfig.Stats.Enabled)
             {
                 mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(ThrottleActionFilter)));
             }
@@ -253,12 +253,7 @@ namespace Slamby.API
                 routeOptions.LowercaseUrls = true;
             });
 
-            services.AddDistributedRedisCache(options =>
-            {
-                //HACK: https://github.com/dotnet/corefx/issues/8768
-                //this should be changed back to Configuration["SlambyApi:Redis:Configuration"] when https://github.com/dotnet/corefx/issues/11564 is closed
-                options.Configuration = services.BuildServiceProvider().GetService<ConfigurationOptions>().ToString();
-            });
+            services.AddMemoryCache();
 
             services.AddSession(options =>
             {

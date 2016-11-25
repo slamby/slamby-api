@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Slamby.Common.DI;
 using StackExchange.Redis;
+using Slamby.Common.Config;
 
 namespace Slamby.API.Services
 {
@@ -10,24 +11,37 @@ namespace Slamby.API.Services
     {
         private ILogger logger;
         readonly ConnectionMultiplexer redis;
+        readonly ConnectionMultiplexer centralRedis;
 
-        public ThrottleService(ConnectionMultiplexer redis, ILoggerFactory loggerFactory)
+        public ThrottleService(ConnectionMultiplexer redis, SiteConfig siteConfig, ILoggerFactory loggerFactory)
         {
+            centralRedis = ((bool)siteConfig.Stats?.Enabled) ? ConnectionMultiplexer.Connect(siteConfig.Stats.Redis.Configuration) : null;
+
             this.redis = redis;
             this.logger = loggerFactory.CreateLogger<ThrottleService>();
         }
         
         public void SaveRequest(string instanceId, string endpoint)
         {
-            if (!redis.IsConnected)
+            if (!redis.IsConnected && !centralRedis.IsConnected)
             {
-                logger.LogWarning("Redis connection is offline");
                 return;
             }
-
             var date = DateTime.UtcNow.ToString("yyyy-MM");
-            var db = redis.GetDatabase();
 
+            IDatabase db = null;
+
+            if (centralRedis.IsConnected)
+            {
+                db = centralRedis.GetDatabase();
+            } else if (redis.IsConnected)
+            {
+                db = redis.GetDatabase();
+            }
+            else
+            {
+                return;
+            }
             db.SortedSetIncrement(instanceId, $"{date}:{endpoint}", 1, CommandFlags.FireAndForget);
         }
     }
