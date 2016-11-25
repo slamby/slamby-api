@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Slamby.Common.DI;
 using StackExchange.Redis;
 using Slamby.Common.Config;
+using System.Net;
+using Slamby.API.Helpers;
 
 namespace Slamby.API.Services
 {
@@ -15,7 +17,11 @@ namespace Slamby.API.Services
 
         public ThrottleService(ConnectionMultiplexer redis, SiteConfig siteConfig, ILoggerFactory loggerFactory)
         {
-            centralRedis = ((bool)siteConfig.Stats?.Enabled) ? ConnectionMultiplexer.Connect(siteConfig.Stats.Redis.Configuration) : null;
+            if (siteConfig.Stats != null && siteConfig.Stats.Enabled)
+            {
+                var options = RedisDnsHelper.CorrectOption(ConfigurationOptions.Parse(siteConfig.Stats.Redis.Configuration));
+                centralRedis = ConnectionMultiplexer.Connect(options);
+            }
 
             this.redis = redis;
             this.logger = loggerFactory.CreateLogger<ThrottleService>();

@@ -155,10 +155,7 @@ namespace Slamby.API
             services.Configure<SiteConfig>(Configuration.GetSection("SlambyApi"));
             services.Configure<SiteConfig>(sc => sc.Version = this.ApiVersion);
         }
-
-        private async Task<string> GetIp(string hostname)
-             => (await Dns.GetHostEntryAsync(hostname)).AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork).ToString();
-
+        
         private void ConfigureDependencies(IServiceCollection services)
         {
             //see: https://github.com/aspnet/Hosting/issues/793
@@ -174,19 +171,7 @@ namespace Slamby.API
                 var options = ConfigurationOptions.Parse(Configuration["SlambyApi:Redis:Configuration"]);
                 //HACK: https://github.com/dotnet/corefx/issues/8768
                 //this should be removed when https://github.com/dotnet/corefx/issues/11564 is closed
-                var dnsEndPoints = options.EndPoints.OfType<DnsEndPoint>().ToList();
-                foreach(var dnsEndPoint in dnsEndPoints)
-                {
-                    options.EndPoints.Remove(dnsEndPoint);
-                    options.EndPoints.Add(GetIp(dnsEndPoint.Host).Result, dnsEndPoint.Port);
-                }
-                if (options.WriteBuffer < 64 * 1024)
-                {
-                    options.WriteBuffer = 64 * 1024;
-                }
-                options.ResolveDns = false; //re-resolve dns on re-connect
-                services.AddSingleton(options);
-                
+                services.AddSingleton(RedisDnsHelper.CorrectOption(options));
                 services.AddSingleton<ConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(sp.GetService<ConfigurationOptions>()));
             }
         }
