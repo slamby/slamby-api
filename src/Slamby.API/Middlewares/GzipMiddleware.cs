@@ -24,6 +24,7 @@ namespace Slamby.API.Middlewares
             // Swagger UI replaces stream with a CanRead=false MemoryStream, so we cannot gzip that stream
             if (!context.IsRequestHeaderContains(HeaderNames.AcceptEncoding, "gzip") ||
                 context.Request.Path.StartsWithSegments("/swagger") ||
+                context.Request.Path.StartsWithSegments("/setup") ||
                 context.Request.Path.StartsWithSegments(Common.Constants.FilesPath) ||
                 context.Request.Path.StartsWithSegments(Common.Constants.AssetsPath))
             {
