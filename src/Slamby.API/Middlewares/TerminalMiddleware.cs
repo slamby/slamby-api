@@ -26,7 +26,8 @@ namespace Slamby.API.Middlewares
             {
                 Name = "Slamby.API",
                 Version = siteConfig.Value.Version,
-                InstanceId = licenseManager.InstanceId
+                InstanceId = licenseManager.InstanceId,
+                Information = "https://developers.slamby.com"
             };
 
             context.Response.ContentType = "application/json";
