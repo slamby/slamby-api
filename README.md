@@ -23,7 +23,7 @@ We made a prepared Docker Compose file for the easy installation.
 
 3. Download our Docker Compose file
   ```
-  $ curl -L "https://github.com/slamby/slamby-api/releases/download/v1.1.0/docker-compose.yml" > docker-compose.yml
+  $ curl -L "https://github.com/slamby/slamby-api/releases/download/v1.2.0/docker-compose.yml" > docker-compose.yml
   ``` 
 
 4. Compose the containers (run next to the compose file)
@@ -31,16 +31,25 @@ We made a prepared Docker Compose file for the easy installation.
   $ docker-compose up -d
   ```
 
-5. Your server is ready. Check that if it's working correctly
+5. Your server is intalled. Check that if it's working correctly
   ```
   $ curl localhost
 
   {
     "Name": "Slamby.API",
-    "Version": "1.1.0"
+    "Version": "1.2.0",
+    "InstanceId": "817021ac-cc23-4473-b203-5083c3e7e00e",
+    "Information": "https://developers.slamby.com"
   }
 
   ```
+
+6. Open the setup page in a browser (http://localhost/setup) and follow the orders
+    
+    During the setup you need to:
+    - Request a Slamby License,
+    - Copy your Slamby API License,
+    - Set the secret (password) for your Slamby API
 
 ### With Docker (advanced)
 
@@ -74,7 +83,7 @@ Create a directory on the host computer for the persistent Slamby API files
 
 Pull the image from docker hub
 ```
-docker pull slamby/slamby.api:1.1.0
+docker pull slamby/slamby.api:1.2.0
 ```
 
 Run the container with settings
@@ -83,7 +92,7 @@ docker run -d \
   --name slamby_api \
   -p 5000:5000 \
   -v /yourDataDirectory:/Slamby \
-  slamby/slamby.api:1.1.0
+  slamby/slamby.api:1.2.0
 ```
 
 The Slamby API is using the port 5000 by default, but you can bind it to whatever port you want on your Docker host. 
