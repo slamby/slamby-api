@@ -21,7 +21,7 @@ services:
   slambyapi:
     container_name: slamby_api
     restart: always
-    image: slamby/slamby.api:1.1.0
+    image: slamby/slamby.api:1.2.0
     environment:
       SlambyApi__ApiSecret: s3cr3t
     volumes:
