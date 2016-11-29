@@ -24,6 +24,7 @@ namespace Slamby.API.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
+            context.Request.PathBase = HostUrlHelper.GetPathBase(context.Request, siteConfig.BaseUrlPrefix);
             var requestId = Guid.NewGuid().ToString();
             var ignoreContent = siteConfig.RequestLogger.IgnoreContent.Any(
                 path => context.Request.Path.StartsWithSegments(new PathString(path), StringComparison.OrdinalIgnoreCase)
