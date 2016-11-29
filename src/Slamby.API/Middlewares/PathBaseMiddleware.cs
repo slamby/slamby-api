@@ -12,17 +12,17 @@ namespace Slamby.API.Middlewares
         readonly ILogger _logger;
         readonly SiteConfig siteConfig;
 
-        public PathBaseMiddleware(RequestDelegate next, ILoggerFactory loggerFactory, SiteConfig siteConfig)
+        public PathBaseMiddleware(RequestDelegate next, SiteConfig siteConfig)
         {
             this.siteConfig = siteConfig;
             this.next = next;
-            _logger = loggerFactory.CreateLogger<RequestLoggerMiddleware>();
         }
 
         public async Task Invoke(HttpContext context)
         {
             context.Request.PathBase = HostUrlHelper.GetPathBase(context.Request, siteConfig.BaseUrlPrefix);
-            return;
+            // Call next Middleware
+            await next(context);
         }
     }
 }
