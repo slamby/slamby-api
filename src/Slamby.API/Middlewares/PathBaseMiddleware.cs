@@ -19,7 +19,7 @@ namespace Slamby.API.Middlewares
             _logger = loggerFactory.CreateLogger<RequestLoggerMiddleware>();
         }
 
-        public void Invoke(HttpContext context)
+        public async Task Invoke(HttpContext context)
         {
             context.Request.PathBase = HostUrlHelper.GetPathBase(context.Request, siteConfig.BaseUrlPrefix);
             return;
