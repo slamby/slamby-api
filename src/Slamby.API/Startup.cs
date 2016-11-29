@@ -291,6 +291,11 @@ namespace Slamby.API
                 app.UseDeveloperExceptionPage();
             }
 
+            if (!string.IsNullOrEmpty(SiteConfig.BaseUrlPrefix))
+            {
+                app.UsePathBase();
+            }
+
             app.UseSession();
 
             app.UseSecretValidator();
