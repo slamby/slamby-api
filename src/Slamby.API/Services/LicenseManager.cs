@@ -197,7 +197,7 @@ namespace Slamby.API.Services
 
             if (checkResponse == null)
             {
-                return new Tuple<bool, IEnumerable<ValidationFailure>>(false, unknownFailure);
+                return new Tuple<bool, IEnumerable<ValidationFailure>>(false, null);
             }
 
             if (checkResponse.IsValid)

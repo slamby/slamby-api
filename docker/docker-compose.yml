@@ -2,7 +2,7 @@ version: '2'
 services:
   redis:
     container_name: slamby_redis
-    image: redis:3.0-32bit
+    image: redis:3.0
     restart: always
     cpu_shares: 512
     volumes:
@@ -11,19 +11,14 @@ services:
     container_name: slamby_elasticsearch
     restart: always
     image: slamby/elasticsearch:1.0
-    mem_limit: 1024m
     volumes:
       - /usr/share/elasticsearch/data:/usr/share/elasticsearch/data
-    environment:
-      ES_HEAP_SIZE: 256m
     oom_score_adj: -1000
     cpu_shares: 512
   slambyapi:
     container_name: slamby_api
     restart: always
     image: slamby/slamby.api:1.2.0
-    environment:
-      SlambyApi__ApiSecret: s3cr3t
     volumes:
       - /home/slamby:/Slamby
     depends_on:
@@ -45,6 +40,8 @@ services:
     restart: always
     ports:
       - "80:80"
+    depends_on:
+      - slambyapi
     links:
       - slambyapi
     cpu_shares: 512
