@@ -31,7 +31,7 @@ We made a prepared Docker Compose file for the easy installation.
   $ docker-compose up -d
   ```
 
-5. Your server is intalled. Check that if it's working correctly
+5. Your server is installed. Check that if it's working correctly
   ```
   $ curl localhost
 
