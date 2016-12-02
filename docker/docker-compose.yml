@@ -20,7 +20,7 @@ services:
     restart: always
     image: slamby/slamby.api:1.2.0
     volumes:
-      - /home/slamby:/Slamby
+      - /usr/share/slamby:/Slamby
     depends_on:
       - elasticsearch
       - redis
