@@ -38,7 +38,7 @@ namespace Slamby.API.Filters
                 DeclaredType = typeof(ErrorsModel)
             };
 
-            logger.LogError("GlobalExceptionFilter", context.Exception);
+            logger.LogError(new EventId(0), context.Exception, "GlobalExceptionFilter");
 
             //log the request for this error if it had
             // Replace Request Body with own MemoryStream

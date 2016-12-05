@@ -10,6 +10,7 @@ namespace Slamby.Cerebellum.Scorer
 
         public override double GetScore(string text, double nGramMultiplier, bool normalized = true)
         {
+            if (!_dictionaries.Any() || _dictionaries.All(d => d.Value == null)) return -1;
             if (string.IsNullOrEmpty(text)) return 0.0;
             var keys = _dictionaries.Keys.OrderByDescending(k => k).ToList();
             var maxN = _dictionaries.Keys.Max();
