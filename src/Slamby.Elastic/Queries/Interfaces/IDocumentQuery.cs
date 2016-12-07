@@ -13,7 +13,7 @@ namespace Slamby.Elastic.Queries
         Dictionary<string, int> CountForTags(List<string> tagIds, string tagField);
         void Delete(string id);
         void Delete(IEnumerable<string> ids);
-        ScrolledSearchResult<DocumentElastic> Filter(string generalQuery, IEnumerable<string> tagIds, string tagField, int limit, string orderBy, bool isDescending, IEnumerable<string> interPretedFields, IEnumerable<string> documentObjectFieldNames, IEnumerable<string> returningDocumentObjectFields, IEnumerable<string> ids = null, DateTime? dateStart = null, DateTime? dateEnd = null);
+        ScrolledSearchResult<DocumentElastic> Filter(string generalQuery, IEnumerable<string> tagIds, string tagField, int limit, string orderBy, bool isDescending, IEnumerable<string> interPretedFields, IEnumerable<string> documentObjectFieldNames, IEnumerable<string> returningDocumentObjectFields, IEnumerable<string> ids = null, DateTime? dateStart = null, DateTime? dateEnd = null, string shouldQuery = null);
         void Flush();
         ScrolledSearchResult<DocumentElastic> GetScrolled(string scrollId);
         DocumentElastic Get(string id);

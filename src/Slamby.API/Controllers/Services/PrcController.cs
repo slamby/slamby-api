@@ -377,7 +377,6 @@ namespace Slamby.API.Controllers.Services
                 tagId = resultsList.First().Key;
             }
             
-            //ha nem adja meg melyik tag-ekhez tartozó doksikon kell keresni, akkor az alap TagId pakoljuk be
             var tagsToTest = new List<string>();
             if (request.Filter?.TagIdList?.Any() == true)
             {
@@ -389,10 +388,6 @@ namespace Slamby.API.Controllers.Services
                         string.Format(ServiceResources.TheFollowingTagIdsNotExistInTheDataSet_0, string.Join(", ", missingTagIds)));
                 }
                 tagsToTest = request.Filter.TagIdList;
-            }
-            else
-            {
-                tagsToTest.Add(tagId);
             } 
 
             var globalSubset = GlobalStore.ActivatedPrcs.Get(id).PrcSubsets[tagId];
@@ -423,8 +418,17 @@ namespace Slamby.API.Controllers.Services
                 return new OkObjectResult(results);
             }
 
-            var query = request.Filter != null ? request.Filter.Query : string.Empty;
-            query = string.Format("{0}{1}({2})", query, !string.IsNullOrEmpty(query) ? " AND " : "", string.Join(" ", wordsInDic));
+            var filterQuery = request.Filter?.Query?.Trim();
+            var query = string.IsNullOrEmpty(filterQuery) ? string.Empty : $"({filterQuery}) AND ";
+            // '+ 1' because we give score between 0 and 1 but in elasticsearch that means negative boost
+            query = string.Format("{0}({1})", query, string.Join(" ", baseDic.Select(k => $"{k.Key}^{k.Value + 1}")));
+
+            string shouldQuery = null;
+            // weighting
+            if (request.Weights?.Any() == true)
+            {
+                shouldQuery = string.Join(" ", request.Weights.Select(k => $"({k.Query})^{k.Value}"));
+            }
 
             var fieldsForRecommendation = GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.FieldsForRecommendation;
 
@@ -433,19 +437,16 @@ namespace Slamby.API.Controllers.Services
             var scrollResult = documentQuery
                 .Filter(query, 
                         tagsToTest, 
-                        dataSet.TagField, 
-                        -1, null, false,
+                        dataSet.TagField,
+                        request.Count,
+                        null, false,
                         fieldsForRecommendation,
                         globalStoreDataSet.DocumentFields,
-                        DocumentService.GetFieldFilter(globalStoreDataSet, new List<string> { request.NeedDocumentInResult ? "*" : globalStoreDataSet.DataSet.IdField }));
+                        DocumentService.GetFieldFilter(globalStoreDataSet, new List<string> { request.NeedDocumentInResult ? "*" : globalStoreDataSet.DataSet.IdField }),
+                        null, null, null,
+                        shouldQuery);
 
             documentElastics.AddRange(scrollResult.Items);
-
-            while (scrollResult.Items.Any())
-            {
-                scrollResult = documentQuery.GetScrolled(scrollResult.ScrollId);
-                documentElastics.AddRange(scrollResult.Items);
-            }
 
             var docIdsWithScore = new ConcurrentDictionary<string, double>(new Dictionary<string, double>());
             var wordQuery = queryFactory.GetWordQuery(dataSet.Name);
@@ -472,25 +473,6 @@ namespace Slamby.API.Controllers.Services
                 var finalScore = (actualBaseScore / baseScore) / (actualGlobalScore / globalScore);
                 docIdsWithScore.TryAdd(docElastic.Id, finalScore);
             });
-
-            //súlyozás
-            if (request.Weights?.Any() == true)
-            {
-                var weightsDic = request.Weights.ToDictionary(w => Guid.NewGuid().ToString(), w => w);
-
-                var docIds = docIdsWithScore.Keys.ToList();
-                var queries = weightsDic.ToDictionary(w => w.Key, w => documentQuery.PrefixQueryFields(w.Value.Query, globalStoreDataSet.DocumentFields));
-                var ids = documentQuery.GetExistsForQueries(queries, docIds).ToDictionary(k => k.Key, v => v.Value.ToDictionary(ke => ke, va => va));
-
-                var allWeightsCount = request.Weights.Count;
-                foreach (var docId in docIds)
-                {
-                    var weightsSum = weightsDic.Where(w => ids[w.Key].ContainsKey(docId)).Sum(w =>w.Value.Value);
-                    var pow = 1 + (weightsSum / allWeightsCount);
-                    var score = Math.Pow(docIdsWithScore[docId] + 1, pow) - 1;
-                    docIdsWithScore[docId] = score;
-                }
-            }
 
             var resultDic = docIdsWithScore.OrderByDescending(rd => rd.Value).ToList();
             if (request.Count != 0 && resultDic.Count > request.Count) resultDic = resultDic.Take(request.Count).ToList();

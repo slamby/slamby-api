@@ -72,7 +72,8 @@ namespace Slamby.Elastic.Queries
             IEnumerable<string> returningDocumentObjectFields,
             IEnumerable<string> ids = null,
             DateTime? dateStart = null,
-            DateTime? dateEnd = null)
+            DateTime? dateEnd = null,
+            string shouldQuery = null)
         {
 
             var sdesc = new SearchDescriptor<DocumentElastic>();
@@ -86,7 +87,7 @@ namespace Slamby.Elastic.Queries
                 //replace the field names (because of the document_object)
                 if (documentObjectFieldNames?.Any() == true)
                 {
-                    modifiedQuery = PrefixQueryFields(generalQuery, documentObjectFieldNames);
+                    modifiedQuery = PrefixQueryFields(modifiedQuery, documentObjectFieldNames);
                 }
                 if (interPretedFields != null && interPretedFields.Any())
                 {
@@ -135,7 +136,23 @@ namespace Slamby.Elastic.Queries
                         .LessThanOrEquals(dateEnd.Value)));
             }
 
-            sdesc.Query(q => q.Bool(b => b.Must(queryContainers.ToArray())));
+            // a REAL _should_ query, if we just add to the queryContainer then at least one of this condition must satisfied
+            if (!string.IsNullOrEmpty(shouldQuery))
+            {
+                var modifiedQuery = shouldQuery;
+                //replace the field names (because of the document_object)
+                if (documentObjectFieldNames?.Any() == true)
+                {
+                    modifiedQuery = PrefixQueryFields(modifiedQuery, documentObjectFieldNames);
+                }
+                sdesc.Query(q => q.Bool(b => b
+                    .Must(queryContainers.ToArray())
+                    .Should(sq => sq.QueryString(qs => qs.Query(modifiedQuery)))));
+            }
+            else
+            {
+                sdesc.Query(q => q.Bool(b => b.Must(queryContainers.ToArray())));
+            }
 
             if (!string.IsNullOrEmpty(orderBy))
             {

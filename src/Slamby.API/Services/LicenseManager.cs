@@ -224,8 +224,15 @@ namespace Slamby.API.Services
                     return new Tuple<bool, IEnumerable<ValidationFailure>>(true, Enumerable.Empty<ValidationFailure>());
                 }
             }
-
-            return new Tuple<bool, IEnumerable<ValidationFailure>>(true, checkResponse.Failures ?? unknownFailure);
+            if (checkResponse.Failures == null && !checkResponse.Failures.Any())
+            {
+                return new Tuple<bool, IEnumerable<ValidationFailure>>(false, unknownFailure);
+            }
+            else
+            {
+                return new Tuple<bool, IEnumerable<ValidationFailure>>(true, checkResponse.Failures);
+            }
+            
         }
 
         private IEnumerable<ValidationFailure> ValidateOffline(string xmlText)

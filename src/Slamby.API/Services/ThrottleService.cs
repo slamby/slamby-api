@@ -24,16 +24,15 @@ namespace Slamby.API.Services
                 options.CommandMap = CommandMap.Create(siteConfig.Stats.Redis.CommandMap);
 
                 options = RedisDnsHelper.CorrectOption(options);
-                centralRedis = ConnectionMultiplexer.Connect(options);
+                if (options != null) centralRedis = ConnectionMultiplexer.Connect(options);
             }
-
             this.redis = redis;
             this.logger = loggerFactory.CreateLogger<ThrottleService>();
         }
         
         public void SaveRequest(string instanceId, string endpoint)
         {
-            if (!redis.IsConnected && !centralRedis.IsConnected)
+            if (!redis.IsConnected && (centralRedis == null || !centralRedis.IsConnected))
             {
                 return;
             }
@@ -41,7 +40,7 @@ namespace Slamby.API.Services
 
             IDatabase db = null;
 
-            if (centralRedis.IsConnected)
+            if (centralRedis != null && centralRedis.IsConnected)
             {
                 db = centralRedis.GetDatabase();
             } else if (redis.IsConnected)

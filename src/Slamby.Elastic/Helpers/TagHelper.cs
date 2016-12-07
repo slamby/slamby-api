@@ -9,7 +9,7 @@ namespace Slamby.Elastic.Helpers
     {
         public static Dictionary<int, List<string>> GetTagIdsByLevel<TItem>(IEnumerable<TItem> tags, Func<TItem, string> parentIdSelector, Func<TItem, string> idSelector)
         {
-            var tagIdsByLevel = new Dictionary<int, List<string>> { [0] = new List<string> { string.Empty, null } };
+            var tagIdsByLevel = new Dictionary<int, List<string>> { [0] = new List<string> { string.Empty, null, "NULL" } };
             var level = 1;
 
             do

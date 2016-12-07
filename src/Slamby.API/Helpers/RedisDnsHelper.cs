@@ -14,20 +14,27 @@ namespace Slamby.API.Helpers
     {
         public static ConfigurationOptions CorrectOption(ConfigurationOptions options)
         {
-            //HACK: https://github.com/dotnet/corefx/issues/8768
-            //this should be removed when https://github.com/dotnet/corefx/issues/11564 is closed
-            var dnsEndPoints = options.EndPoints.OfType<DnsEndPoint>().ToList();
-            foreach (var dnsEndPoint in dnsEndPoints)
+            try
             {
-                options.EndPoints.Remove(dnsEndPoint);
-                options.EndPoints.Add(GetIp(dnsEndPoint.Host).Result, dnsEndPoint.Port);
-            }
-            if (options.WriteBuffer < 64 * 1024)
+                //HACK: https://github.com/dotnet/corefx/issues/8768
+                //this should be removed when https://github.com/dotnet/corefx/issues/11564 is closed
+                var dnsEndPoints = options.EndPoints.OfType<DnsEndPoint>().ToList();
+                foreach (var dnsEndPoint in dnsEndPoints)
+                {
+                    options.EndPoints.Remove(dnsEndPoint);
+                    options.EndPoints.Add(GetIp(dnsEndPoint.Host).Result, dnsEndPoint.Port);
+                }
+                if (options.WriteBuffer < 64 * 1024)
+                {
+                    options.WriteBuffer = 64 * 1024;
+                }
+                options.ResolveDns = false; //re-resolve dns on re-connect
+                return options;
+            } catch(Exception ex)
             {
-                options.WriteBuffer = 64 * 1024;
+                return null;
             }
-            options.ResolveDns = false; //re-resolve dns on re-connect
-            return options;
+            
         }
 
         private static async Task<string> GetIp(string hostname)

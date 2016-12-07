@@ -171,6 +171,12 @@ namespace Slamby.API
                 var options = ConfigurationOptions.Parse(Configuration["SlambyApi:Redis:Configuration"]);
                 //HACK: https://github.com/dotnet/corefx/issues/8768
                 //this should be removed when https://github.com/dotnet/corefx/issues/11564 is closed
+                options = RedisDnsHelper.CorrectOption(options);
+                if (options == null)
+                {
+                    Log.Logger.Error("Can't resolve the name of the Redis server!");
+                    return;
+                }
                 services.AddSingleton(RedisDnsHelper.CorrectOption(options));
                 services.AddSingleton<ConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(sp.GetService<ConfigurationOptions>()));
             }
