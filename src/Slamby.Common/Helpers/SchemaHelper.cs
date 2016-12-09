@@ -128,7 +128,7 @@ namespace Slamby.Common.Helpers
 
                 result.Add(fullPath, new Tuple<string, string>(type, subType));
 
-                if (type == Types.Object)
+                if (type == Types.Object || subType == Types.Object)
                 {
                     GetSchemaPaths(property.Value.SelectToken($"{tokenPrefix}{Elements.Properties}"), result, fullPath);
                 }
