@@ -53,19 +53,31 @@ namespace Slamby.Elastic.Queries
             ResponseValidator(mapResp);
         }
 
-        public IEnumerable<ProcessElastic> GetAll()
+        public IEnumerable<ProcessElastic> GetAll(bool justActives, int lastDays = 0)
         {
             var sdesc = new SearchDescriptor<ProcessElastic>();
-            return Get(sdesc).Items;
-        }
-
-        public IEnumerable<ProcessElastic> GetActives()
-        {
-            var sdesc = new SearchDescriptor<ProcessElastic>()
-                .Query(q => q
+            var queryContDesc = new QueryContainerDescriptor<ProcessElastic>();
+            var queryContainers = new List<QueryContainer>();
+            if (justActives)
+            {
+                queryContainers.Add(queryContDesc
                     .Term(t => t
                         .Field(f => f.Status)
                         .Value((int)SDK.Net.Models.Enums.ProcessStatusEnum.InProgress)));
+            }
+            if (lastDays > 0)
+            {
+                queryContainers.Add(queryContDesc
+                    .DateRange(dr => dr
+                        .Field(f => f.Start)
+                        .GreaterThanOrEquals(System.DateTime.UtcNow.AddDays(-lastDays))));
+            }
+            if (queryContainers.Count > 0)
+            {
+                sdesc.Query(query => query
+                .Bool(selector => selector
+                    .Must(queryContainers.ToArray())));
+            }
             return Get(sdesc).Items;
         }
 

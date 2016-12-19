@@ -30,12 +30,9 @@ namespace Slamby.API.Controllers
         [HttpGet]
         [SwaggerOperation("GetProcesses")]
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(IEnumerable<Process>))]
-        public IActionResult Get([FromQuery]bool allStatus = false)
+        public IActionResult Get([FromQuery]bool allStatus = false, [FromQuery]bool allTime = false)
         {
-            var processes = allStatus 
-                ? processQuery.GetAll() 
-                : processQuery.GetActives();
-
+            var processes = processQuery.GetAll(!allStatus, allTime ? 0 : 30);
             return new OkObjectResult(processes.Select(ModelHelper.ToProcessModel));
         }
 

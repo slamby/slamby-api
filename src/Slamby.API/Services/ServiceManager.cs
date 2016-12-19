@@ -154,7 +154,7 @@ namespace Slamby.API.Services
 
         public void CancelBusyProcesses()
         {
-            var busyProcesses = processQuery.GetActives();
+            var busyProcesses = processQuery.GetAll(true);
             foreach (var process in busyProcesses)
             {
                 if (process.Type == (int)ProcessTypeEnum.PrcIndex)
