@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using Slamby.Common.Helpers;
 using Slamby.Elastic.Models;
 using Slamby.SDK.Net.Models;
+using System.Threading;
 
 namespace Slamby.API.Services.Interfaces
 {
@@ -39,9 +40,8 @@ namespace Slamby.API.Services.Interfaces
 
         string GetIdValue(string dataSetName, object document);
         object GetFieldValue(object document, string field);
-
-        Result Copy(string dataSetName, IEnumerable<string> documentIds, string targetDataSetName, int parallelLimit = -1);
-        Result Move(string dataSetName, IEnumerable<string> documentIds, string targetDataSetName, int parallelLimit = -1);
+        Process StartCopyOrMove(string dataSetName, IDocumentSettings settings, bool isMove, int parallelLimit = -1);
+        void CopyOrMove(string processId, string dataSetName, IEnumerable<string> documentIds, string targetDataSetName, int parallelLimit, bool isMove, CancellationToken token, string hostUrl);
 
         PaginatedList<object> Sample(string dataSetName, string seed, IEnumerable<string> tagIds, int size, IEnumerable<string> fields = null);
         PaginatedList<object> Sample(string dataSetName, string seed, IEnumerable<string> tagIds, double percent, IEnumerable<string> fields = null);

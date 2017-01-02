@@ -34,9 +34,8 @@ namespace Slamby.API.Controllers.Documents
 
         [HttpPost]
         [SwaggerOperation("CopyDocuments")]
-        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status200OK, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
-        [SwaggerResponse(StatusCodes.Status409Conflict, "", typeof(ErrorsModel))]
         public IActionResult Post([FromBody]DocumentCopySettings copySettings)
         {
             if (copySettings.DocumentIdList == null || !copySettings.DocumentIdList.Any())
@@ -49,14 +48,8 @@ namespace Slamby.API.Controllers.Documents
                 return HttpErrorResult(StatusCodes.Status400BadRequest, 
                     string.Format(DataSetResources.DataSet_0_IsNotFound, copySettings.TargetDataSetName));
             }
-
-            var result = documentService.Copy(dataSetName, copySettings.DocumentIdList, copySettings.TargetDataSetName, parallelService.ParallelLimit);
-            if (result.IsFailure)
-            {
-                return HttpErrorResult(StatusCodes.Status409Conflict, result.Error);
-            }
-
-            return new StatusCodeResult(StatusCodes.Status200OK);
+            var process = documentService.StartCopyOrMove(dataSetName, copySettings, false, parallelService.ParallelLimit);
+            return HttpObjectResult(StatusCodes.Status202Accepted, process);
         }
     }
 }

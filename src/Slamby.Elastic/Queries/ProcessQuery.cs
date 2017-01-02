@@ -89,21 +89,11 @@ namespace Slamby.Elastic.Queries
 
         public void Index(ProcessElastic processElastic)
         {
-            Index(new List<ProcessElastic> { processElastic });
-        }
-
-        public void Index(IEnumerable<ProcessElastic> processElastics)
-        {
-            if (!processElastics.Any())
-            {
-                return;
-            }
-
-            var response = Client.IndexMany(processElastics);
+            var response = Client.Index(processElastic);
             ResponseValidator(response);
             Client.Flush(IndexName);
         }
-
+        
         public string Update(string id, ProcessElastic processElastic)
         {
             var response = Client.Update(new DocumentPath<ProcessElastic>(id), ur => ur.Doc(processElastic));
@@ -130,17 +120,6 @@ namespace Slamby.Elastic.Queries
         public bool IsExists(string id)
         {
             return Client.DocumentExists<ProcessElastic>(id).Exists;
-        }
-
-        /// <summary>
-        /// TODO: remove after every API upgraded to 1.0
-        /// It is used one time only for migration
-        /// </summary>
-        public void RelocateFromServices()
-        {
-            var sdesc = new SearchDescriptor<ProcessElastic>().Index(Constants.SlambyServicesIndex);
-            var items = Get(sdesc).Items;
-            Index(items);
         }
     }
 }

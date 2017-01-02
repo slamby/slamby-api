@@ -20,6 +20,10 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using MoreLinq;
 using Slamby.Common.Config;
+using Slamby.SDK.Net.Models.Enums;
+using System.Threading;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace Slamby.API.Services
 {
@@ -29,19 +33,23 @@ namespace Slamby.API.Services
         readonly IGlobalStoreManager globalStore;
         readonly IQueryFactory queryFactory;
         private const string _allFieldCharacter = "*";
+        readonly ProcessHandler processHandler;
+        readonly UrlProvider urlProvider;
 
         GlobalStoreDataSet DataSet(string dataSetName) => globalStore.DataSets.Get(dataSetName);
         IDocumentQuery DocumentQuery(string dataSetName) => queryFactory.GetDocumentQuery(dataSetName);
 
         readonly SiteConfig siteConfig;
 
-        public DocumentService(IGlobalStoreManager globalStore, IQueryFactory queryFactory, SiteConfig siteConfig)
+        public DocumentService(IGlobalStoreManager globalStore, IQueryFactory queryFactory, SiteConfig siteConfig, ProcessHandler processHandler, UrlProvider urlProvider)
         {
             this.siteConfig = siteConfig;
             this.queryFactory = queryFactory;
             this.globalStore = globalStore;
+            this.processHandler = processHandler;
+            this.urlProvider = urlProvider;
         }
-        
+
         private ScrolledSearchResult<DocumentElastic> FilterInternal(
             GlobalStoreDataSet dataSet,
             string generalQuery, List<string> tagIds, int limit, string orderBy,
@@ -62,7 +70,7 @@ namespace Slamby.API.Services
             return searchResult;
         }
 
-        public PaginatedList<object> Filter(string dataSetName, string generalQuery, List<string> tagIds, int limit, string orderBy, 
+        public PaginatedList<object> Filter(string dataSetName, string generalQuery, List<string> tagIds, int limit, string orderBy,
             bool isDescending, List<string> documentObjectFields = null)
         {
             var dataSet = DataSet(dataSetName);
@@ -87,7 +95,7 @@ namespace Slamby.API.Services
                 fieldList.Add(dataSet.DataSet.IdField);
                 fieldList.Add(dataSet.DataSet.TagField);
                 fieldList.AddRange(dataSet.DataSet.InterpretedFields);
-                
+
                 // Remove attachment type fields
                 fieldList = fieldList.Except(dataSet.AttachmentFields).ToList();
             }
@@ -161,7 +169,7 @@ namespace Slamby.API.Services
         {
             var actionResult = new List<Func<Result>>();
 
-            if (root.GetPathToken(idField) != null) { actionResult.Add(() => ValidateIdField(root, idField));  }
+            if (root.GetPathToken(idField) != null) { actionResult.Add(() => ValidateIdField(root, idField)); }
             if (root.GetPathToken(tagField) != null) { actionResult.Add(() => ValidateTagField(root, tagField, tagIsArray, tagIsInteger, false)); }
 
             var existingInterpretedFields = interpretedFields.Where(field => root.GetPathToken(field) != null).ToList();
@@ -212,7 +220,7 @@ namespace Slamby.API.Services
         public Result ValidateInterpretedFields(JToken root, IEnumerable<string> interpretedFields)
         {
             foreach (var interpretedField in interpretedFields)
-            {   
+            {
                 var fieldToken = root.GetPathToken(interpretedField);
                 if (fieldToken == null)
                 {
@@ -328,7 +336,7 @@ namespace Slamby.API.Services
         /// <param name="idField"></param>
         /// <returns></returns>
         public Result ValidateIdField(JToken root, string idField)
-        {   
+        {
             var idToken = root.GetPathToken(idField);
             if (idToken == null)
             {
@@ -480,7 +488,7 @@ namespace Slamby.API.Services
             var pageSize = 1000;
             var scrolledResults = FilterInternal(dataSet, null, tagIdsToRemove, pageSize, dataSet.DataSet.IdField, false, new List<string> { dataSet.DataSet.TagField });
 
-            while(scrolledResults.Items.Any())
+            while (scrolledResults.Items.Any())
             {
                 foreach (var documentElastic in scrolledResults.Items)
                 {
@@ -752,21 +760,42 @@ namespace Slamby.API.Services
             return DocumentHelper.GetValue(document, field);
         }
 
-        public Result Copy(string dataSetName, IEnumerable<string> documentIds, string targetDataSetName, int parallelLimit = -1)
+        public Process StartCopyOrMove(string dataSetName, IDocumentSettings settings, bool isMove, int parallelLimit = -1)
         {
+            var process = processHandler.Create(
+                isMove ? ProcessTypeEnum.DocumentsMove : ProcessTypeEnum.DocumentsCopy,
+                dataSetName, settings,
+                string.Format(
+                    isMove ? DocumentResources.Move_0_Documents_From_1_To_2 : DocumentResources.Copy_0_Documents_From_1_To_2,
+                    settings.DocumentIdList.Count(), dataSetName, settings.TargetDataSetName));
+
+            processHandler.Start(process, (tokenSource) =>
+                CopyOrMove(process.Id, dataSetName, settings.DocumentIdList, settings.TargetDataSetName, parallelLimit, isMove, tokenSource.Token, urlProvider.GetHostUrl()));
+            return process.ToProcessModel();
+        }
+
+        public void CopyOrMove(string processId, string dataSetName, IEnumerable<string> documentIds, string targetDataSetName, int parallelLimit, bool isMove, CancellationToken token, string hostUrl)
+        {
+            var results = new BulkResults();
             //// TODO: Validate target schema
             var copiedDocumentIds = new ConcurrentBag<string>();
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = parallelLimit };
             var sourceDocumentQuery = DocumentQuery(dataSetName);
             var targetDocumentQuery = DocumentQuery(targetDataSetName);
+            var allCount = documentIds.Count();
 
-            var isCompleted = Parallel.ForEach(
-                documentIds.Batch(siteConfig.Resources.MaxSearchBulkCount), 
-                parallelOptions, 
+            Parallel.ForEach(
+                documentIds.Batch(siteConfig.Resources.MaxSearchBulkCount),
+                parallelOptions,
                 (batchIds, loopState) =>
             {
                 try
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        processHandler.Cancelled(processId);
+                        return;
+                    }
                     var batchDocuments = sourceDocumentQuery.Get(batchIds);
                     var interpretedFields = DataSet(dataSetName).DataSet.InterpretedFields;
 
@@ -776,47 +805,43 @@ namespace Slamby.API.Services
                     }
 
                     var bulkResponse = targetDocumentQuery.Index(batchDocuments);
-                    var returnedIds = bulkResponse.Items.Select(i => i.Id).ToList();
-
-                    returnedIds.ForEach(id => copiedDocumentIds.Add(id));
-
-                    if (batchIds.Except(returnedIds).Count() > 0)
-                    {
-                        loopState.Stop();
-                    }
+                    results.Results.AddRange(bulkResponse.ToBulkResult());
+                    processHandler.Changed(processId, Math.Round(results.Results.Count / (double)allCount * 100, 2));
                 }
-                catch
+                catch (Exception ex)
                 {
+                    processHandler.Interrupted(processId, ex);
                     loopState.Stop();
                 }
-            }).IsCompleted;
-
-            if (!isCompleted)
-            {
-                targetDocumentQuery.Delete(copiedDocumentIds);
-                return Result.Fail(DocumentResources.ErrorDuringIndexingDocuments);
-            }
-
+            });
             targetDocumentQuery.Flush();
 
-            return Result.Ok();
-        }
-
-        public Result Move(string dataSetName, IEnumerable<string> documentIds, string targetDataSetName, int parallelLimit = -1)
-        {
-            // TODO: Validate target schema
-            var result = Copy(dataSetName, documentIds, targetDataSetName, parallelLimit);
-            if (result.IsFailure)
+            var succeedDocumentIds = results.Results.Where(r => r.StatusCode == StatusCodes.Status200OK).Select(r => r.Id).ToList();
+            var failedDocumentIds = results.Results.Where(r => r.StatusCode != StatusCodes.Status200OK).Select(r => r.Id).ToList();
+            if (isMove)
             {
-                return result;
+                if (succeedDocumentIds.Any())
+                {
+                    sourceDocumentQuery.Delete(succeedDocumentIds);
+                    sourceDocumentQuery.Flush();
+                }
             }
 
-            var sourceDocumentQuery = DocumentQuery(dataSetName);
+            // save the response
+            var fileName = string.Format("{0}.json", processId);
+            var resultPath = string.Format("{0}/{1}", siteConfig.Directory.User, fileName);
+            File.AppendAllText(resultPath, JsonConvert.SerializeObject(results.Results.OrderByDescending(r => r.StatusCode), Formatting.Indented));
+            var url = string.Format("{0}{1}/{2}", hostUrl, Constants.FilesPath, fileName);
 
-            sourceDocumentQuery.Delete(documentIds);
-            sourceDocumentQuery.Flush();
-
-            return Result.Ok();
+            processHandler.Finished(processId,
+                    string.Format("{0}\n{1}",
+                        string.Format(
+                            isMove ?
+                                DocumentResources.MoveFinishedFrom_0_To_1_Succeeded_2_Failed_3 :
+                                DocumentResources.CopyFinishedFrom_0_To_1_Succeeded_2_Failed_3,
+                            dataSetName, targetDataSetName, succeedDocumentIds.Count, failedDocumentIds.Count),
+                            string.Format(DocumentResources.ResultFileCanBeDownloadFromHere_0, url)
+                        ));
         }
 
         public PaginatedList<object> Sample(string dataSetName, string seed, IEnumerable<string> tagIds, int size, IEnumerable<string> fields = null)

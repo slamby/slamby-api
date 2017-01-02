@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CopyFinishedFrom_0_To_1_Succeeded_2_Failed_3" xml:space="preserve">
+    <value>Copy from the {0} dataset to the {1} dataset finished. {2} documents succeeded, {3} documents failed!</value>
+  </data>
+  <data name="Copy_0_Documents_From_1_To_2" xml:space="preserve">
+    <value>Copying {0} documents from the {1} dataset to the {2} dataset</value>
+  </data>
   <data name="DocumentWithId_0_DoesNotFound" xml:space="preserve">
     <value>Document with Id '{0}' does not found</value>
   </data>
@@ -141,8 +147,17 @@
   <data name="JsonSchemaValidationError_0" xml:space="preserve">
     <value>Json schema validation error: {0}</value>
   </data>
+  <data name="MoveFinishedFrom_0_To_1_Succeeded_2_Failed_3" xml:space="preserve">
+    <value>Move from the {0} dataset to the {1} dataset finished. {2} documents succeeded, {3} documents failed!</value>
+  </data>
+  <data name="Move_0_Documents_From_1_To_2" xml:space="preserve">
+    <value>Moving {0} documents from the {1} dataset to the {2} dataset</value>
+  </data>
   <data name="OnlyFieldOfPrimitiveTypeIsAllowedForOrderByField" xml:space="preserve">
     <value>Only field of primitive type is allowed for OrderByField</value>
+  </data>
+  <data name="ResultFileCanBeDownloadFromHere_0" xml:space="preserve">
+    <value>The result file can be download from here: {0}</value>
   </data>
   <data name="TheFieldIsDefinedAsArrayButItIsSimpleType" xml:space="preserve">
     <value>Tag field is defined as an array type but this tag field is a simple type</value>

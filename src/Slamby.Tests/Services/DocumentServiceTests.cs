@@ -220,7 +220,7 @@ namespace Slamby.Tests.Services
             var dataSet = GetSampleDataSet();
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
             globalStoreManagerMock.Setup(s => s.DataSets.Get(It.IsAny<string>())).Returns(dataSet);
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
 
             // Act
             var result = service.ValidateDocument("dataset_name", document);
@@ -236,7 +236,7 @@ namespace Slamby.Tests.Services
             var dataSet = GetSampleDataSet();
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
             globalStoreManagerMock.Setup(s => s.DataSets.Get(It.IsAny<string>())).Returns(dataSet);
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
 
             // Act
             var result = service.ValidateDocument("dataset_name", document);
@@ -253,7 +253,7 @@ namespace Slamby.Tests.Services
             var documentQueryMock = new Mock<IDocumentQuery>();
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
             globalStoreManagerMock.Setup(s => s.DataSets.Get(It.IsAny<string>())).Returns(dataSet);
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
             var document = new { id = "", tag = "", int1 = "", int2 = new string[] { } };
 
             // Act
@@ -268,7 +268,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
             var dataSet = GetSampleDataSet();
 
             // Act
@@ -283,7 +283,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
             var dataSet = GetSampleDataSet();
 
             // Act
@@ -298,7 +298,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService( globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService( globalStoreManagerMock.Object, null, null, null, null);
             var dataSet = GetSampleDataSet();
 
             // Act
@@ -313,7 +313,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
             var dataSet = GetSampleDataSet();
 
             // Act
@@ -331,7 +331,7 @@ namespace Slamby.Tests.Services
             dataSet.TagIsArray = tagIsArray;
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
             globalStoreManagerMock.Setup(s => s.DataSets.Get(It.IsAny<string>())).Returns(dataSet);
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
 
             // Act
             var result = service.ValidateDocument("dataset_name", document);
@@ -348,7 +348,7 @@ namespace Slamby.Tests.Services
             dataSet.TagIsArray = tagIsArray;
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
             globalStoreManagerMock.Setup(s => s.DataSets.Get(It.IsAny<string>())).Returns(dataSet);
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
 
             // Act
             var result = service.ValidateSampleDocument(JToken.FromObject(document), "id", "tag", new[] { "int1", "int2" });
@@ -366,7 +366,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
             var attachmentFields = new string[] { "nested.file" };
             var document = new
             {
@@ -390,7 +390,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
             var attachmentFields = new string[] { "nested.file" };
             var document = new
             {
@@ -413,7 +413,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
 
             // Act
             var result = service.ValidateSchemaIdField(JToken.FromObject(schema), "id");
@@ -427,7 +427,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
 
             // Act
             var result = service.ValidateSchemaTagField(JToken.FromObject(schema), "tag");
@@ -441,7 +441,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
 
             // Act
             var result = service.ValidateSchemaInterpretedFields(JToken.FromObject(schema), new string[] { "tag" });
@@ -455,7 +455,7 @@ namespace Slamby.Tests.Services
         {
             // Arrange
             var globalStoreManagerMock = new Mock<IGlobalStoreManager>();
-            var service = new DocumentService(globalStoreManagerMock.Object, null, null);
+            var service = new DocumentService(globalStoreManagerMock.Object, null, null, null, null);
             var schema = new { id = 1, title = "", desc = "", tags = new string[] { } };
             var type = schema.GetType();
             var token = GenerateSchema(type);

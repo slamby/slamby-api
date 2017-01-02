@@ -65,9 +65,6 @@ namespace Slamby.API.Services
 
             UpdateVersion(3, () =>
             {
-                logger.LogInformation($"Relocate Processes from {Elastic.Constants.SlambyServicesIndex} to {Elastic.Constants.SlambyProcessesIndex}...");
-                processQuery.RelocateFromServices();
-
                 logger.LogInformation($"Service Alias mapping to Not Analyzed with recreating {Elastic.Constants.SlambyServicesIndex}...");
                 serviceQuery.ReCreateIndex();
             });
