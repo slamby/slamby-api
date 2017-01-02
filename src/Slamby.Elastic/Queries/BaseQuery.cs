@@ -165,6 +165,15 @@ namespace Slamby.Elastic.Queries
                     throw new OutOfResourceException("The server doesn't have enough resource to complete the request!", ex);
                 }
 
+                if (scanResult.ServerError?.Status == 400)
+                {
+                    throw new ElasticSearchException(
+                        string.Join("\n", scanResult.ServerError.Error.RootCause.Select(rc => rc.Reason)),
+                        scanResult.OriginalException,
+                        scanResult.ServerError
+                        );
+                }
+
                 throw ex;
             }
 

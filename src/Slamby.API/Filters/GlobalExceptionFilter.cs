@@ -28,7 +28,7 @@ namespace Slamby.API.Filters
         {
             var message = "Internal Server Error";
 
-            if (context.Exception is Common.Exceptions.SlambyException && !(context.Exception is Common.Exceptions.ElasticSearchException)) message = context.Exception.Message;
+            if (context.Exception is Common.Exceptions.SlambyException) message = context.Exception.Message;
 
             var response = ErrorsModel.Create(message);
 
