@@ -152,7 +152,7 @@ namespace Slamby.API.Controllers.Services
                 if (tags.Count < prcPrepareSettings.TagIdList.Count)
                 {
                     var missingTagIds = prcPrepareSettings.TagIdList.Except(tags.Select(t => t.Id)).ToList();
-                    return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, 
+                    return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                         string.Format(ServiceResources.TheFollowingTagIdsNotExistInTheDataSet_0, string.Join(", ", missingTagIds)));
                 }
             }
@@ -172,8 +172,8 @@ namespace Slamby.API.Controllers.Services
             serviceQuery.IndexSettings(serviceSettings);
 
             var process = processHandler.Create(
-                ProcessTypeEnum.PrcPrepare, 
-                service.Id, 
+                ProcessTypeEnum.PrcPrepare,
+                service.Id,
                 prcPrepareSettings,
                 string.Format(ServiceResources.Preparing_0_Service_1, ServiceTypeEnum.Prc, service.Name));
 
@@ -221,7 +221,7 @@ namespace Slamby.API.Controllers.Services
                     var fields = prcActivateSettings.FieldsForRecommendation.Intersect(GlobalStore.DataSets.Get(prcSettings.DataSetName).DataSet.InterpretedFields).ToList();
                     if (fields.Count != prcActivateSettings.FieldsForRecommendation.Count)
                     {
-                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, 
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                         string.Format(ServiceResources.TheFollowingFieldsNotExistInTheSampleDocument_0, string.Join(", ", fields)));
                     }
                     prcSettings.FieldsForRecommendation = prcActivateSettings.FieldsForRecommendation;
@@ -292,10 +292,8 @@ namespace Slamby.API.Controllers.Services
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
             }
-            if (!GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.Tags.Any(t => t.Id == request.TagId))
-            {
+            if (!string.IsNullOrEmpty(request.TagId) && !GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.Tags.Any(t => t.Id == request.TagId))
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.TheGivenTagIsMissingFromThePRCService);
-            }
 
             var dataSet = GlobalStore.DataSets.Get(GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.DataSetName).DataSet;
             var analyzeQuery = queryFactory.GetAnalyzeQuery(dataSet.Name);
@@ -303,7 +301,24 @@ namespace Slamby.API.Controllers.Services
             var tokens = analyzeQuery.Analyze(request.Text, 1).ToList();
             var text = string.Join(" ", tokens);
 
-            var tagId = request.TagId;
+            var tagId = string.Empty;
+            if (!string.IsNullOrEmpty(request.TagId))
+            {
+                tagId = request.TagId;
+            }
+            else
+            {
+                //ha nincs megadva tagId akkor kiszámoljuk a prc scorer-ekkel
+                var allResults = new List<KeyValuePair<string, double>>();
+                foreach (var scorerKvp in GlobalStore.ActivatedPrcs.Get(id).PrcScorers)
+                {
+                    var score = scorerKvp.Value.GetScore(text, 1.7, true);
+                    allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
+                }
+                var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
+                if (resultsList.Count == 0) return new OkObjectResult(new List<PrcRecommendationResult>());
+                tagId = resultsList.First().Key;
+            }
 
             var globalSubset = GlobalStore.ActivatedPrcs.Get(id).PrcSubsets[tagId];
             if (globalSubset.WordsWithOccurences == null)
@@ -347,7 +362,7 @@ namespace Slamby.API.Controllers.Services
             }
 
             if (!string.IsNullOrEmpty(request.TagId) && !GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.Tags.Any(t => t.Id == request.TagId))
-                    return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.TheGivenTagIsMissingFromThePRCService);
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.TheGivenTagIsMissingFromThePRCService);
 
 
             var globalStoreDataSet = GlobalStore.DataSets.Get(GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.DataSetName);
@@ -376,7 +391,7 @@ namespace Slamby.API.Controllers.Services
                 if (resultsList.Count == 0) return new OkObjectResult(new List<PrcRecommendationResult>());
                 tagId = resultsList.First().Key;
             }
-            
+
             var tagsToTest = new List<string>();
             if (request.Filter?.TagIdList?.Any() == true)
             {
@@ -388,7 +403,7 @@ namespace Slamby.API.Controllers.Services
                         string.Format(ServiceResources.TheFollowingTagIdsNotExistInTheDataSet_0, string.Join(", ", missingTagIds)));
                 }
                 tagsToTest = request.Filter.TagIdList;
-            } 
+            }
 
             var globalSubset = GlobalStore.ActivatedPrcs.Get(id).PrcSubsets[tagId];
             if (globalSubset.WordsWithOccurences == null)
@@ -398,7 +413,8 @@ namespace Slamby.API.Controllers.Services
 
             var wordsInDic = globalSubset.WordsWithOccurences.Keys.Intersect(tokens).ToList();
 
-            var baseSubset = new Cerebellum.Subset {
+            var baseSubset = new Cerebellum.Subset
+            {
                 AllWordsOccurencesSumInCorpus = globalSubset.AllWordsOccurencesSumInCorpus,
                 AllWordsOccurencesSumInTag = globalSubset.AllWordsOccurencesSumInTag,
                 WordsWithOccurences = wordsInDic.ToDictionary(w => w, w => globalSubset.WordsWithOccurences[w])
@@ -435,8 +451,8 @@ namespace Slamby.API.Controllers.Services
             var documentQuery = queryFactory.GetDocumentQuery(dataSet.Name);
             var documentElastics = new List<DocumentElastic>();
             var scrollResult = documentQuery
-                .Filter(query, 
-                        tagsToTest, 
+                .Filter(query,
+                        tagsToTest,
                         dataSet.TagField,
                         request.Count,
                         null, false,
@@ -451,13 +467,13 @@ namespace Slamby.API.Controllers.Services
             var docIdsWithScore = new ConcurrentDictionary<string, double>(new Dictionary<string, double>());
             var wordQuery = queryFactory.GetWordQuery(dataSet.Name);
 
-            Func<string, bool> isAttachmentField = (field) => globalStoreDataSet.AttachmentFields.Any(attachmentField => 
+            Func<string, bool> isAttachmentField = (field) => globalStoreDataSet.AttachmentFields.Any(attachmentField =>
                 string.Equals(attachmentField, field, StringComparison.OrdinalIgnoreCase));
 
-            Parallel.ForEach(documentElastics, parallelService.ParallelOptions(), docElastic => 
+            Parallel.ForEach(documentElastics, parallelService.ParallelOptions(), docElastic =>
             {
                 var fieldList = fieldsForRecommendation
-                    .Select(field => isAttachmentField(field) ? $"{field}.content": field)
+                    .Select(field => isAttachmentField(field) ? $"{field}.content" : field)
                     .Select(DocumentQuery.MapDocumentObjectName)
                     .ToList();
 
@@ -477,11 +493,12 @@ namespace Slamby.API.Controllers.Services
             var resultDic = docIdsWithScore.OrderByDescending(rd => rd.Value).ToList();
             if (request.Count != 0 && resultDic.Count > request.Count) resultDic = resultDic.Take(request.Count).ToList();
 
-            var docsDic = request.NeedDocumentInResult 
-                ? resultDic.Select(r => documentElastics.First(d => d.Id == r.Key)).ToDictionary(d => d.Id, d => d) 
+            var docsDic = request.NeedDocumentInResult
+                ? resultDic.Select(r => documentElastics.First(d => d.Id == r.Key)).ToDictionary(d => d.Id, d => d)
                 : null;
 
-            return new OkObjectResult(resultDic.Select(kvp => new PrcRecommendationResult {
+            return new OkObjectResult(resultDic.Select(kvp => new PrcRecommendationResult
+            {
                 DocumentId = kvp.Key,
                 Score = kvp.Value,
                 Document = request.NeedDocumentInResult ? docsDic[kvp.Key].DocumentObject : null
@@ -498,17 +515,17 @@ namespace Slamby.API.Controllers.Services
             var service = serviceQuery.Get(id);
             if (service == null)
             {
-                return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, 
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound,
                     ServiceResources.InvalidIdNotExistingService);
             }
             if (service.Type != (int)ServiceTypeEnum.Prc)
             {
-                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, 
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                     string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Prc"));
             }
             if (service.Status != (int)ServiceStatusEnum.Active)
             {
-                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, 
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                     ServiceResources.InvalidStatusOnlyTheServicesWithActiveStatusCanBeIndexed);
             }
 
@@ -546,7 +563,7 @@ namespace Slamby.API.Controllers.Services
             serviceQuery.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => prcIndexHandler.Index(process.Id, prcSettings, tokenSource.Token));
-            
+
             return new HttpStatusCodeWithObjectResult(StatusCodes.Status202Accepted, process.ToProcessModel());
         }
 
