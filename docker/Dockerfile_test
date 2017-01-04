@@ -1,6 +1,7 @@
 FROM microsoft/aspnetcore-build:1.1.0-projectjson
 
 COPY ./src /app_code
+COPY ./nuget /nuget
 WORKDIR /app_code
 RUN ["dotnet", "restore"]
 WORKDIR Slamby.Tests
