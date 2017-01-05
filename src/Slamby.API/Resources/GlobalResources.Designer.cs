@@ -186,6 +186,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to The argument {0} must be in the format: {1}.
+        /// </summary>
+        public static string TheArgument_0_MustBeInFormat_1 {
+            get {
+                return ResourceManager.GetString("TheArgument_0_MustBeInFormat_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to The argument cannot be null: {0}.
         /// </summary>
         public static string TheArgumentCannotBeNull_0 {

@@ -162,4 +162,7 @@
   <data name="TheArgument_0_IsNot_1_Type" xml:space="preserve">
     <value>The argument {0} is not {1} type</value>
   </data>
+  <data name="TheArgument_0_MustBeInFormat_1" xml:space="preserve">
+    <value>The argument {0} must be in the format: {1}</value>
+  </data>
 </root>

@@ -43,15 +43,14 @@ namespace Slamby.API.Services
             if (centralRedis != null && centralRedis.IsConnected)
             {
                 db = centralRedis.GetDatabase();
-            } else if (redis.IsConnected)
+                db.SortedSetIncrement(instanceId, $"{date}:{endpoint}", 1, CommandFlags.FireAndForget);
+            }
+
+            if (redis.IsConnected)
             {
                 db = redis.GetDatabase();
+                db.SortedSetIncrement(instanceId, $"{date}:{endpoint}", 1, CommandFlags.FireAndForget);
             }
-            else
-            {
-                return;
-            }
-            db.SortedSetIncrement(instanceId, $"{date}:{endpoint}", 1, CommandFlags.FireAndForget);
         }
     }
 }
