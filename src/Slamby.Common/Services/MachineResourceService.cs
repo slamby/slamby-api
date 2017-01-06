@@ -86,6 +86,7 @@ namespace Slamby.Common.Services
             try
             {
                 var freeSpace = 0L;
+                var totalSpace = 0L;
 
                 if (IsWindowsOS)
                 {
@@ -93,12 +94,20 @@ namespace Slamby.Common.Services
                                         .Where(drive => drive.DriveType == DriveType.Fixed)
                                         .Select(drive => drive.AvailableFreeSpace)
                                         .Sum();
+                    totalSpace = DriveInfo.GetDrives()
+                                        .Where(drive => drive.DriveType == DriveType.Fixed)
+                                        .Select(drive => drive.TotalSize)
+                                        .Sum();
                 }
                 else
                 {
                     freeSpace = DriveInfo.GetDrives()
                                         .Where(drive => drive.Name == "/")
                                         .Select(drive => drive.AvailableFreeSpace)
+                                        .FirstOrDefault();
+                    totalSpace = DriveInfo.GetDrives()
+                                        .Where(drive => drive.Name == "/")
+                                        .Select(drive => drive.TotalSize)
                                         .FirstOrDefault();
                 }
                 
@@ -108,6 +117,7 @@ namespace Slamby.Common.Services
                 lock (_statusLock)
                 {
                     Status.AvailableFreeSpace = ((decimal)freeSpace / (1024 * 1024)).Round(2);
+                    Status.TotalSpace = ((decimal)totalSpace / (1024 * 1024)).Round(2);
                     Status.CpuUsage = cpu.ToDecimal().Round(2);
 
                     var freeLines = mem.Split(new string[] { "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
