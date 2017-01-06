@@ -16,6 +16,7 @@ namespace Slamby.API.Controllers.Documents
     [SwaggerGroup("Document")]
     [SwaggerResponseRemoveDefaults]
     [DataSetNameFilter]
+    [ServiceFilter(typeof(DiskSpaceLimitFilter))]
     public class DocumentsCopyController : BaseController
     {
         readonly ParallelService parallelService;

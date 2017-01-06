@@ -23,5 +23,7 @@
         public ResourcesConfig Resources { get; set; } = new ResourcesConfig();
 
         public RequestLoggerConfig RequestLogger { get; set; } = new RequestLoggerConfig();
+
+        public DiskSpaceLimitConfig DiskSpaceLimit { get; set; } = new DiskSpaceLimitConfig();
     }
 }

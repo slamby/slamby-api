@@ -15,6 +15,7 @@ namespace Slamby.API.Controllers
     [SwaggerGroup("Document")]
     [SwaggerResponseRemoveDefaults]
     [DataSetNameFilter]
+    [ServiceFilter(typeof(DiskSpaceLimitFilter))]
     public class DocumentsBulkController : BaseController
     {
         readonly IDocumentService documentService;

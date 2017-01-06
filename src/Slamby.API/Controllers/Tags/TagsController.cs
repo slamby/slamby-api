@@ -59,6 +59,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status201Created, type: typeof(Tag))]
         [SwaggerResponse(StatusCodes.Status409Conflict, type: typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status406NotAcceptable, type: typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Post([FromBody]Tag tag)
         {
             tag = tagService.TrimTag(tag);
@@ -93,6 +94,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status406NotAcceptable, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Put(string id, [FromBody]Tag tag)
         {
             tag = tagService.TrimTag(tag);

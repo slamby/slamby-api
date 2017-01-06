@@ -18,6 +18,7 @@ namespace Slamby.API.Controllers
     [Route("api/Tags/ExportWords")]
     [SwaggerGroup("Tag")]
     [DataSetNameFilter]
+    [ServiceFilter(typeof(DiskSpaceLimitFilter))]
     public class TagsExportWordsController : BaseController
     {
         public string DataSetName { get; private set; }

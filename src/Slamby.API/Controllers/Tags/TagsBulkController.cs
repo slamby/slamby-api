@@ -15,6 +15,7 @@ namespace Slamby.API.Controllers
     [Route("api/Tags/Bulk")]
     [SwaggerGroup("Tag")]
     [DataSetNameFilter]
+    [ServiceFilter(typeof(DiskSpaceLimitFilter))]
     public class TagsBulkController : BaseController
     {
         readonly TagService tagService;

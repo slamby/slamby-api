@@ -20,6 +20,7 @@ using Slamby.Common.Services;
 using System.Collections.Concurrent;
 using Slamby.API.Services.Interfaces;
 using Slamby.Elastic.Factories.Interfaces;
+using Slamby.API.Filters;
 
 namespace Slamby.API.Controllers.Services
 {
@@ -117,6 +118,7 @@ namespace Slamby.API.Controllers.Services
         [HttpPost("{id}/Prepare")]
         [SwaggerOperation("PrcPrepareService")]
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Prepare(string id, [FromBody]PrcPrepareSettings prcPrepareSettings)
         {
             //SERVICE VALIDATION
@@ -509,6 +511,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerOperation("PrcIndexService")]
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Index(string id, [FromBody]PrcIndexSettings prcIndexSettings)
         {
             //SERVICE VALIDATION
@@ -571,6 +574,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerOperation("PrcIndexPartialService")]
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult IndexPartial(string id)
         {
             //SERVICE VALIDATION
@@ -644,6 +648,7 @@ namespace Slamby.API.Controllers.Services
         [HttpPost("{id}/ExportDictionaries")]
         [SwaggerOperation("PrcExportDictionaries")]
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(Process))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult ExportDictionaries(string id, [FromBody]ExportDictionariesSettings settings, [FromServices]UrlProvider urlProvider)
         {
             //SERVICE VALIDATION

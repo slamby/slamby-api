@@ -225,6 +225,7 @@ namespace Slamby.API
             //}
             mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(ModelValidationFilter)));
             mvcBuilder.AddMvcOptions(o => o.Filters.Add(typeof(GlobalExceptionFilter)));
+            services.AddScoped<DiskSpaceLimitFilter>();
 
             if (SiteConfig.Stats.Enabled)
             {

@@ -126,6 +126,9 @@
   <data name="LicenseIsEmpty" xml:space="preserve">
     <value>License is empty</value>
   </data>
+  <data name="LowDiskSpace_01" xml:space="preserve">
+    <value>Low disk space error. This request is not allowed under {0}Mb available free disk space. Current available free disk space is: {1}Mb</value>
+  </data>
   <data name="Missing_0_Header" xml:space="preserve">
     <value>Missing '{0}' header!</value>
   </data>

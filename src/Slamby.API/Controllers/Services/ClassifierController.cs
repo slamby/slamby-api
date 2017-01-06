@@ -17,6 +17,7 @@ using Slamby.SDK.Net.Models;
 using Slamby.SDK.Net.Models.Enums;
 using Slamby.SDK.Net.Models.Services;
 using Swashbuckle.SwaggerGen.Annotations;
+using Slamby.API.Filters;
 
 namespace Slamby.API.Controllers
 {
@@ -100,6 +101,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Prepare(string id, [FromBody]ClassifierPrepareSettings classifierPrepareSettings)
         {
             //SERVICE VALIDATION
@@ -353,6 +355,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult ExportDictionaries(string id, [FromBody]ExportDictionariesSettings settings, [FromServices]UrlProvider urlProvider)
         {
             //SERVICE VALIDATION

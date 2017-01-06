@@ -48,6 +48,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status409Conflict, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Post([FromBody]object document)
         {
             var validateResult = documentService.ValidateDocument(DataSetName, document);
@@ -77,6 +78,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(object))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Put(string id, [FromBody]object document)
         {
             var documentOriginal = documentService.Get(DataSetName, id);

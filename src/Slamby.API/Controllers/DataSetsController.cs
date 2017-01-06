@@ -10,6 +10,7 @@ using Slamby.API.Services.Interfaces;
 using Slamby.Common.Services;
 using Slamby.SDK.Net.Models;
 using Swashbuckle.SwaggerGen.Annotations;
+using Slamby.API.Filters;
 
 namespace Slamby.API.Controllers
 {
@@ -65,6 +66,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status409Conflict, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Post([FromBody]DataSet dataSet)
         {
             dataSetService.ThrowIfDataSetIsBusy(dataSet.Name);
@@ -101,6 +103,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status409Conflict, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult PostWithSchema([FromBody]DataSet dataSet, [FromServices]DataSetSchemaValidatorService jsonValidator)
         {
             dataSetService.ThrowIfDataSetIsBusy(dataSet.Name);
@@ -146,6 +149,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status304NotModified)]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status409Conflict, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Put(string existingName, [FromBody]DataSetUpdate dataSetUpdate)
         {
             var validationResultString = DataSetService.ValidateDataSetName(existingName);

@@ -13,6 +13,7 @@ using Slamby.API.Helpers.Swashbuckle;
 using Swashbuckle.SwaggerGen.Annotations;
 using Slamby.API.Helpers;
 using Slamby.API.Services.Interfaces;
+using Slamby.API.Filters;
 
 namespace Slamby.API.Controllers
 {
@@ -67,6 +68,7 @@ namespace Slamby.API.Controllers
         [SwaggerOperation("CreateService")]
         [SwaggerResponse(StatusCodes.Status201Created)]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Post([FromBody]Service service)
         {
             if (!string.IsNullOrEmpty(service.Id))
@@ -109,6 +111,7 @@ namespace Slamby.API.Controllers
         [SwaggerOperation("UpdateService")]
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(Service))]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Put(string id, [FromBody]Service service)
         {
             var serviceElastic = serviceQuery.Get(id);

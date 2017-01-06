@@ -87,6 +87,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to Low disk space error. This request is not allowed under {0}Mb available free disk space. Current available free disk space is: {1}Mb.
+        /// </summary>
+        public static string LowDiskSpace_01 {
+            get {
+                return ResourceManager.GetString("LowDiskSpace_01", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Missing &apos;{0}&apos; header!.
         /// </summary>
         public static string Missing_0_Header {
