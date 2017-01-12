@@ -29,7 +29,7 @@
           </elementProp>
           <elementProp name="jmxDir" elementType="Argument">
             <stringProp name="Argument.name">jmxDir</stringProp>
-            <stringProp name="Argument.value">${__BeanShell(import org.apache.jmeter.services.FileServer; FileServer.getFileServer().getBaseDir();)} </stringProp>
+            <stringProp name="Argument.value">${__BeanShell(import org.apache.jmeter.services.FileServer;FileServer.getFileServer().getBaseDir();)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="datasetName" elementType="Argument">
