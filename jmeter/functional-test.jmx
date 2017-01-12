@@ -34,7 +34,7 @@
           </elementProp>
           <elementProp name="datasetName" elementType="Argument">
             <stringProp name="Argument.name">datasetName</stringProp>
-            <stringProp name="Argument.value">test-datase</stringProp>
+            <stringProp name="Argument.value">test-dataset</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="tagsCount" elementType="Argument">
