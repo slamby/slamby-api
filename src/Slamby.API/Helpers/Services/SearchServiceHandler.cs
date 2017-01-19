@@ -78,11 +78,9 @@ namespace Slamby.API.Helpers.Services
                 service.Status = (int)ServiceStatusEnum.Busy;
                 serviceQuery.Update(service.Id, service);
 
-                var globalStoreSearch = new GlobalStoreSearch();
-                globalStoreSearch.AutoCompleteSettings = settings.AutoCompleteSettings;
-                globalStoreSearch.ClassifierSettings = settings.ClassifierSettings;
-                globalStoreSearch.HighlightSettings = settings.HighlightSettings;
-                globalStoreSearch.SearchSettings = settings.SearchSettings;
+                var globalStoreSearch = new GlobalStoreSearch {
+                    SearchSettingsWrapper = settings
+                };
 
                 GlobalStore.ActivatedSearches.Add(settings.ServiceId, globalStoreSearch);
 

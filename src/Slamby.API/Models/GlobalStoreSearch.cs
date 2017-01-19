@@ -8,12 +8,6 @@ namespace Slamby.API.Models
 {
     public class GlobalStoreSearch
     {
-        public SearchSettingsElastic SearchSettings { get; set; } = new SearchSettingsElastic();
-
-        public HighlightSettingsElastic HighlightSettings { get; set; } = new HighlightSettingsElastic();
-
-        public AutoCompleteSettingsElastic AutoCompleteSettings { get; set; } = new AutoCompleteSettingsElastic();
-
-        public ClassifierSearchSettingsElastic ClassifierSettings { get; set; } = new ClassifierSearchSettingsElastic();
+        public SearchSettingsWrapperElastic SearchSettingsWrapper { get; set; } = new SearchSettingsWrapperElastic();
     }
 }

@@ -60,6 +60,7 @@ namespace Slamby.API.Services
         {
             WarmUpService<PrcSettingsElastic, PrcServiceHandler>(ServiceTypeEnum.Prc);
             WarmUpService<ClassifierSettingsElastic, ClassifierServiceHandler>(ServiceTypeEnum.Classifier);
+            WarmUpService<SearchSettingsWrapperElastic, SearchServiceHandler>(ServiceTypeEnum.Search);
         }
 
         private void WarmUpService<TServiceSettings, THandler>(ServiceTypeEnum serviceType)
@@ -79,6 +80,9 @@ namespace Slamby.API.Services
                         break;
                     case ServiceTypeEnum.Prc:
                         processType = ProcessTypeEnum.PrcActivate;
+                        break;
+                    case ServiceTypeEnum.Search:
+                        processType = ProcessTypeEnum.SearchActivate;
                         break;
                     default:
                         throw new Exception("Try to warm up service with undefined process activation type!");

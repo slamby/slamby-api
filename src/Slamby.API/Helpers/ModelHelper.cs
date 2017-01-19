@@ -53,16 +53,16 @@ namespace Slamby.API.Helpers
             return model;
         }
 
-        public static ClassifierSettings ToClassifierSettingsModel(this ClassifierSearchSettingsElastic classifier)
+        public static HighlightSettingsElastic ToHighlightSettingsElastic(this HighlightSettings highlight)
         {
-            var model = new ClassifierSettings
+            var model = new HighlightSettingsElastic
             {
-                Id = classifier.Id,
-                Count = classifier.Count
+                PreTag = highlight.PreTag,
+                PostTag = highlight.PostTag
             };
             return model;
         }
-
+        
         public static Filter ToFilterModel(this FilterElastic filter)
         {
             var model = new Filter
@@ -73,12 +73,12 @@ namespace Slamby.API.Helpers
             return model;
         }
 
-        public static SearchFieldWeight ToSearchFieldWeightModel(this WeightElastic weight)
+        public static FilterElastic ToFilterElastic(this Filter filter)
         {
-            var model = new SearchFieldWeight
+            var model = new FilterElastic
             {
-                Field = weight.Query,
-                Value = weight.Value
+                Query = filter.Query,
+                TagIdList = filter.TagIdList
             };
             return model;
         }
@@ -93,13 +93,36 @@ namespace Slamby.API.Helpers
             return model;
         }
 
+        public static WeightElastic ToWeightElastic(this Weight weight)
+        {
+            var model = new WeightElastic
+            {
+                Query = weight.Query,
+                Value = weight.Value
+            };
+            return model;
+        }
+
         public static AutoCompleteSettings ToAutoCompleteSettingsModel(this AutoCompleteSettingsElastic autoComplete)
         {
             var model = new AutoCompleteSettings
             {
                 Confidence = autoComplete.Confidence,
                 Count = autoComplete.Count,
-                HighlightSettings = autoComplete.HighlightSettings.ToHighlightSettingsModel(),
+                HighlightSettings = autoComplete.HighlightSettings?.ToHighlightSettingsModel(),
+                MaximumErrors = autoComplete.MaximumErrors,
+                NGram = autoComplete.NGram
+            };
+            return model;
+        }
+
+        public static AutoCompleteSettingsElastic ToAutoCompleteSettingsElastic(this AutoCompleteSettings autoComplete)
+        {
+            var model = new AutoCompleteSettingsElastic
+            {
+                Confidence = autoComplete.Confidence,
+                Count = autoComplete.Count,
+                HighlightSettings = autoComplete.HighlightSettings?.ToHighlightSettingsElastic(),
                 MaximumErrors = autoComplete.MaximumErrors,
                 NGram = autoComplete.NGram
             };
@@ -112,17 +135,56 @@ namespace Slamby.API.Helpers
             {
                 Count = search.Count,
                 CutOffFrequency = search.CutOffFrequency,
-                Filter = search.Filter.ToFilterModel(),
+                Filter = search.Filter?.ToFilterModel(),
                 Fuzziness = search.Fuzziness,
-                HighlightSettings = search.HighlightSettings.ToHighlightSettingsModel(),
+                HighlightSettings = search.HighlightSettings?.ToHighlightSettingsModel(),
                 ResponseFieldList = search.ResponseFieldList,
                 SearchFieldList = search.SearchFieldList,
-                SearchFieldWeights = search.SearchFieldWeights.Select(s => s.ToSearchFieldWeightModel()).ToList(),
                 Type = (SearchTypeEnum)search.Type,
-                Weights = search.Weights.Select(s => s.ToWeightModel()).ToList()
+                Weights = search.Weights?.Select(s => s.ToWeightModel()).ToList(),
+                Operator = (LogicalOperatorEnum)search.Operator
             };
             return model;
         }
+
+        public static SearchSettingsElastic ToSearchSettingsElastic(this SearchSettings search)
+        {
+            var model = new SearchSettingsElastic
+            {
+                Count = search.Count,
+                CutOffFrequency = search.CutOffFrequency,
+                Filter = search.Filter?.ToFilterElastic(),
+                Fuzziness = search.Fuzziness,
+                HighlightSettings = search.HighlightSettings?.ToHighlightSettingsElastic(),
+                ResponseFieldList = search.ResponseFieldList,
+                SearchFieldList = search.SearchFieldList,
+                Type = (int)search.Type,
+                Weights = search.Weights?.Select(s => s.ToWeightElastic()).ToList(),
+                Operator = (int)search.Operator
+            };
+            return model;
+        }
+
+        public static ClassifierSettings ToClassifierSettingsModel(this ClassifierSearchSettingsElastic classifier)
+        {
+            var model = new ClassifierSettings
+            {
+                Id = classifier.Id,
+                Count = classifier.Count
+            };
+            return model;
+        }
+
+        public static ClassifierSearchSettingsElastic ToClassifierSearchSettingsElastic(this ClassifierSettings classifier)
+        {
+            var model = new ClassifierSearchSettingsElastic
+            {
+                Id = classifier.Id,
+                Count = classifier.Count
+            };
+            return model;
+        }
+
 
         public static SearchPrepareSettings ToSearchPrepareSettingsModel(this SearchSettingsWrapperElastic searchWrapper)
         {

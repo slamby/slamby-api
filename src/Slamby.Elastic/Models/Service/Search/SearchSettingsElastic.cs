@@ -67,9 +67,6 @@ namespace Slamby.Elastic.Models
         [String(Name = "search_field_list")]
         public List<string> SearchFieldList { get; set; }
 
-        [Object(Name = "search_field_weights")]
-        public List<WeightElastic> SearchFieldWeights { get; set; }
-
         [Number(NumberType.Integer, Name = "type")]
         public int Type { get; set; }
 
@@ -84,6 +81,9 @@ namespace Slamby.Elastic.Models
 
         [Number(NumberType.Integer, Name = "count")]
         public int Count { get; set; }
+
+        [Number(NumberType.Integer, Name = "operator")]
+        public int Operator { get; set; }
     }
 
     public class ClassifierSearchSettingsElastic

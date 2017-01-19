@@ -114,11 +114,11 @@ namespace Slamby.API.Controllers.Services
             var globalStoreDataSet = GlobalStore.DataSets.Get(searchPrepareSettings.DataSetName);
             var dataSet = globalStoreDataSet.DataSet;
 
-            
+
 
             var serviceSettings = new SearchSettingsWrapperElastic
             {
-                DataSetName = globalStoreDataSet.IndexName,
+                DataSetName = globalStoreDataSet.DataSet.Name,
                 ServiceId = service.Id
             };
 
@@ -129,7 +129,8 @@ namespace Slamby.API.Controllers.Services
             serviceSettings.HighlightSettings = null;
 
             var defaultAutoCompleteSettings = new AutoCompleteSettings();
-            serviceSettings.AutoCompleteSettings = new AutoCompleteSettingsElastic {
+            serviceSettings.AutoCompleteSettings = new AutoCompleteSettingsElastic
+            {
                 Confidence = defaultAutoCompleteSettings.Confidence,
                 Count = defaultActivationSettings.Count,
                 HighlightSettings = null,
@@ -147,24 +148,263 @@ namespace Slamby.API.Controllers.Services
                 HighlightSettings = null,
                 ResponseFieldList = dataSet.InterpretedFields.Union(new List<string> { dataSet.IdField, dataSet.TagField }).ToList(),
                 SearchFieldList = dataSet.InterpretedFields,
-                SearchFieldWeights = null,
                 Type = (int)SearchTypeEnum.Match,
-                Weights = null
+                Weights = null,
+                Operator = (int)defaultSearchSettings.Operator
             };
 
             serviceQuery.IndexSettings(serviceSettings);
-            
+
             var process = processHandler.Create(
                 ProcessTypeEnum.SearchPrepare,
                 service.Id, searchPrepareSettings,
                 string.Format(ServiceResources.Preparing_0_Service_1, ServiceTypeEnum.Search, service.Name));
-                
+
             service.ProcessIdList.Add(process.Id);
             serviceQuery.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => searchHandler.Prepare(process.Id, serviceSettings, tokenSource.Token));
 
             return new HttpStatusCodeWithObjectResult(StatusCodes.Status202Accepted, process.ToProcessModel());
+        }
+
+        [HttpPost("{id}/Activate")]
+        [SwaggerOperation("SearchActivateService")]
+        [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        public IActionResult Activate(string id, [FromBody]SearchActivateSettings searchActivateSettings)
+        {
+            //SERVICE VALIDATION
+            var service = serviceQuery.Get(id);
+            if (service == null)
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
+            }
+            if (service.Type != (int)ServiceTypeEnum.Search)
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Search"));
+            }
+            if (service.Status != (int)ServiceStatusEnum.Prepared)
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated);
+            }
+            var searchSettings = serviceQuery.GetSettings<SearchSettingsWrapperElastic>(service.Id);
+            service.Status = (int)ServiceStatusEnum.Active;
+
+            if (searchActivateSettings != null &&
+                (
+                    searchActivateSettings.AutoCompleteSettings != null ||
+                    searchActivateSettings.ClassifierSettings != null ||
+                    searchActivateSettings.SearchSettings != null)
+                )
+            {
+                // TODO VALIDATION
+
+                searchSettings = MergeSettings(
+                    searchSettings,
+                    searchActivateSettings.AutoCompleteSettings,
+                    searchActivateSettings.ClassifierSettings,
+                    searchActivateSettings.SearchSettings,
+                    searchActivateSettings.HighlightSettings,
+                    searchActivateSettings.Count);
+            }
+
+            var process = processHandler.Create(
+                ProcessTypeEnum.ClassifierActivate,
+                service.Id,
+                searchSettings,
+                string.Format(ServiceResources.Activating_0_Service_1, ServiceTypeEnum.Search, service.Name));
+
+            service.ProcessIdList.Add(process.Id);
+            serviceQuery.Update(service.Id, service);
+            serviceQuery.IndexSettings(searchSettings);
+
+            processHandler.Start(process, (tokenSource) => searchHandler.Activate(process.Id, searchSettings, tokenSource.Token));
+
+            return new HttpStatusCodeWithObjectResult(StatusCodes.Status202Accepted, process.ToProcessModel());
+        }
+
+        [HttpPost("{id}/Deactivate")]
+        [SwaggerOperation("SearchDeactivateService")]
+        [SwaggerResponse(StatusCodes.Status200OK, "")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        public IActionResult Deactivate(string id)
+        {
+            //SERVICE VALIDATION
+            var service = serviceQuery.Get(id);
+            if (service == null)
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
+            }
+            if (service.Type != (int)ServiceTypeEnum.Search)
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Search"));
+            }
+            if (service.Status != (int)ServiceStatusEnum.Active)
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithActiveStatusCanBeDeactivated);
+            }
+
+            searchHandler.Deactivate(service.Id);
+
+            service.Status = (int)ServiceStatusEnum.Prepared;
+            serviceQuery.Update(service.Id, service);
+
+            return new OkResult();
+        }
+
+        [HttpPost("{id}")]
+        [SwaggerOperation("SearchService")]
+        [SwaggerResponse(StatusCodes.Status200OK, "", typeof(IEnumerable<SearchResultWrapper>))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
+        public IActionResult Search(string id, [FromBody]SearchRequest request)
+        {
+            // If Id is Alias, translate to Id
+            if (GlobalStore.ServiceAliases.IsExist(id))
+            {
+                id = GlobalStore.ServiceAliases.Get(id);
+            }
+
+            if (!GlobalStore.ActivatedSearches.IsExist(id))
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
+            }
+
+            // TODO VALIDATION
+
+            SearchSettingsWrapperElastic searchSettings;
+            if (request.AutoCompleteSettings != null ||
+                request.ClassifierSettings != null ||
+                request.SearchSettings != null)
+            {
+                searchSettings = MergeSettings(
+                    GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper,
+                    request.AutoCompleteSettings,
+                    request.ClassifierSettings,
+                    request.SearchSettings,
+                    request.HighlightSettings,
+                    request.Count);
+            }
+            else
+            {
+                searchSettings = GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper;
+            }
+
+            var dataSet = GlobalStore.DataSets.Get(searchSettings.DataSetName);
+            var result = new SearchResultWrapper();
+
+            var documentQuery = queryFactory.GetDocumentQuery(dataSet.DataSet.Name);
+            var searchResponse = documentQuery.Search(
+                searchSettings.AutoCompleteSettings,
+                searchSettings.SearchSettings,
+                request.Text,
+                dataSet.DocumentFields,
+                dataSet.DataSet.TagField
+            );
+
+            // AUTOCOMPLETE
+            // TODO collate script + highlight!
+            result.AutoCompleteResultList = searchResponse.Suggest?["simple_suggest"].SelectMany(s => s.Options).Select(o =>
+                new AutoCompleteResult
+                {
+                    Text = searchSettings.AutoCompleteSettings.HighlightSettings == null ? o.Text : o.Highlighted,
+                    Score = o.Score,
+                }).ToList();
+
+            // SEARCH
+            // TODO highlight
+            result.SearchResultList = searchResponse.Hits.Select(d =>
+                new SearchResult
+                {
+                    Document = d.Source.DocumentObject,
+                    DocumentId = d.Id,
+                    Score = d.Score
+                }).ToList();
+
+
+            // CLASSIFIER
+            if (searchSettings.ClassifierSettings != null)
+            {
+                var analyzeQuery = queryFactory.GetAnalyzeQuery(dataSet.DataSet.Name);
+                var classifierId = searchSettings.ClassifierSettings.Id;
+                var classifier = GlobalStore.ActivatedClassifiers.Get(GlobalStore.ServiceAliases.IsExist(classifierId) ? GlobalStore.ServiceAliases.Get(classifierId) : classifierId);
+                //a bi/tri stb gramokat nem jobb lenne elastic-al? Jelenleg a Scorer csinálja az NGramMaker-el
+
+                //ORIGINAL
+                var tokens = analyzeQuery.Analyze(request.Text, 1).ToList();
+                var text = string.Join(" ", tokens);
+
+                var allResults = new List<KeyValuePair<string, double>>();
+                foreach (var scorerKvp in classifier.ClassifierScorers)
+                {
+                    var score = scorerKvp.Value.GetScore(text, 1.7, true);
+                    allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
+                }
+                var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
+                if (resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
+                result.ClassifierResultList = resultsList.Select(r => new ClassifierRecommendationResult
+                {
+                    TagId = r.Key,
+                    Score = r.Value,
+                    Tag = classifier.ClassifiersTags[r.Key]
+                }).ToList();
+
+
+                //AUTOCOMPLETE
+                foreach (var ac in result.AutoCompleteResultList)
+                {
+                    tokens = analyzeQuery.Analyze(ac.Text, 1).ToList();
+                    text = string.Join(" ", tokens);
+
+                    allResults = new List<KeyValuePair<string, double>>();
+                    foreach (var scorerKvp in classifier.ClassifierScorers)
+                    {
+                        var score = scorerKvp.Value.GetScore(text, 1.7, true);
+                        allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
+                    }
+                    resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
+                    if (searchSettings.ClassifierSettings.Count != 0 &&
+                        resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
+                    ac.ClassifierResultList = resultsList.Select(r => new ClassifierRecommendationResult
+                    {
+                        TagId = r.Key,
+                        Score = r.Value,
+                        Tag = classifier.ClassifiersTags[r.Key]
+                    }).ToList();
+                }
+            }
+            return new OkObjectResult(result);
+        }
+
+        private SearchSettingsWrapperElastic MergeSettings(
+            SearchSettingsWrapperElastic defaultSettings,
+            AutoCompleteSettings autoCompleteSettings, ClassifierSettings classifierSettings, SearchSettings searchSettings, HighlightSettings highlightSettings, int count)
+        {
+            defaultSettings.AutoCompleteSettings = autoCompleteSettings?.ToAutoCompleteSettingsElastic();
+            defaultSettings.ClassifierSettings = classifierSettings?.ToClassifierSearchSettingsElastic();
+            defaultSettings.SearchSettings = searchSettings?.ToSearchSettingsElastic();
+            defaultSettings.HighlightSettings = highlightSettings?.ToHighlightSettingsElastic();
+
+            //set the default count from the root
+            if (count > 0)
+            {
+                if (defaultSettings.AutoCompleteSettings?.Count == 0) autoCompleteSettings.Count = count;
+                if (defaultSettings.SearchSettings?.Count == 0) defaultSettings.SearchSettings.Count = count;
+                if (defaultSettings.ClassifierSettings?.Count == 0) defaultSettings.ClassifierSettings.Count = count;
+            }
+
+            //set the default highlight from the root
+            if (highlightSettings != null)
+            {
+                if (defaultSettings.AutoCompleteSettings.HighlightSettings == null)
+                    defaultSettings.AutoCompleteSettings.HighlightSettings = highlightSettings.ToHighlightSettingsElastic();
+                if (defaultSettings.SearchSettings.HighlightSettings == null)
+                    defaultSettings.SearchSettings.HighlightSettings = highlightSettings.ToHighlightSettingsElastic();
+            }
+
+            return defaultSettings;
         }
     }
 }

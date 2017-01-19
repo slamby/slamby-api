@@ -91,6 +91,7 @@ namespace Slamby.Elastic.Queries
 
                         foreach (var termVector in termVectors)
                         {
+                            if (ngramCount > 1 && !termVector.Key.Contains(' ')) continue;
                             if (!wordTotalTermFreq[field].ContainsKey(termVector.Key))
                             {
                                 wordTotalTermFreq[field].Add(termVector.Key, termVector.Value.TotalTermFrequency);
