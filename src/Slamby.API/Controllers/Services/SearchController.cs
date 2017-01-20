@@ -18,6 +18,7 @@ using Slamby.SDK.Net.Models;
 using Slamby.Elastic.Models;
 using Slamby.API.Filters;
 using Slamby.API.Helpers.Services;
+using Slamby.API.Services;
 
 // For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -31,17 +32,19 @@ namespace Slamby.API.Controllers.Services
         readonly SearchServiceHandler searchHandler;
         readonly ProcessHandler processHandler;
         readonly IQueryFactory queryFactory;
+        readonly ServiceManager serviceManager;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public SearchController(ServiceQuery serviceQuery, SearchServiceHandler searchHandler, ProcessHandler processHandler,
-            IQueryFactory queryFactory, IGlobalStoreManager globalStore)
+            IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceManager serviceManager)
         {
             GlobalStore = globalStore;
             this.queryFactory = queryFactory;
             this.processHandler = processHandler;
             this.searchHandler = searchHandler;
             this.serviceQuery = serviceQuery;
+            this.serviceManager = serviceManager;
         }
 
         [HttpGet("{id}")]
@@ -109,12 +112,8 @@ namespace Slamby.API.Controllers.Services
                     string.Format(ServiceResources.DataSet_0_NotFound, searchPrepareSettings.DataSetName));
             }
 
-            // TODO VALIDATION
-
             var globalStoreDataSet = GlobalStore.DataSets.Get(searchPrepareSettings.DataSetName);
             var dataSet = globalStoreDataSet.DataSet;
-
-
 
             var serviceSettings = new SearchSettingsWrapperElastic
             {
@@ -122,7 +121,7 @@ namespace Slamby.API.Controllers.Services
                 ServiceId = service.Id
             };
 
-            // SETUP default values for Activation - later here we can calculate accurate settings for the dataset
+            // SETUP default values for Activation - later here we can calculate more accurate settings for the dataset
 
             var defaultActivationSettings = new SearchActivateSettings();
             serviceSettings.Count = defaultActivationSettings.Count;
@@ -185,13 +184,20 @@ namespace Slamby.API.Controllers.Services
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated);
             }
+
+            var validationResult = Validate(searchActivateSettings.AutoCompleteSettings);
+            if (validationResult != null) return validationResult;
+            validationResult = Validate(searchActivateSettings.ClassifierSettings);
+            if (validationResult != null) return validationResult;
+            validationResult = Validate(searchActivateSettings.SearchSettings);
+            if (validationResult != null) return validationResult;
+
+
             var searchSettings = serviceQuery.GetSettings<SearchSettingsWrapperElastic>(service.Id);
             service.Status = (int)ServiceStatusEnum.Active;
 
             if (searchActivateSettings != null)
             {
-                // TODO VALIDATION
-
                 searchSettings = MergeSettings(
                     searchSettings,
                     searchActivateSettings.AutoCompleteSettings,
@@ -251,26 +257,17 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         public IActionResult Search(string id, [FromBody]SearchRequest request)
         {
-            // If Id is Alias, translate to Id
-            if (GlobalStore.ServiceAliases.IsExist(id))
-            {
-                id = GlobalStore.ServiceAliases.Get(id);
-            }
+            if (GlobalStore.ServiceAliases.IsExist(id)) id = GlobalStore.ServiceAliases.Get(id);
 
-            if (!GlobalStore.ActivatedSearches.IsExist(id))
-            {
-                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
-            }
-
-            // TODO VALIDATION
-
-            var searchSettings = MergeSettings(
-                GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper,
-                request.AutoCompleteSettings,
-                request.ClassifierSettings,
-                request.SearchSettings,
-                request.Count);
+            var validationResult = serviceManager.ValidateIfServiceActive(id, ServiceTypeEnum.Search);
+            if (validationResult != null) return validationResult;
             
+            var searchSettings = MergeCounts(
+                GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper, 
+                request.AutoCompleteCount, 
+                request.ClassifierCount, 
+                request.SearchCount);
+
             var dataSet = GlobalStore.DataSets.Get(searchSettings.DataSetName);
             var result = new SearchResultWrapper();
 
@@ -363,8 +360,9 @@ namespace Slamby.API.Controllers.Services
 
 
             // all the settings are null so not tousch the default settings jut set the root parameters to them
-            if (autoCompleteSettings == null && classifierSettings == null && searchSettings == null && count > 0)
+            if (autoCompleteSettings == null && classifierSettings == null && searchSettings == null)
             {
+                if (count == 0) return result;
                 if (result.AutoCompleteSettings != null) result.AutoCompleteSettings.Count = count;
                 if (result.SearchSettings != null) result.SearchSettings.Count = count;
                 if (result.ClassifierSettings != null) result.ClassifierSettings.Count = count;
@@ -391,6 +389,47 @@ namespace Slamby.API.Controllers.Services
             result.ClassifierSettings = classifierSettings?.ToClassifierSearchSettingsElastic();
 
             return result;
+        }
+
+        private SearchSettingsWrapperElastic MergeCounts(
+            SearchSettingsWrapperElastic defaultSettings, 
+            int autoCompleteCount, int classifierCount, int searchCount)
+        {
+            var result = new SearchSettingsWrapperElastic(defaultSettings);
+
+            if (result.AutoCompleteSettings != null && autoCompleteCount > 0)
+            {
+                result.AutoCompleteSettings.Count = autoCompleteCount;
+            }
+
+            if (result.ClassifierSettings != null && classifierCount > 0)
+            {
+                result.ClassifierSettings.Count = classifierCount;
+            }
+
+            if (result.SearchSettings != null && searchCount > 0)
+            {
+                result.SearchSettings.Count = searchCount;
+            }
+            return result;
+        }
+
+        private IActionResult Validate(AutoCompleteSettings autoCompleteSettings)
+        {
+            //nothing to do (the model validate everything)
+            return null;
+        }
+
+        private IActionResult Validate(SearchSettings searchSettings)
+        {
+            //nothing to do (the model validate everything)
+            return null;
+        }
+
+        private IActionResult Validate(ClassifierSettings classifierSettings)
+        {
+            if (classifierSettings == null) return null;
+            return serviceManager.ValidateIfServiceActive(classifierSettings.Id, ServiceTypeEnum.Classifier);
         }
     }
 }
