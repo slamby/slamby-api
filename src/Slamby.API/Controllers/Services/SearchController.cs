@@ -33,12 +33,12 @@ namespace Slamby.API.Controllers.Services
         readonly ProcessHandler processHandler;
         readonly IQueryFactory queryFactory;
         readonly ServiceManager serviceManager;
-        readonly DocumentService documentService;
+        readonly IDocumentService documentService;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public SearchController(ServiceQuery serviceQuery, SearchServiceHandler searchHandler, ProcessHandler processHandler,
-            IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceManager serviceManager, DocumentService documentService)
+            IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceManager serviceManager, IDocumentService documentService)
         {
             GlobalStore = globalStore;
             this.queryFactory = queryFactory;
@@ -306,49 +306,51 @@ namespace Slamby.API.Controllers.Services
                 var analyzeQuery = queryFactory.GetAnalyzeQuery(dataSet.DataSet.Name);
                 var classifierId = searchSettings.ClassifierSettings.Id;
                 var classifier = GlobalStore.ActivatedClassifiers.Get(GlobalStore.ServiceAliases.IsExist(classifierId) ? GlobalStore.ServiceAliases.Get(classifierId) : classifierId);
-                //a bi/tri stb gramokat nem jobb lenne elastic-al? Jelenleg a Scorer csinálja az NGramMaker-el
-
-                //ORIGINAL
-                var tokens = analyzeQuery.Analyze(request.Text, 1).ToList();
-                var text = string.Join(" ", tokens);
-
-                var allResults = new List<KeyValuePair<string, double>>();
-                foreach (var scorerKvp in classifier.ClassifierScorers)
+                //if the classifier is not activated right now
+                if (classifier != null)
                 {
-                    var score = scorerKvp.Value.GetScore(text, 1.7, true);
-                    allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
-                }
-                var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
-                if (resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
-                result.ClassifierResultList = resultsList.Select(r => new ClassifierRecommendationResult
-                {
-                    TagId = r.Key,
-                    Score = r.Value,
-                    Tag = classifier.ClassifiersTags[r.Key]
-                }).ToList();
+                    //ORIGINAL
+                    var tokens = analyzeQuery.Analyze(request.Text, 1).ToList();
+                    var text = string.Join(" ", tokens);
 
-
-                //AUTOCOMPLETE
-                foreach (var ac in result.AutoCompleteResultList)
-                {
-                    tokens = analyzeQuery.Analyze(ac.Text, 1).ToList();
-                    text = string.Join(" ", tokens);
-
-                    allResults = new List<KeyValuePair<string, double>>();
+                    var allResults = new List<KeyValuePair<string, double>>();
                     foreach (var scorerKvp in classifier.ClassifierScorers)
                     {
                         var score = scorerKvp.Value.GetScore(text, 1.7, true);
                         allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
                     }
-                    resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
-                    if (searchSettings.ClassifierSettings.Count != 0 &&
-                        resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
-                    ac.ClassifierResultList = resultsList.Select(r => new ClassifierRecommendationResult
+                    var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
+                    if (resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
+                    result.ClassifierResultList = resultsList.Select(r => new ClassifierRecommendationResult
                     {
                         TagId = r.Key,
                         Score = r.Value,
                         Tag = classifier.ClassifiersTags[r.Key]
                     }).ToList();
+
+
+                    //AUTOCOMPLETE
+                    foreach (var ac in result.AutoCompleteResultList)
+                    {
+                        tokens = analyzeQuery.Analyze(ac.Text, 1).ToList();
+                        text = string.Join(" ", tokens);
+
+                        allResults = new List<KeyValuePair<string, double>>();
+                        foreach (var scorerKvp in classifier.ClassifierScorers)
+                        {
+                            var score = scorerKvp.Value.GetScore(text, 1.7, true);
+                            allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
+                        }
+                        resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
+                        if (searchSettings.ClassifierSettings.Count != 0 &&
+                            resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
+                        ac.ClassifierResultList = resultsList.Select(r => new ClassifierRecommendationResult
+                        {
+                            TagId = r.Key,
+                            Score = r.Value,
+                            Tag = classifier.ClassifiersTags[r.Key]
+                        }).ToList();
+                    }
                 }
             }
             return new OkObjectResult(result);
