@@ -192,12 +192,7 @@ namespace Slamby.API.Controllers.Services
             var searchSettings = serviceQuery.GetSettings<SearchSettingsWrapperElastic>(service.Id);
             service.Status = (int)ServiceStatusEnum.Active;
 
-            if (searchActivateSettings != null &&
-                (
-                    searchActivateSettings.AutoCompleteSettings != null ||
-                    searchActivateSettings.ClassifierSettings != null ||
-                    searchActivateSettings.SearchSettings != null)
-                )
+            if (searchActivateSettings != null)
             {
                 // TODO VALIDATION
 
@@ -274,24 +269,14 @@ namespace Slamby.API.Controllers.Services
 
             // TODO VALIDATION
 
-            SearchSettingsWrapperElastic searchSettings;
-            if (request.AutoCompleteSettings != null ||
-                request.ClassifierSettings != null ||
-                request.SearchSettings != null)
-            {
-                searchSettings = MergeSettings(
-                    GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper,
-                    request.AutoCompleteSettings,
-                    request.ClassifierSettings,
-                    request.SearchSettings,
-                    request.HighlightSettings,
-                    request.Count);
-            }
-            else
-            {
-                searchSettings = GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper;
-            }
-
+            var searchSettings = MergeSettings(
+                GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper,
+                request.AutoCompleteSettings,
+                request.ClassifierSettings,
+                request.SearchSettings,
+                request.HighlightSettings,
+                request.Count);
+            
             var dataSet = GlobalStore.DataSets.Get(searchSettings.DataSetName);
             var result = new SearchResultWrapper();
 
@@ -382,10 +367,15 @@ namespace Slamby.API.Controllers.Services
             SearchSettingsWrapperElastic defaultSettings,
             AutoCompleteSettings autoCompleteSettings, ClassifierSettings classifierSettings, SearchSettings searchSettings, HighlightSettings highlightSettings, int count)
         {
-            defaultSettings.AutoCompleteSettings = autoCompleteSettings?.ToAutoCompleteSettingsElastic();
-            defaultSettings.ClassifierSettings = classifierSettings?.ToClassifierSearchSettingsElastic();
-            defaultSettings.SearchSettings = searchSettings?.ToSearchSettingsElastic();
-            defaultSettings.HighlightSettings = highlightSettings?.ToHighlightSettingsElastic();
+            if (autoCompleteSettings != null ||
+                classifierSettings != null ||
+                searchSettings != null)
+            {
+                defaultSettings.AutoCompleteSettings = autoCompleteSettings?.ToAutoCompleteSettingsElastic();
+                defaultSettings.ClassifierSettings = classifierSettings?.ToClassifierSearchSettingsElastic();
+                defaultSettings.SearchSettings = searchSettings?.ToSearchSettingsElastic();
+                defaultSettings.HighlightSettings = highlightSettings?.ToHighlightSettingsElastic();
+            }
 
             //set the default count from the root
             if (count > 0)
@@ -398,9 +388,9 @@ namespace Slamby.API.Controllers.Services
             //set the default highlight from the root
             if (highlightSettings != null)
             {
-                if (defaultSettings.AutoCompleteSettings.HighlightSettings == null)
+                if (defaultSettings.AutoCompleteSettings?.HighlightSettings == null)
                     defaultSettings.AutoCompleteSettings.HighlightSettings = highlightSettings.ToHighlightSettingsElastic();
-                if (defaultSettings.SearchSettings.HighlightSettings == null)
+                if (defaultSettings.SearchSettings?.HighlightSettings == null)
                     defaultSettings.SearchSettings.HighlightSettings = highlightSettings.ToHighlightSettingsElastic();
             }
 
