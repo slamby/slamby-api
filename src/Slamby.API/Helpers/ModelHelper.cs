@@ -43,26 +43,6 @@ namespace Slamby.API.Helpers
         }
 
         #region SearchService
-        public static HighlightSettings ToHighlightSettingsModel(this HighlightSettingsElastic highlight)
-        {
-            var model = new HighlightSettings
-            {
-                PreTag = highlight.PreTag,
-                PostTag = highlight.PostTag
-            };
-            return model;
-        }
-
-        public static HighlightSettingsElastic ToHighlightSettingsElastic(this HighlightSettings highlight)
-        {
-            var model = new HighlightSettingsElastic
-            {
-                PreTag = highlight.PreTag,
-                PostTag = highlight.PostTag
-            };
-            return model;
-        }
-        
         public static Filter ToFilterModel(this FilterElastic filter)
         {
             var model = new Filter
@@ -109,9 +89,7 @@ namespace Slamby.API.Helpers
             {
                 Confidence = autoComplete.Confidence,
                 Count = autoComplete.Count,
-                HighlightSettings = autoComplete.HighlightSettings?.ToHighlightSettingsModel(),
                 MaximumErrors = autoComplete.MaximumErrors,
-                NGram = autoComplete.NGram
             };
             return model;
         }
@@ -122,9 +100,7 @@ namespace Slamby.API.Helpers
             {
                 Confidence = autoComplete.Confidence,
                 Count = autoComplete.Count,
-                HighlightSettings = autoComplete.HighlightSettings?.ToHighlightSettingsElastic(),
                 MaximumErrors = autoComplete.MaximumErrors,
-                NGram = autoComplete.NGram
             };
             return model;
         }
@@ -137,7 +113,6 @@ namespace Slamby.API.Helpers
                 CutOffFrequency = search.CutOffFrequency,
                 Filter = search.Filter?.ToFilterModel(),
                 Fuzziness = search.Fuzziness,
-                HighlightSettings = search.HighlightSettings?.ToHighlightSettingsModel(),
                 ResponseFieldList = search.ResponseFieldList,
                 SearchFieldList = search.SearchFieldList,
                 Type = (SearchTypeEnum)search.Type,
@@ -155,7 +130,6 @@ namespace Slamby.API.Helpers
                 CutOffFrequency = search.CutOffFrequency,
                 Filter = search.Filter?.ToFilterElastic(),
                 Fuzziness = search.Fuzziness,
-                HighlightSettings = search.HighlightSettings?.ToHighlightSettingsElastic(),
                 ResponseFieldList = search.ResponseFieldList,
                 SearchFieldList = search.SearchFieldList,
                 Type = (int)search.Type,
@@ -201,7 +175,6 @@ namespace Slamby.API.Helpers
                 AutoCompleteSettings = searchWrapper.AutoCompleteSettings?.ToAutoCompleteSettingsModel(),
                 ClassifierSettings = searchWrapper.ClassifierSettings?.ToClassifierSettingsModel(),
                 Count = searchWrapper.Count,
-                HighlightSettings = searchWrapper.HighlightSettings?.ToHighlightSettingsModel(),
                 SearchSettings = searchWrapper.SearchSettings?.ToSearchSettingsModel()
             };
             return model;

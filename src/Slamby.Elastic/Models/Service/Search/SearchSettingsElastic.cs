@@ -9,11 +9,20 @@ namespace Slamby.Elastic.Models
     [ElasticsearchType(Name = "search_settings", IdProperty = "ServiceId")]
     public class SearchSettingsWrapperElastic : BaseServiceSettingsElastic
     {
+        public SearchSettingsWrapperElastic() {}
+
+        public SearchSettingsWrapperElastic(SearchSettingsWrapperElastic value)
+        {
+            this.AutoCompleteSettings = value.AutoCompleteSettings;
+            this.ClassifierSettings = value.ClassifierSettings;
+            this.Count = value.Count;
+            this.DataSetName = value.DataSetName;
+            this.SearchSettings = value.SearchSettings;
+            this.ServiceId = value.ServiceId;
+        }
+
         [Number(NumberType.Integer, Name = "count")]
         public int Count { get; set; }
-
-        [Object(Name = "highlight_settings")]
-        public HighlightSettingsElastic HighlightSettings { get; set; }
 
         [Object(Name = "autocomplete_settings")]
         public AutoCompleteSettingsElastic AutoCompleteSettings { get; set; }
@@ -26,28 +35,13 @@ namespace Slamby.Elastic.Models
 
     }
 
-    public class HighlightSettingsElastic
-    {
-        [String(Name = "pre_tag", Index = FieldIndexOption.NotAnalyzed)]
-        public string PreTag { get; set; }
-        [String(Name = "post_tag", Index = FieldIndexOption.NotAnalyzed)]
-        public string PostTag { get; set; }
-
-    }
-
     public class AutoCompleteSettingsElastic
     {
-        [Number(NumberType.Integer, Name = "ngram")]
-        public int NGram { get; set; }
-
         [Number(NumberType.Double, Name = "confidence")]
         public double Confidence { get; set; }
 
         [Number(NumberType.Double, Name = "maximum_errors")]
         public double MaximumErrors { get; set; }
-
-        [Object(Name = "highlight_settings")]
-        public HighlightSettingsElastic HighlightSettings { get; set; }
 
         [Number(NumberType.Integer, Name = "count")]
         public int Count { get; set; }
@@ -76,9 +70,6 @@ namespace Slamby.Elastic.Models
         [Number(NumberType.Integer, Name = "fuzziness")]
         public int Fuzziness { get; set; }
         
-        [Object(Name = "highlight_settings")]
-        public HighlightSettingsElastic HighlightSettings { get; set; }
-
         [Number(NumberType.Integer, Name = "count")]
         public int Count { get; set; }
 

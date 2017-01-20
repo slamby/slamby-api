@@ -14,6 +14,8 @@ namespace Slamby.Elastic.Queries
     [TransientDependency(ServiceType = typeof(IDocumentQuery))]
     public class DocumentQuery : BaseQuery, IDocumentQuery
     {
+        public const string SuggestName = "simple_suggest";
+
         public DocumentQuery(ElasticClient client, SiteConfig siteConfig) : base(client, siteConfig) { }
 
         public DocumentElastic Get(string id)
@@ -439,6 +441,8 @@ namespace Slamby.Elastic.Queries
                    .Fields(fields)));
         }
 
+        
+
         public ISearchResponse<DocumentElastic> Search(
             AutoCompleteSettingsElastic autoCompleteSettings, 
             SearchSettingsElastic searchSettings,
@@ -525,14 +529,6 @@ namespace Slamby.Elastic.Queries
                     sdesc.Query(q => q.Bool(b => b.Must(queryContainers.ToArray())));
                 }
 
-                //HIGHLIGHT
-                if (searchSettings.HighlightSettings != null)
-                {
-                    sdesc.Highlight(h => h
-                        .PreTags(searchSettings.HighlightSettings.PreTag)
-                        .PostTags(searchSettings.HighlightSettings.PostTag));
-                }
-
                 // COUNT
                 sdesc.Size(searchSettings.Count);
 
@@ -565,18 +561,12 @@ namespace Slamby.Elastic.Queries
                 .Collate(c => c
                     .Prune()
                     .Query(q => q
-                        .Inline("{\"match\": {\"{{field_name}}\" : {\"query\": \"{{suggestion}}\", \"operator\": \"and\"}}}")
-                        .Params(new Dictionary<string, object> { { "field_name", DocumentElastic.TextField } })))
+                    //unfortunately Params is not working here so had to hack the text field like this
+                      .Inline($"{{\"match\": {{\"{DocumentElastic.TextField}\" : {{\"query\": \"{{{{suggestion}}}}\", \"operator\": \"and\"}}}}}}")
+                    )
+                )
                 .Text(text);
-
-                if (autoCompleteSettings.HighlightSettings != null)
-                {
-                    psgd.Highlight(hl => hl
-                        .PreTag(autoCompleteSettings.HighlightSettings.PreTag)
-                        .PostTag(autoCompleteSettings.HighlightSettings.PostTag));
-                }
-
-                sdesc.Suggest(s => s.Phrase("simple_suggest", p => psgd));
+                sdesc.Suggest(s => s.Phrase(SuggestName, p => psgd));
             }
             
 

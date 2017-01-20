@@ -126,16 +126,13 @@ namespace Slamby.API.Controllers.Services
 
             var defaultActivationSettings = new SearchActivateSettings();
             serviceSettings.Count = defaultActivationSettings.Count;
-            serviceSettings.HighlightSettings = null;
 
             var defaultAutoCompleteSettings = new AutoCompleteSettings();
             serviceSettings.AutoCompleteSettings = new AutoCompleteSettingsElastic
             {
                 Confidence = defaultAutoCompleteSettings.Confidence,
                 Count = defaultActivationSettings.Count,
-                HighlightSettings = null,
-                MaximumErrors = defaultAutoCompleteSettings.MaximumErrors,
-                NGram = dataSet.NGramCount
+                MaximumErrors = defaultAutoCompleteSettings.MaximumErrors
             };
 
             var defaultSearchSettings = new SearchSettings();
@@ -145,7 +142,6 @@ namespace Slamby.API.Controllers.Services
                 CutOffFrequency = defaultSearchSettings.CutOffFrequency,
                 Filter = null,
                 Fuzziness = defaultSearchSettings.Fuzziness,
-                HighlightSettings = null,
                 ResponseFieldList = dataSet.InterpretedFields.Union(new List<string> { dataSet.IdField, dataSet.TagField }).ToList(),
                 SearchFieldList = dataSet.InterpretedFields,
                 Type = (int)SearchTypeEnum.Match,
@@ -201,7 +197,6 @@ namespace Slamby.API.Controllers.Services
                     searchActivateSettings.AutoCompleteSettings,
                     searchActivateSettings.ClassifierSettings,
                     searchActivateSettings.SearchSettings,
-                    searchActivateSettings.HighlightSettings,
                     searchActivateSettings.Count);
             }
 
@@ -274,7 +269,6 @@ namespace Slamby.API.Controllers.Services
                 request.AutoCompleteSettings,
                 request.ClassifierSettings,
                 request.SearchSettings,
-                request.HighlightSettings,
                 request.Count);
             
             var dataSet = GlobalStore.DataSets.Get(searchSettings.DataSetName);
@@ -290,16 +284,14 @@ namespace Slamby.API.Controllers.Services
             );
 
             // AUTOCOMPLETE
-            // TODO collate script + highlight!
-            result.AutoCompleteResultList = searchResponse.Suggest?["simple_suggest"].SelectMany(s => s.Options).Select(o =>
+            result.AutoCompleteResultList = searchResponse.Suggest?[DocumentQuery.SuggestName].SelectMany(s => s.Options).Where(o => o.CollateMatch).Select(o =>
                 new AutoCompleteResult
                 {
-                    Text = searchSettings.AutoCompleteSettings.HighlightSettings == null ? o.Text : o.Highlighted,
+                    Text = o.Text,
                     Score = o.Score,
                 }).ToList();
 
             // SEARCH
-            // TODO highlight
             result.SearchResultList = searchResponse.Hits.Select(d =>
                 new SearchResult
                 {
@@ -365,36 +357,40 @@ namespace Slamby.API.Controllers.Services
 
         private SearchSettingsWrapperElastic MergeSettings(
             SearchSettingsWrapperElastic defaultSettings,
-            AutoCompleteSettings autoCompleteSettings, ClassifierSettings classifierSettings, SearchSettings searchSettings, HighlightSettings highlightSettings, int count)
+            AutoCompleteSettings autoCompleteSettings, ClassifierSettings classifierSettings, SearchSettings searchSettings, int count)
         {
-            if (autoCompleteSettings != null ||
-                classifierSettings != null ||
-                searchSettings != null)
+            var result = new SearchSettingsWrapperElastic(defaultSettings);
+
+
+            // all the settings are null so not tousch the default settings jut set the root parameters to them
+            if (autoCompleteSettings == null && classifierSettings == null && searchSettings == null && count > 0)
             {
-                defaultSettings.AutoCompleteSettings = autoCompleteSettings?.ToAutoCompleteSettingsElastic();
-                defaultSettings.ClassifierSettings = classifierSettings?.ToClassifierSearchSettingsElastic();
-                defaultSettings.SearchSettings = searchSettings?.ToSearchSettingsElastic();
-                defaultSettings.HighlightSettings = highlightSettings?.ToHighlightSettingsElastic();
+                if (result.AutoCompleteSettings != null) result.AutoCompleteSettings.Count = count;
+                if (result.SearchSettings != null) result.SearchSettings.Count = count;
+                if (result.ClassifierSettings != null) result.ClassifierSettings.Count = count;
+                return result;
             }
 
-            //set the default count from the root
-            if (count > 0)
+            // there are settings which are not null so apply all of the settings (along with the root parameters)
+            if (autoCompleteSettings != null && count > 0 && autoCompleteSettings.Count == 0)
             {
-                if (defaultSettings.AutoCompleteSettings?.Count == 0) autoCompleteSettings.Count = count;
-                if (defaultSettings.SearchSettings?.Count == 0) defaultSettings.SearchSettings.Count = count;
-                if (defaultSettings.ClassifierSettings?.Count == 0) defaultSettings.ClassifierSettings.Count = count;
+                autoCompleteSettings.Count = count;
             }
+            result.AutoCompleteSettings = autoCompleteSettings?.ToAutoCompleteSettingsElastic();
 
-            //set the default highlight from the root
-            if (highlightSettings != null)
+            if (searchSettings != null && count > 0 && searchSettings.Count == 0)
             {
-                if (defaultSettings.AutoCompleteSettings?.HighlightSettings == null)
-                    defaultSettings.AutoCompleteSettings.HighlightSettings = highlightSettings.ToHighlightSettingsElastic();
-                if (defaultSettings.SearchSettings?.HighlightSettings == null)
-                    defaultSettings.SearchSettings.HighlightSettings = highlightSettings.ToHighlightSettingsElastic();
+                searchSettings.Count = count;
             }
+            result.SearchSettings = searchSettings?.ToSearchSettingsElastic();
 
-            return defaultSettings;
+            if (classifierSettings != null && count > 0 && classifierSettings.Count == 0)
+            {
+                classifierSettings.Count = count;
+            }
+            result.ClassifierSettings = classifierSettings?.ToClassifierSearchSettingsElastic();
+
+            return result;
         }
     }
 }
