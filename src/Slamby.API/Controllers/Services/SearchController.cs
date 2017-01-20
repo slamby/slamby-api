@@ -33,11 +33,12 @@ namespace Slamby.API.Controllers.Services
         readonly ProcessHandler processHandler;
         readonly IQueryFactory queryFactory;
         readonly ServiceManager serviceManager;
+        readonly DocumentService documentService;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public SearchController(ServiceQuery serviceQuery, SearchServiceHandler searchHandler, ProcessHandler processHandler,
-            IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceManager serviceManager)
+            IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceManager serviceManager, DocumentService documentService)
         {
             GlobalStore = globalStore;
             this.queryFactory = queryFactory;
@@ -45,6 +46,7 @@ namespace Slamby.API.Controllers.Services
             this.searchHandler = searchHandler;
             this.serviceQuery = serviceQuery;
             this.serviceManager = serviceManager;
+            this.documentService = documentService;
         }
 
         [HttpGet("{id}")]
@@ -185,15 +187,15 @@ namespace Slamby.API.Controllers.Services
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated);
             }
 
+            var searchSettings = serviceQuery.GetSettings<SearchSettingsWrapperElastic>(service.Id);
+
             var validationResult = Validate(searchActivateSettings.AutoCompleteSettings);
             if (validationResult != null) return validationResult;
             validationResult = Validate(searchActivateSettings.ClassifierSettings);
             if (validationResult != null) return validationResult;
-            validationResult = Validate(searchActivateSettings.SearchSettings);
+            validationResult = Validate(searchSettings.DataSetName, searchActivateSettings.SearchSettings);
             if (validationResult != null) return validationResult;
-
-
-            var searchSettings = serviceQuery.GetSettings<SearchSettingsWrapperElastic>(service.Id);
+            
             service.Status = (int)ServiceStatusEnum.Active;
 
             if (searchActivateSettings != null)
@@ -299,7 +301,7 @@ namespace Slamby.API.Controllers.Services
 
 
             // CLASSIFIER
-            if (searchSettings.ClassifierSettings != null)
+            if (searchSettings.ClassifierSettings != null && searchSettings.ClassifierSettings.Count > 0)
             {
                 var analyzeQuery = queryFactory.GetAnalyzeQuery(dataSet.DataSet.Name);
                 var classifierId = searchSettings.ClassifierSettings.Id;
@@ -420,9 +422,24 @@ namespace Slamby.API.Controllers.Services
             return null;
         }
 
-        private IActionResult Validate(SearchSettings searchSettings)
+        private IActionResult Validate(string dataSetName, SearchSettings searchSettings)
         {
-            //nothing to do (the model validate everything)
+            if (searchSettings.SearchFieldList != null)
+            {
+                var validateResult = documentService.ValidateFieldFilterFields(dataSetName, searchSettings.SearchFieldList);
+                if (validateResult.IsFailure)
+                {
+                    return HttpErrorResult(StatusCodes.Status400BadRequest, validateResult.Error);
+                }
+            }
+            if (searchSettings.ResponseFieldList != null)
+            {
+                var validateResult = documentService.ValidateFieldFilterFields(dataSetName, searchSettings.ResponseFieldList);
+                if (validateResult.IsFailure)
+                {
+                    return HttpErrorResult(StatusCodes.Status400BadRequest, validateResult.Error);
+                }
+            }
             return null;
         }
 
