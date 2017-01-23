@@ -456,7 +456,7 @@ namespace Slamby.Elastic.Queries
 
             #region SEARCH
 
-            if (searchSettings != null)
+            if (searchSettings?.Count > 0)
             {
                 var queryContDesc = new QueryContainerDescriptor<DocumentElastic>();
                 var queryContainers = new List<QueryContainer>();
@@ -544,7 +544,7 @@ namespace Slamby.Elastic.Queries
 
             #region SUGGEST
 
-            if (autoCompleteSettings != null)
+            if (autoCompleteSettings?.Count > 0)
             {
                 var psgd = new PhraseSuggesterDescriptor<DocumentElastic>()
                 .Field(DocumentElastic.TextField)

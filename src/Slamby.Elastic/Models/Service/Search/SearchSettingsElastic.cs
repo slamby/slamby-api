@@ -15,14 +15,10 @@ namespace Slamby.Elastic.Models
         {
             this.AutoCompleteSettings = value.AutoCompleteSettings;
             this.ClassifierSettings = value.ClassifierSettings;
-            this.Count = value.Count;
             this.DataSetName = value.DataSetName;
             this.SearchSettings = value.SearchSettings;
             this.ServiceId = value.ServiceId;
         }
-
-        [Number(NumberType.Integer, Name = "count")]
-        public int Count { get; set; }
 
         [Object(Name = "autocomplete_settings")]
         public AutoCompleteSettingsElastic AutoCompleteSettings { get; set; }

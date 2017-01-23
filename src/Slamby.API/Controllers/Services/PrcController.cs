@@ -292,7 +292,7 @@ namespace Slamby.API.Controllers.Services
 
             if (!GlobalStore.ActivatedPrcs.IsExist(id))
             {
-                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, ServiceTypeEnum.Classifier));
             }
             if (!string.IsNullOrEmpty(request.TagId) && !GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.Tags.Any(t => t.Id == request.TagId))
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.TheGivenTagIsMissingFromThePRCService);
@@ -360,7 +360,7 @@ namespace Slamby.API.Controllers.Services
 
             if (!GlobalStore.ActivatedPrcs.IsExist(id))
             {
-                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, ServiceTypeEnum.Classifier));
             }
 
             if (!string.IsNullOrEmpty(request.TagId) && !GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.Tags.Any(t => t.Id == request.TagId))
@@ -632,7 +632,7 @@ namespace Slamby.API.Controllers.Services
 
             if (!GlobalStore.ActivatedPrcs.IsExist(id))
             {
-                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, ServiceTypeEnum.Prc));
             }
             if (!string.IsNullOrEmpty(request.TagId) && !GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.Tags.Any(t => t.Id == request.TagId))
             {

@@ -234,19 +234,19 @@ namespace Slamby.API.Services
                 case ServiceTypeEnum.Classifier:
                     if (!GlobalStore.ActivatedClassifiers.IsExist(serviceIdOrAlias))
                     {
-                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, serviceType));
                     }
                     break;
                 case ServiceTypeEnum.Prc:
                     if (!GlobalStore.ActivatedPrcs.IsExist(serviceIdOrAlias))
                     {
-                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, serviceType));
                     }
                     break;
                 case ServiceTypeEnum.Search:
                     if (!GlobalStore.ActivatedSearches.IsExist(serviceIdOrAlias))
                     {
-                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, serviceType));
                     }
                     break;
             }

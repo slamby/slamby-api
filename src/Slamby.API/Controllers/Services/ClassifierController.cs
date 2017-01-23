@@ -309,7 +309,7 @@ namespace Slamby.API.Controllers
 
             if (!GlobalStore.ActivatedClassifiers.IsExist(id))
             {
-                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.ServiceNotExistsOrNotActivated);
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, ServiceTypeEnum.Classifier));
             }
 
             var analyzeQuery = queryFactory.GetAnalyzeQuery(GlobalStore.ActivatedClassifiers.Get(id).ClassifiersSettings.DataSetName);

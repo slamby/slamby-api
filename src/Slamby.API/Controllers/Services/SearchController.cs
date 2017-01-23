@@ -123,31 +123,28 @@ namespace Slamby.API.Controllers.Services
                 ServiceId = service.Id
             };
 
-            // SETUP default values for Activation - later here we can calculate more accurate settings for the dataset
+            // SETUP default values for Activation - here we can calculate more accurate settings for the dataset
 
             var defaultActivationSettings = new SearchActivateSettings();
-            serviceSettings.Count = defaultActivationSettings.Count;
 
-            var defaultAutoCompleteSettings = new AutoCompleteSettings();
             serviceSettings.AutoCompleteSettings = new AutoCompleteSettingsElastic
             {
-                Confidence = defaultAutoCompleteSettings.Confidence,
-                Count = defaultActivationSettings.Count,
-                MaximumErrors = defaultAutoCompleteSettings.MaximumErrors
+                Confidence = 2.0,
+                Count = 3,
+                MaximumErrors = 0.5
             };
 
-            var defaultSearchSettings = new SearchSettings();
             serviceSettings.SearchSettings = new SearchSettingsElastic
             {
-                Count = defaultActivationSettings.Count,
-                CutOffFrequency = defaultSearchSettings.CutOffFrequency,
+                Count = 3,
+                CutOffFrequency = 0.001,
                 Filter = null,
-                Fuzziness = defaultSearchSettings.Fuzziness,
+                Fuzziness = -1,
                 ResponseFieldList = dataSet.InterpretedFields.Union(new List<string> { dataSet.IdField, dataSet.TagField }).ToList(),
                 SearchFieldList = dataSet.InterpretedFields,
                 Type = (int)SearchTypeEnum.Match,
                 Weights = null,
-                Operator = (int)defaultSearchSettings.Operator
+                Operator = (int)LogicalOperatorEnum.OR
             };
 
             serviceQuery.IndexSettings(serviceSettings);
@@ -189,24 +186,30 @@ namespace Slamby.API.Controllers.Services
 
             var searchSettings = serviceQuery.GetSettings<SearchSettingsWrapperElastic>(service.Id);
 
-            var validationResult = Validate(searchActivateSettings.AutoCompleteSettings);
-            if (validationResult != null) return validationResult;
-            validationResult = Validate(searchActivateSettings.ClassifierSettings);
-            if (validationResult != null) return validationResult;
-            validationResult = Validate(searchSettings.DataSetName, searchActivateSettings.SearchSettings);
-            if (validationResult != null) return validationResult;
-            
-            service.Status = (int)ServiceStatusEnum.Active;
-
             if (searchActivateSettings != null)
             {
-                searchSettings = MergeSettings(
-                    searchSettings,
-                    searchActivateSettings.AutoCompleteSettings,
-                    searchActivateSettings.ClassifierSettings,
-                    searchActivateSettings.SearchSettings,
-                    searchActivateSettings.Count);
+                if (searchActivateSettings.AutoCompleteSettings != null)
+                {
+                    var validationResult = Validate(searchActivateSettings.AutoCompleteSettings);
+                    if (validationResult != null) return validationResult;
+                    searchSettings.AutoCompleteSettings = searchActivateSettings.AutoCompleteSettings?.ToAutoCompleteSettingsElastic();
+                }
+                if (searchActivateSettings.ClassifierSettings != null)
+                {
+                    var validationResult = Validate(searchActivateSettings.ClassifierSettings);
+                    if (validationResult != null) return validationResult;
+                    searchSettings.ClassifierSettings = searchActivateSettings.ClassifierSettings?.ToClassifierSearchSettingsElastic();
+                    // there isn't default settings here at the prepare step so we have to set it up here
+                    if (searchSettings.ClassifierSettings?.Count == 0) searchSettings.ClassifierSettings.Count = 3;
+                }
+                if (searchActivateSettings.SearchSettings != null)
+                {
+                    var validationResult = Validate(searchSettings.DataSetName, searchActivateSettings.SearchSettings);
+                    if (validationResult != null) return validationResult;
+                    searchSettings.SearchSettings = searchActivateSettings.SearchSettings?.ToSearchSettingsElastic();
+                }
             }
+            service.Status = (int)ServiceStatusEnum.Active;
 
             var process = processHandler.Create(
                 ProcessTypeEnum.ClassifierActivate,
@@ -264,11 +267,11 @@ namespace Slamby.API.Controllers.Services
             var validationResult = serviceManager.ValidateIfServiceActive(id, ServiceTypeEnum.Search);
             if (validationResult != null) return validationResult;
             
-            var searchSettings = MergeCounts(
+            var searchSettings = MergeSettings(
                 GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper, 
-                request.AutoCompleteCount, 
-                request.ClassifierCount, 
-                request.SearchCount);
+                request.AutoCompleteSettings, 
+                request.ClassifierSettings, 
+                request.SearchSettings);
 
             var dataSet = GlobalStore.DataSets.Get(searchSettings.DataSetName);
             var result = new SearchResultWrapper();
@@ -301,7 +304,7 @@ namespace Slamby.API.Controllers.Services
 
 
             // CLASSIFIER
-            if (searchSettings.ClassifierSettings != null && searchSettings.ClassifierSettings.Count > 0)
+            if (searchSettings.ClassifierSettings?.Count > 0)
             {
                 var analyzeQuery = queryFactory.GetAnalyzeQuery(dataSet.DataSet.Name);
                 var classifierId = searchSettings.ClassifierSettings.Id;
@@ -358,62 +361,23 @@ namespace Slamby.API.Controllers.Services
 
         private SearchSettingsWrapperElastic MergeSettings(
             SearchSettingsWrapperElastic defaultSettings,
-            AutoCompleteSettings autoCompleteSettings, ClassifierSettings classifierSettings, SearchSettings searchSettings, int count)
+            AutoCompleteSettings autoCompleteSettings, ClassifierSettings classifierSettings, SearchSettings searchSettings)
         {
             var result = new SearchSettingsWrapperElastic(defaultSettings);
-
-
-            // all the settings are null so not tousch the default settings jut set the root parameters to them
-            if (autoCompleteSettings == null && classifierSettings == null && searchSettings == null)
+            
+            if (autoCompleteSettings != null)
             {
-                if (count == 0) return result;
-                if (result.AutoCompleteSettings != null) result.AutoCompleteSettings.Count = count;
-                if (result.SearchSettings != null) result.SearchSettings.Count = count;
-                if (result.ClassifierSettings != null) result.ClassifierSettings.Count = count;
-                return result;
+                result.AutoCompleteSettings = defaultSettings.AutoCompleteSettings != null ? autoCompleteSettings.ToAutoCompleteSettingsElastic(defaultSettings.AutoCompleteSettings) : null;
+            }
+            
+            if (classifierSettings != null)
+            {
+                result.ClassifierSettings = defaultSettings.ClassifierSettings != null ? classifierSettings.ToClassifierSearchSettingsElastic(defaultSettings.ClassifierSettings) : null;
             }
 
-            // there are settings which are not null so apply all of the settings (along with the root parameters)
-            if (autoCompleteSettings != null && count > 0 && autoCompleteSettings.Count == 0)
+            if (searchSettings != null)
             {
-                autoCompleteSettings.Count = count;
-            }
-            result.AutoCompleteSettings = autoCompleteSettings?.ToAutoCompleteSettingsElastic();
-
-            if (searchSettings != null && count > 0 && searchSettings.Count == 0)
-            {
-                searchSettings.Count = count;
-            }
-            result.SearchSettings = searchSettings?.ToSearchSettingsElastic();
-
-            if (classifierSettings != null && count > 0 && classifierSettings.Count == 0)
-            {
-                classifierSettings.Count = count;
-            }
-            result.ClassifierSettings = classifierSettings?.ToClassifierSearchSettingsElastic();
-
-            return result;
-        }
-
-        private SearchSettingsWrapperElastic MergeCounts(
-            SearchSettingsWrapperElastic defaultSettings, 
-            int autoCompleteCount, int classifierCount, int searchCount)
-        {
-            var result = new SearchSettingsWrapperElastic(defaultSettings);
-
-            if (result.AutoCompleteSettings != null && autoCompleteCount > 0)
-            {
-                result.AutoCompleteSettings.Count = autoCompleteCount;
-            }
-
-            if (result.ClassifierSettings != null && classifierCount > 0)
-            {
-                result.ClassifierSettings.Count = classifierCount;
-            }
-
-            if (result.SearchSettings != null && searchCount > 0)
-            {
-                result.SearchSettings.Count = searchCount;
+                result.SearchSettings = defaultSettings.SearchSettings != null ? searchSettings.ToSearchSettingsElastic(defaultSettings.SearchSettings) : null;
             }
             return result;
         }
@@ -426,6 +390,7 @@ namespace Slamby.API.Controllers.Services
 
         private IActionResult Validate(string dataSetName, SearchSettings searchSettings)
         {
+            if (searchSettings == null) return null;
             if (searchSettings.SearchFieldList != null)
             {
                 var validateResult = documentService.ValidateFieldFilterFields(dataSetName, searchSettings.SearchFieldList);
@@ -448,6 +413,10 @@ namespace Slamby.API.Controllers.Services
         private IActionResult Validate(ClassifierSettings classifierSettings)
         {
             if (classifierSettings == null) return null;
+            if (string.IsNullOrEmpty(classifierSettings.Id))
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.IdCantBeEmptyIn_0_Settings, "Classifier")); 
+            }
             return serviceManager.ValidateIfServiceActive(classifierSettings.Id, ServiceTypeEnum.Classifier);
         }
     }

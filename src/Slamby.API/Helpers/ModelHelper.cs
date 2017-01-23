@@ -94,13 +94,13 @@ namespace Slamby.API.Helpers
             return model;
         }
 
-        public static AutoCompleteSettingsElastic ToAutoCompleteSettingsElastic(this AutoCompleteSettings autoComplete)
+        public static AutoCompleteSettingsElastic ToAutoCompleteSettingsElastic(this AutoCompleteSettings autoComplete, AutoCompleteSettingsElastic original = null)
         {
             var model = new AutoCompleteSettingsElastic
             {
-                Confidence = autoComplete.Confidence,
-                Count = autoComplete.Count,
-                MaximumErrors = autoComplete.MaximumErrors,
+                Confidence = autoComplete.Confidence.HasValue ? autoComplete.Confidence.Value : (double)original?.Confidence,
+                Count = autoComplete.Count.HasValue ? autoComplete.Count.Value : (int)original?.Count,
+                MaximumErrors = autoComplete.MaximumErrors.HasValue ? autoComplete.MaximumErrors.Value : (double)original?.MaximumErrors,
             };
             return model;
         }
@@ -122,19 +122,19 @@ namespace Slamby.API.Helpers
             return model;
         }
 
-        public static SearchSettingsElastic ToSearchSettingsElastic(this SearchSettings search)
+        public static SearchSettingsElastic ToSearchSettingsElastic(this SearchSettings search, SearchSettingsElastic original = null)
         {
             var model = new SearchSettingsElastic
             {
-                Count = search.Count,
-                CutOffFrequency = search.CutOffFrequency,
-                Filter = search.Filter?.ToFilterElastic(),
-                Fuzziness = search.Fuzziness,
-                ResponseFieldList = search.ResponseFieldList,
-                SearchFieldList = search.SearchFieldList,
-                Type = (int)search.Type,
-                Weights = search.Weights?.Select(s => s.ToWeightElastic()).ToList(),
-                Operator = (int)search.Operator
+                Count = search.Count.HasValue ? search.Count.Value : (int)original?.Count,
+                CutOffFrequency = search.CutOffFrequency.HasValue ? search.CutOffFrequency.Value : (double)original?.CutOffFrequency,
+                Filter = search.Filter != null ? search.Filter.ToFilterElastic() : original?.Filter,
+                Fuzziness = search.Fuzziness.HasValue ? search.Fuzziness.Value : (int)original?.Fuzziness,
+                ResponseFieldList = search.ResponseFieldList != null ? search.ResponseFieldList : original?.ResponseFieldList,
+                SearchFieldList = search.SearchFieldList != null ? search.SearchFieldList : original?.SearchFieldList,
+                Type = search.Type.HasValue ? (int)search.Type.Value : (int)original?.Type,
+                Weights = search.Weights != null ? search.Weights.Select(s => s.ToWeightElastic()).ToList() : original?.Weights,
+                Operator = search.Operator.HasValue ? (int)search.Operator.Value : (int)original?.Operator
             };
             return model;
         }
@@ -149,12 +149,12 @@ namespace Slamby.API.Helpers
             return model;
         }
 
-        public static ClassifierSearchSettingsElastic ToClassifierSearchSettingsElastic(this ClassifierSettings classifier)
+        public static ClassifierSearchSettingsElastic ToClassifierSearchSettingsElastic(this ClassifierSettings classifier, ClassifierSearchSettingsElastic original = null)
         {
             var model = new ClassifierSearchSettingsElastic
             {
-                Id = classifier.Id,
-                Count = classifier.Count
+                Id = !string.IsNullOrEmpty(classifier.Id) ? classifier.Id : original?.Id,
+                Count = classifier.Count.HasValue ? classifier.Count.Value : (int)original?.Count,
             };
             return model;
         }
@@ -174,7 +174,6 @@ namespace Slamby.API.Helpers
             var model = new SearchActivateSettings {
                 AutoCompleteSettings = searchWrapper.AutoCompleteSettings?.ToAutoCompleteSettingsModel(),
                 ClassifierSettings = searchWrapper.ClassifierSettings?.ToClassifierSettingsModel(),
-                Count = searchWrapper.Count,
                 SearchSettings = searchWrapper.SearchSettings?.ToSearchSettingsModel()
             };
             return model;
