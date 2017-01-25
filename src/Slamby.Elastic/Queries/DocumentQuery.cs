@@ -448,7 +448,10 @@ namespace Slamby.Elastic.Queries
             SearchSettingsElastic searchSettings,
             string text,
             IEnumerable<string> documentObjectFieldNames,
-            string tagField
+            string tagField,
+            IEnumerable<string> interPretedFields,
+            FilterElastic defaultFilter,
+            List<WeightElastic> defaultWeights
             )
         {
 
@@ -463,6 +466,28 @@ namespace Slamby.Elastic.Queries
 
                 var searchFields = searchSettings.SearchFieldList.Select(f => MapDocumentObjectName(f)).ToArray();
                 //FILTER
+                if (searchSettings.UseDefaultFilter)
+                {
+                    if (!string.IsNullOrEmpty(defaultFilter?.Query))
+                    {
+                        var modifiedQuery = documentObjectFieldNames?.Any() == true ?
+                            PrefixQueryFields(defaultFilter.Query, documentObjectFieldNames) :
+                            defaultFilter.Query;
+                        queryContainers.Add(queryContDesc.QueryString(q => q.Query(modifiedQuery)));
+                    }
+                    if (defaultFilter?.TagIdList?.Any() == true)
+                    {
+                        var shouldDesc = new BoolQueryDescriptor<DocumentElastic>();
+                        foreach (var batchTagIds in defaultFilter.TagIdList.Batch(1000))
+                        {
+                            shouldDesc.Should(queryContDesc
+                                .Terms(t => t
+                                    .Terms(batchTagIds)
+                                    .Field(MapDocumentObjectName(tagField))));
+                        }
+                        queryContainers.Add(queryContDesc.Bool(q => shouldDesc));
+                    }
+                }
                 if (!string.IsNullOrEmpty(searchSettings.Filter?.Query))
                 {
                     var modifiedQuery = documentObjectFieldNames?.Any() == true ?
@@ -514,9 +539,18 @@ namespace Slamby.Elastic.Queries
 
                 // WEIGHTS
                 // a REAL _should_ query, if we just add to the queryContainer then at least one of this condition must satisfied
+                var weights = new List<WeightElastic>();
+                if (searchSettings.UseDefaultWeights && (defaultWeights?.Any() == true))
+                {
+                    weights.AddRange(defaultWeights);
+                }
                 if (searchSettings.Weights?.Any() == true)
                 {
-                    var shouldQuery = string.Join(" ", searchSettings.Weights.Select(k => $"({k.Query})^{k.Value}"));
+                    weights.AddRange(searchSettings.Weights);
+                }
+                if (weights.Any())
+                {
+                    var shouldQuery = string.Join(" ", weights.Select(k => $"({k.Query})^{k.Value}"));
                     var modifiedQuery = documentObjectFieldNames?.Any() == true ?
                         PrefixQueryFields(shouldQuery, documentObjectFieldNames) :
                         shouldQuery;
@@ -527,6 +561,17 @@ namespace Slamby.Elastic.Queries
                 else
                 {
                     sdesc.Query(q => q.Bool(b => b.Must(queryContainers.ToArray())));
+                }
+
+                // ORDER
+                if (!string.IsNullOrEmpty(searchSettings.Order?.OrderByField))
+                {
+                    var fieldName = MapDocumentObjectName(searchSettings.Order.OrderByField);
+                    if (interPretedFields != null && interPretedFields.Contains(searchSettings.Order.OrderByField))
+                    {
+                        fieldName += ".raw";
+                    }
+                    sdesc.Sort(s => (int)SortOrder.Descending == searchSettings.Order.OrderDirection ? s.Descending(fieldName) : s.Ascending(fieldName));
                 }
 
                 // COUNT

@@ -63,6 +63,28 @@ namespace Slamby.API.Helpers
             return model;
         }
 
+        public static Order ToOrderModel(this OrderElastic order)
+        {
+            var model = new Order
+            {
+                OrderByField = order.OrderByField,
+                OrderDirection = (OrderDirectionEnum)order.OrderDirection
+            };
+            return model;
+        }
+
+        public static OrderElastic ToOrderElastic(this Order order)
+        {
+            var model = new OrderElastic
+            {
+                OrderByField = order.OrderByField,
+                OrderDirection = (int)order.OrderDirection
+            };
+            return model;
+        }
+
+
+
         public static Weight ToWeightModel(this WeightElastic weight)
         {
             var model = new Weight
@@ -117,7 +139,10 @@ namespace Slamby.API.Helpers
                 SearchFieldList = search.SearchFieldList,
                 Type = (SearchTypeEnum)search.Type,
                 Weights = search.Weights?.Select(s => s.ToWeightModel()).ToList(),
-                Operator = (LogicalOperatorEnum)search.Operator
+                Operator = (LogicalOperatorEnum)search.Operator,
+                UseDefaultFilter = search.UseDefaultFilter,
+                UseDefaultWeights = search.UseDefaultWeights,
+                Order = search.Order?.ToOrderModel()
             };
             return model;
         }
@@ -134,7 +159,10 @@ namespace Slamby.API.Helpers
                 SearchFieldList = search.SearchFieldList != null ? search.SearchFieldList : original?.SearchFieldList,
                 Type = search.Type.HasValue ? (int)search.Type.Value : (int)original?.Type,
                 Weights = search.Weights != null ? search.Weights.Select(s => s.ToWeightElastic()).ToList() : original?.Weights,
-                Operator = search.Operator.HasValue ? (int)search.Operator.Value : (int)original?.Operator
+                Operator = search.Operator.HasValue ? (int)search.Operator.Value : (int)original?.Operator,
+                UseDefaultFilter = search.UseDefaultFilter.HasValue ? search.UseDefaultFilter.Value : (bool)original?.UseDefaultFilter,
+                UseDefaultWeights = search.UseDefaultWeights.HasValue ? search.UseDefaultWeights.Value : (bool)original?.UseDefaultFilter,
+                Order = search.Order != null ? search.Order.ToOrderElastic() : original?.Order,
             };
             return model;
         }

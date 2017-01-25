@@ -32,6 +32,6 @@ namespace Slamby.Elastic.Queries
         SearchResult<DocumentElastic> Sample(string seed, IEnumerable<string> tagIds, string tagField, int size, IEnumerable<string> fields = null);
         SearchResult<DocumentElastic> Sample(string seed, IEnumerable<string> tagIds, string tagField, double percent, IEnumerable<string> fields = null);
         string Update(string id, DocumentElastic documentElastic);
-        Nest.ISearchResponse<DocumentElastic> Search(AutoCompleteSettingsElastic autoCompleteSettings, SearchSettingsElastic searchSettings, string text, IEnumerable<string> documentObjectFieldNames, string tagField);
+        Nest.ISearchResponse<DocumentElastic> Search(AutoCompleteSettingsElastic autoCompleteSettings, SearchSettingsElastic searchSettings, string text, IEnumerable<string> documentObjectFieldNames, string tagField, IEnumerable<string> interPretedFields, FilterElastic defaultFilter, List<WeightElastic> defaultWeights);
     }
 }

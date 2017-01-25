@@ -51,7 +51,7 @@ namespace Slamby.API.Controllers.Services
 
         [HttpGet("{id}")]
         [SwaggerOperation("SearchGetService")]
-        [SwaggerResponse(StatusCodes.Status200OK, "", typeof(SearchSettingsWrapperElastic))]
+        [SwaggerResponse(StatusCodes.Status200OK, "", typeof(SearchService))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         public IActionResult Get(string id)
@@ -144,7 +144,10 @@ namespace Slamby.API.Controllers.Services
                 SearchFieldList = dataSet.InterpretedFields,
                 Type = (int)SearchTypeEnum.Match,
                 Weights = null,
-                Operator = (int)LogicalOperatorEnum.OR
+                Operator = (int)LogicalOperatorEnum.OR,
+                UseDefaultFilter = true,
+                UseDefaultWeights = true,
+                Order = null
             };
 
             serviceQuery.IndexSettings(serviceSettings);
@@ -192,13 +195,13 @@ namespace Slamby.API.Controllers.Services
                 {
                     var validationResult = Validate(searchActivateSettings.AutoCompleteSettings);
                     if (validationResult != null) return validationResult;
-                    searchSettings.AutoCompleteSettings = searchActivateSettings.AutoCompleteSettings?.ToAutoCompleteSettingsElastic();
+                    searchSettings.AutoCompleteSettings = searchActivateSettings.AutoCompleteSettings.ToAutoCompleteSettingsElastic(searchSettings.AutoCompleteSettings);
                 }
                 if (searchActivateSettings.ClassifierSettings != null)
                 {
                     var validationResult = Validate(searchActivateSettings.ClassifierSettings);
                     if (validationResult != null) return validationResult;
-                    searchSettings.ClassifierSettings = searchActivateSettings.ClassifierSettings?.ToClassifierSearchSettingsElastic();
+                    searchSettings.ClassifierSettings = searchActivateSettings.ClassifierSettings.ToClassifierSearchSettingsElastic(searchSettings.ClassifierSettings);
                     // there isn't default settings here at the prepare step so we have to set it up here
                     if (searchSettings.ClassifierSettings?.Count == 0) searchSettings.ClassifierSettings.Count = 3;
                 }
@@ -206,7 +209,7 @@ namespace Slamby.API.Controllers.Services
                 {
                     var validationResult = Validate(searchSettings.DataSetName, searchActivateSettings.SearchSettings);
                     if (validationResult != null) return validationResult;
-                    searchSettings.SearchSettings = searchActivateSettings.SearchSettings?.ToSearchSettingsElastic();
+                    searchSettings.SearchSettings = searchActivateSettings.SearchSettings.ToSearchSettingsElastic(searchSettings.SearchSettings);
                 }
             }
             service.Status = (int)ServiceStatusEnum.Active;
@@ -266,9 +269,27 @@ namespace Slamby.API.Controllers.Services
 
             var validationResult = serviceManager.ValidateIfServiceActive(id, ServiceTypeEnum.Search);
             if (validationResult != null) return validationResult;
-            
+
+            var defaultSettings = GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper;
+
+            if (request.AutoCompleteSettings != null)
+            {
+                validationResult = Validate(request.AutoCompleteSettings);
+                if (validationResult != null) return validationResult;
+            }
+            if (request.ClassifierSettings != null)
+            {
+                validationResult = Validate(request.ClassifierSettings);
+                if (validationResult != null) return validationResult;
+            }
+            if (request.SearchSettings != null)
+            {
+                validationResult = Validate(defaultSettings.DataSetName, request.SearchSettings);
+                if (validationResult != null) return validationResult;
+            }
+
             var searchSettings = MergeSettings(
-                GlobalStore.ActivatedSearches.Get(id).SearchSettingsWrapper, 
+                defaultSettings, 
                 request.AutoCompleteSettings, 
                 request.ClassifierSettings, 
                 request.SearchSettings);
@@ -282,7 +303,10 @@ namespace Slamby.API.Controllers.Services
                 searchSettings.SearchSettings,
                 request.Text,
                 dataSet.DocumentFields,
-                dataSet.DataSet.TagField
+                dataSet.DataSet.TagField,
+                dataSet.DataSet.InterpretedFields,
+                defaultSettings.SearchSettings.Filter,
+                defaultSettings.SearchSettings.Weights
             );
 
             // AUTOCOMPLETE
@@ -302,10 +326,15 @@ namespace Slamby.API.Controllers.Services
                     Score = d.Score
                 }).ToList();
 
-
             // CLASSIFIER
             if (searchSettings.ClassifierSettings?.Count > 0)
             {
+                var searchMatchCategories = (dataSet.TagIsArray
+                    ? result.SearchResultList.SelectMany(d => ((Array)DocumentHelper.GetValue(d.Document, dataSet.DataSet.TagField)).Cast<string>())
+                    : result.SearchResultList.Select(d => DocumentHelper.GetValue(d.Document, dataSet.DataSet.TagField).ToString()))
+                .Distinct()
+                .ToDictionary(t => t);
+
                 var analyzeQuery = queryFactory.GetAnalyzeQuery(dataSet.DataSet.Name);
                 var classifierId = searchSettings.ClassifierSettings.Id;
                 var classifier = GlobalStore.ActivatedClassifiers.Get(GlobalStore.ServiceAliases.IsExist(classifierId) ? GlobalStore.ServiceAliases.Get(classifierId) : classifierId);
@@ -324,11 +353,12 @@ namespace Slamby.API.Controllers.Services
                     }
                     var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
                     if (resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
-                    result.ClassifierResultList = resultsList.Select(r => new ClassifierRecommendationResult
+                    result.ClassifierResultList = resultsList.Select(r => new SearchClassifierRecommendationResult
                     {
                         TagId = r.Key,
                         Score = r.Value,
-                        Tag = classifier.ClassifiersTags[r.Key]
+                        Tag = classifier.ClassifiersTags[r.Key],
+                        SearchResultMatch = searchMatchCategories.ContainsKey(r.Key)
                     }).ToList();
 
 
@@ -347,11 +377,12 @@ namespace Slamby.API.Controllers.Services
                         resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
                         if (searchSettings.ClassifierSettings.Count != 0 &&
                             resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
-                        ac.ClassifierResultList = resultsList.Select(r => new ClassifierRecommendationResult
+                        ac.ClassifierResultList = resultsList.Select(r => new SearchClassifierRecommendationResult
                         {
                             TagId = r.Key,
                             Score = r.Value,
-                            Tag = classifier.ClassifiersTags[r.Key]
+                            Tag = classifier.ClassifiersTags[r.Key],
+                            SearchResultMatch = searchMatchCategories.ContainsKey(r.Key)
                         }).ToList();
                     }
                 }
@@ -378,6 +409,8 @@ namespace Slamby.API.Controllers.Services
             if (searchSettings != null)
             {
                 result.SearchSettings = defaultSettings.SearchSettings != null ? searchSettings.ToSearchSettingsElastic(defaultSettings.SearchSettings) : null;
+                if (searchSettings.UseDefaultFilter == false && searchSettings.Filter == null) result.SearchSettings.Filter = null;
+                if (searchSettings.UseDefaultWeights == false && searchSettings.Weights == null) result.SearchSettings.Weights = null;
             }
             return result;
         }
@@ -407,6 +440,16 @@ namespace Slamby.API.Controllers.Services
                     return HttpErrorResult(StatusCodes.Status400BadRequest, validateResult.Error);
                 }
             }
+
+            if (!string.IsNullOrEmpty(searchSettings.Order?.OrderByField))
+            {
+                var orderByFieldResult = documentService.ValidateOrderByField(dataSetName, searchSettings.Order.OrderByField);
+                if (orderByFieldResult.IsFailure)
+                {
+                    return HttpErrorResult(StatusCodes.Status400BadRequest, orderByFieldResult.Error);
+                }
+            }
+
             return null;
         }
 

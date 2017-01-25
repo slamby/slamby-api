@@ -48,8 +48,14 @@ namespace Slamby.Elastic.Models
         [Object(Name = "filter")]
         public FilterElastic Filter { get; set; }
 
+        [Boolean(Name = "use_default_filter")]
+        public bool UseDefaultFilter { get; set; }
+
         [Object(Name = "weights")]
         public List<WeightElastic> Weights { get; set; }
+
+        [Boolean(Name = "use_default_weights")]
+        public bool UseDefaultWeights { get; set; }
 
         [String(Name = "response_field_list")]
         public List<string> ResponseFieldList { get; set; }
@@ -71,6 +77,9 @@ namespace Slamby.Elastic.Models
 
         [Number(NumberType.Integer, Name = "operator")]
         public int Operator { get; set; }
+
+        [Object(Name = "order")]
+        public OrderElastic Order { get; set; }
     }
 
     public class ClassifierSearchSettingsElastic
@@ -90,6 +99,15 @@ namespace Slamby.Elastic.Models
 
         [String(Name = "tagid_list")]
         public List<string> TagIdList { get; set; }
+    }
+
+    public class OrderElastic
+    {
+        [Number(Name = "order_direction")]
+        public int OrderDirection { get; set; }
+
+        [String(Name = "order_by_field")]
+        public string OrderByField { get; set; }
     }
 
     public class WeightElastic
