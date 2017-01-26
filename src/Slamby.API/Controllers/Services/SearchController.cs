@@ -325,6 +325,7 @@ namespace Slamby.API.Controllers.Services
                     DocumentId = d.Id,
                     Score = d.Score
                 }).ToList();
+            result.Total = (int)searchResponse.Total;
 
             // CLASSIFIER
             if (searchSettings.ClassifierSettings?.Count > 0)
