@@ -306,47 +306,11 @@ namespace Slamby.API.Controllers
             {
                 id = GlobalStore.ServiceAliases.Get(id);
             }
-
             if (!GlobalStore.ActivatedClassifiers.IsExist(id))
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, ServiceTypeEnum.Classifier));
             }
-
-            var analyzeQuery = queryFactory.GetAnalyzeQuery(GlobalStore.ActivatedClassifiers.Get(id).ClassifiersSettings.DataSetName);
-
-            //a bi/tri stb gramokat nem jobb lenne elastic-al? Jelenleg a Scorer csinálja az NGramMaker-el
-            var tokens = analyzeQuery.Analyze(request.Text, 1).ToList();
-            var text = string.Join(" ", tokens);
-
-            var allResults = new ConcurrentBag<KeyValuePair<string, double>>();
-            foreach(var scorerKvp in GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers)
-            {
-                var score = scorerKvp.Value.GetScore(text, 1.7, true);
-                allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
-            }
-
-            var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
-
-            var emphasizedCategoriesDictionary = new Dictionary<string, string>();
-            if (request.UseEmphasizing)
-            {
-                emphasizedCategoriesDictionary = resultsList.Where(r =>
-                    GlobalStore.ActivatedClassifiers.Get(id).ClassifierEmphasizedTagIds.ContainsKey(r.Key) &&
-                    GlobalStore.ActivatedClassifiers.Get(id).ClassifierEmphasizedTagIds[r.Key].All(word => tokens.Contains(word)))
-                    .ToDictionary(r => r.Key, r => r.Key);
-
-                resultsList = resultsList.OrderByDescending(r => emphasizedCategoriesDictionary.ContainsKey(r.Key) ? (r.Value + 100) : r.Value).ToList();
-            }
-
-            if (request.Count != 0 && resultsList.Count > request.Count) resultsList = resultsList.Take(request.Count).ToList();
-
-            var results = resultsList.Select(r => new ClassifierRecommendationResult
-            {
-                TagId = r.Key,
-                Score = r.Value,
-                Tag = request.NeedTagInResult ? GlobalStore.ActivatedClassifiers.Get(id).ClassifiersTags[r.Key] : null,
-                IsEmphasized = request.UseEmphasizing && emphasizedCategoriesDictionary.ContainsKey(r.Key)
-            });
+            var results = classifierHandler.Recommend(id, request.Text, request.Count, request.UseEmphasizing, request.NeedTagInResult);
             return new OkObjectResult(results);
         }
 

@@ -34,11 +34,13 @@ namespace Slamby.API.Controllers.Services
         readonly IQueryFactory queryFactory;
         readonly ServiceManager serviceManager;
         readonly IDocumentService documentService;
+        readonly ClassifierServiceHandler classifierHandler;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public SearchController(ServiceQuery serviceQuery, SearchServiceHandler searchHandler, ProcessHandler processHandler,
-            IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceManager serviceManager, IDocumentService documentService)
+            IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceManager serviceManager, IDocumentService documentService,
+            ClassifierServiceHandler classifierHandler)
         {
             GlobalStore = globalStore;
             this.queryFactory = queryFactory;
@@ -47,6 +49,7 @@ namespace Slamby.API.Controllers.Services
             this.serviceQuery = serviceQuery;
             this.serviceManager = serviceManager;
             this.documentService = documentService;
+            this.classifierHandler = classifierHandler;
         }
 
         [HttpGet("{id}")]
@@ -336,54 +339,31 @@ namespace Slamby.API.Controllers.Services
                 .Distinct()
                 .ToDictionary(t => t);
 
-                var analyzeQuery = queryFactory.GetAnalyzeQuery(dataSet.DataSet.Name);
-                var classifierId = searchSettings.ClassifierSettings.Id;
-                var classifier = GlobalStore.ActivatedClassifiers.Get(GlobalStore.ServiceAliases.IsExist(classifierId) ? GlobalStore.ServiceAliases.Get(classifierId) : classifierId);
+                var classifierId = GlobalStore.ServiceAliases.IsExist(searchSettings.ClassifierSettings.Id) ? GlobalStore.ServiceAliases.Get(searchSettings.ClassifierSettings.Id) : searchSettings.ClassifierSettings.Id;
+                var classifier = GlobalStore.ActivatedClassifiers.Get(classifierId);
                 //if the classifier is not activated right now
                 if (classifier != null)
                 {
-                    //ORIGINAL
-                    var tokens = analyzeQuery.Analyze(request.Text, 1).ToList();
-                    var text = string.Join(" ", tokens);
+                    var resultsList = classifierHandler.Recommend(classifierId, request.Text, searchSettings.ClassifierSettings.Count, classifier.ClassifierEmphasizedTagIds.Any(), true);
 
-                    var allResults = new List<KeyValuePair<string, double>>();
-                    foreach (var scorerKvp in classifier.ClassifierScorers)
-                    {
-                        var score = scorerKvp.Value.GetScore(text, 1.7, true);
-                        allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
-                    }
-                    var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
-                    if (resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
                     result.ClassifierResultList = resultsList.Select(r => new SearchClassifierRecommendationResult
                     {
-                        TagId = r.Key,
-                        Score = r.Value,
-                        Tag = classifier.ClassifiersTags[r.Key],
-                        SearchResultMatch = searchMatchCategories.ContainsKey(r.Key)
+                        TagId = r.TagId,
+                        Score = r.Score,
+                        Tag = r.Tag,
+                        SearchResultMatch = searchMatchCategories.ContainsKey(r.TagId)
                     }).ToList();
-
 
                     //AUTOCOMPLETE
                     foreach (var ac in result.AutoCompleteResultList)
                     {
-                        tokens = analyzeQuery.Analyze(ac.Text, 1).ToList();
-                        text = string.Join(" ", tokens);
-
-                        allResults = new List<KeyValuePair<string, double>>();
-                        foreach (var scorerKvp in classifier.ClassifierScorers)
-                        {
-                            var score = scorerKvp.Value.GetScore(text, 1.7, true);
-                            allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
-                        }
-                        resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
-                        if (searchSettings.ClassifierSettings.Count != 0 &&
-                            resultsList.Count > searchSettings.ClassifierSettings.Count) resultsList = resultsList.Take(searchSettings.ClassifierSettings.Count).ToList();
+                        var acResultsList = classifierHandler.Recommend(classifierId, ac.Text, searchSettings.ClassifierSettings.Count, classifier.ClassifierEmphasizedTagIds.Any(), true);
                         ac.ClassifierResultList = resultsList.Select(r => new SearchClassifierRecommendationResult
                         {
-                            TagId = r.Key,
-                            Score = r.Value,
-                            Tag = classifier.ClassifiersTags[r.Key],
-                            SearchResultMatch = searchMatchCategories.ContainsKey(r.Key)
+                            TagId = r.TagId,
+                            Score = r.Score,
+                            Tag = r.Tag,
+                            SearchResultMatch = searchMatchCategories.ContainsKey(r.TagId)
                         }).ToList();
                     }
                 }
