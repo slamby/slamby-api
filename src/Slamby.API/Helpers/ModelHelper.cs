@@ -147,7 +147,7 @@ namespace Slamby.API.Helpers
             return model;
         }
 
-        public static SearchSettingsElastic ToSearchSettingsElastic(this SearchSettings search, SearchSettingsElastic original = null)
+        public static SearchSettingsElastic ToSearchSettingsElastic(this SearchSettings search, SearchSettingsElastic original = null, bool emptyDefaults = false)
         {
             var model = new SearchSettingsElastic
             {
@@ -164,6 +164,11 @@ namespace Slamby.API.Helpers
                 UseDefaultWeights = search.UseDefaultWeights.HasValue ? search.UseDefaultWeights.Value : (bool)original?.UseDefaultFilter,
                 Order = search.Order != null ? search.Order.ToOrderElastic() : original?.Order,
             };
+            if (emptyDefaults)
+            {
+                if (search.UseDefaultFilter == false && search.Filter == null) model.Filter = null;
+                if (search.UseDefaultWeights == false && search.Weights == null) model.Weights = null;
+            }
             return model;
         }
 

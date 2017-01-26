@@ -408,9 +408,7 @@ namespace Slamby.API.Controllers.Services
 
             if (searchSettings != null)
             {
-                result.SearchSettings = defaultSettings.SearchSettings != null ? searchSettings.ToSearchSettingsElastic(defaultSettings.SearchSettings) : null;
-                if (searchSettings.UseDefaultFilter == false && searchSettings.Filter == null) result.SearchSettings.Filter = null;
-                if (searchSettings.UseDefaultWeights == false && searchSettings.Weights == null) result.SearchSettings.Weights = null;
+                result.SearchSettings = defaultSettings.SearchSettings != null ? searchSettings.ToSearchSettingsElastic(defaultSettings.SearchSettings, true) : null;
             }
             return result;
         }
