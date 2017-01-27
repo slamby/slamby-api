@@ -300,6 +300,8 @@ namespace Slamby.API.Controllers.Services
             var dataSet = GlobalStore.DataSets.Get(searchSettings.DataSetName);
             var result = new SearchResultWrapper();
 
+            searchHandler.SaveSearchRequest(searchSettings, request);
+
             var documentQuery = queryFactory.GetDocumentQuery(dataSet.DataSet.Name);
             var searchResponse = documentQuery.Search(
                 searchSettings.AutoCompleteSettings,

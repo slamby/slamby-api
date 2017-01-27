@@ -9,6 +9,7 @@ using Slamby.Elastic.Factories.Interfaces;
 using Slamby.Elastic.Models;
 using Slamby.Elastic.Queries;
 using Slamby.SDK.Net.Models.Enums;
+using Slamby.SDK.Net.Models.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,12 +27,13 @@ namespace Slamby.API.Helpers.Services
         readonly IQueryFactory queryFactory;
         readonly ParallelService parallelService;
         readonly MachineResourceService machineResourceService;
+        readonly SearchRedisHandler searchRedisHandler;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public SearchServiceHandler(SiteConfig siteConfig, ServiceQuery serviceQuery, ProcessHandler processHandler,
             IQueryFactory queryFactory, ParallelService parallelService, MachineResourceService machineResourceService,
-            IGlobalStoreManager globalStore)
+            IGlobalStoreManager globalStore, SearchRedisHandler searchRedisHandler)
         {
             GlobalStore = globalStore;
             this.parallelService = parallelService;
@@ -40,6 +42,7 @@ namespace Slamby.API.Helpers.Services
             this.serviceQuery = serviceQuery;
             this.siteConfig = siteConfig;
             this.machineResourceService = machineResourceService;
+            this.searchRedisHandler = searchRedisHandler;
         }
 
         public void Prepare(string processId, SearchSettingsWrapperElastic settings, CancellationToken token)
@@ -129,5 +132,12 @@ namespace Slamby.API.Helpers.Services
             }
             if (serviceElastic.Status == (int)ServiceStatusEnum.Prepared) { }
         }
+
+
+        public void SaveSearchRequest(SearchSettingsWrapperElastic settings, SearchRequest request)
+        {
+            searchRedisHandler.SaveSearch(settings.ServiceId, request.Text);
+        }
+
     }
 }
