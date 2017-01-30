@@ -141,6 +141,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to Please accept the licenses.
+        /// </summary>
+        public static string PleaseAcceptTheLicenses {
+            get {
+                return ResourceManager.GetString("PleaseAcceptTheLicenses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Please enter a valid email address.
         /// </summary>
         public static string PleaseEnterAValidEmailAddress {

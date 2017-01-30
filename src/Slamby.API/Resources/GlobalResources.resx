@@ -144,6 +144,9 @@
   <data name="NGramValuesShouldBeBetween1And6" xml:space="preserve">
     <value>NGram values should be between 1 and 6</value>
   </data>
+  <data name="PleaseAcceptTheLicenses" xml:space="preserve">
+    <value>Please accept the licenses</value>
+  </data>
   <data name="PleaseEnterAValidEmailAddress" xml:space="preserve">
     <value>Please enter a valid email address</value>
   </data>
