@@ -12,13 +12,15 @@ namespace Slamby.API.Services
             IGlobalStoreProcessRepository processesRepository,
             IGlobalStoreClassifierRepository classifiersRepository,
             IGlobalStorePrcRepository prcsRepository,
-            IGlobalStoreServiceAliasRepository serviceAliasesRepository)
+            IGlobalStoreServiceAliasRepository serviceAliasesRepository,
+            IGlobalStoreSearchRepository searchRepository)
         {
             DataSets = dataSetRepository;
             Processes = processesRepository;
             ActivatedClassifiers = classifiersRepository;
             ActivatedPrcs = prcsRepository;
             ServiceAliases = serviceAliasesRepository;
+            ActivatedSearches = searchRepository;
         }
 
         public IGlobalStoreDataSetRepository DataSets { get; } = new GlobalStoreDataSetRepository();
@@ -30,5 +32,7 @@ namespace Slamby.API.Services
         public IGlobalStorePrcRepository ActivatedPrcs { get; } = new GlobalStorePrcRepository();
 
         public IGlobalStoreServiceAliasRepository ServiceAliases { get; } = new GlobalStoreServiceAliasRepository();
+
+        public IGlobalStoreSearchRepository ActivatedSearches { get; } = new GlobalStoreSearchRepository();
     }
 }

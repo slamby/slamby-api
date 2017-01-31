@@ -165,6 +165,11 @@ namespace Slamby.API.Controllers
                     prcHandler.Delete(service);
                     serviceQuery.DeleteSettings<PrcSettingsElastic>(service.Id);
                     break;
+                case (int)ServiceTypeEnum.Search:
+                    var searchHandler = serviceProvider.GetService<SearchServiceHandler>();
+                    searchHandler.Delete(service);
+                    serviceQuery.DeleteSettings<SearchSettingsWrapperElastic>(service.Id);
+                    break;
             }
 
             serviceQuery.Delete(service);

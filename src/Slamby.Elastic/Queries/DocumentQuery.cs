@@ -7,12 +7,15 @@ using Nest;
 using Slamby.Common.DI;
 using Slamby.Elastic.Models;
 using Slamby.Common.Config;
+using Elasticsearch.Net;
 
 namespace Slamby.Elastic.Queries
 {
     [TransientDependency(ServiceType = typeof(IDocumentQuery))]
     public class DocumentQuery : BaseQuery, IDocumentQuery
     {
+        public const string SuggestName = "simple_suggest";
+
         public DocumentQuery(ElasticClient client, SiteConfig siteConfig) : base(client, siteConfig) { }
 
         public DocumentElastic Get(string id)
@@ -436,6 +439,189 @@ namespace Slamby.Elastic.Queries
             sdesc.Source(desc => desc
                .Include(f => f
                    .Fields(fields)));
+        }
+
+        
+
+        public ISearchResponse<DocumentElastic> Search(
+            AutoCompleteSettingsElastic autoCompleteSettings, 
+            SearchSettingsElastic searchSettings,
+            string text,
+            IEnumerable<string> documentObjectFieldNames,
+            string tagField,
+            IEnumerable<string> interPretedFields,
+            FilterElastic defaultFilter,
+            List<WeightElastic> defaultWeights
+            )
+        {
+
+            var sdesc = new SearchDescriptor<DocumentElastic>();
+
+            #region SEARCH
+
+            if (searchSettings?.Count > 0)
+            {
+                var queryContDesc = new QueryContainerDescriptor<DocumentElastic>();
+                var queryContainers = new List<QueryContainer>();
+
+                var searchFields = searchSettings.SearchFieldList.Select(f => MapDocumentObjectName(f)).ToArray();
+                //FILTER
+                if (searchSettings.UseDefaultFilter)
+                {
+                    if (!string.IsNullOrEmpty(defaultFilter?.Query))
+                    {
+                        var modifiedQuery = documentObjectFieldNames?.Any() == true ?
+                            PrefixQueryFields(defaultFilter.Query, documentObjectFieldNames) :
+                            defaultFilter.Query;
+                        queryContainers.Add(queryContDesc.QueryString(q => q.Query(modifiedQuery)));
+                    }
+                    if (defaultFilter?.TagIdList?.Any() == true)
+                    {
+                        var shouldDesc = new BoolQueryDescriptor<DocumentElastic>();
+                        foreach (var batchTagIds in defaultFilter.TagIdList.Batch(1000))
+                        {
+                            shouldDesc.Should(queryContDesc
+                                .Terms(t => t
+                                    .Terms(batchTagIds)
+                                    .Field(MapDocumentObjectName(tagField))));
+                        }
+                        queryContainers.Add(queryContDesc.Bool(q => shouldDesc));
+                    }
+                }
+                if (!string.IsNullOrEmpty(searchSettings.Filter?.Query))
+                {
+                    var modifiedQuery = documentObjectFieldNames?.Any() == true ?
+                        PrefixQueryFields(searchSettings.Filter.Query, documentObjectFieldNames) :
+                        searchSettings.Filter.Query;
+                    queryContainers.Add(queryContDesc.QueryString(q => q.Query(modifiedQuery)));
+                }
+                if (searchSettings.Filter?.TagIdList?.Any() == true)
+                {
+                    var shouldDesc = new BoolQueryDescriptor<DocumentElastic>();
+                    foreach (var batchTagIds in searchSettings.Filter.TagIdList.Batch(1000))
+                    {
+                        shouldDesc.Should(queryContDesc
+                            .Terms(t => t
+                                .Terms(batchTagIds)
+                                .Field(MapDocumentObjectName(tagField))));
+                    }
+                    queryContainers.Add(queryContDesc.Bool(q => shouldDesc));
+                }
+
+                // MATCH TYPE SEARCH
+                if (searchSettings.Type == (int)SDK.Net.Models.Enums.SearchTypeEnum.Match)
+                {
+                    var mqd = new MultiMatchQueryDescriptor<DocumentElastic>()
+                        .Query(text)
+                        .Type(TextQueryType.BestFields)
+                        .CutoffFrequency(searchSettings.CutOffFrequency)
+                        .Fuzziness(searchSettings.Fuzziness < 0 ? Fuzziness.Auto : Fuzziness.EditDistance(searchSettings.Fuzziness))
+                        .Fields(f => f.Fields(searchFields))
+                        .Operator((Operator)searchSettings.Operator);
+                    queryContainers.Add(queryContDesc.MultiMatch(q => mqd));
+                }
+
+                // QUERY(STRING) TYPE SEARCH
+                if (searchSettings.Type == (int)SDK.Net.Models.Enums.SearchTypeEnum.Query)
+                {
+                    var modifiedQuery = documentObjectFieldNames?.Any() == true ?
+                        PrefixQueryFields(text, documentObjectFieldNames) :
+                        text;
+                    var qsd = new QueryStringQueryDescriptor<DocumentElastic>()
+                        .Query(text)
+                        //cutoff_frequency is not supported for querystring query
+                        //.CutoffFrequency(searchSettings.CutOffFrequency)
+                        .Fuzziness(searchSettings.Fuzziness < 0 ? Fuzziness.Auto : Fuzziness.EditDistance(searchSettings.Fuzziness))
+                        .Fields(f => f.Fields(searchFields))
+                        .DefaultOperator((Operator)searchSettings.Operator);
+                    queryContainers.Add(queryContDesc.QueryString(q => qsd));
+                }
+
+                // WEIGHTS
+                // a REAL _should_ query, if we just add to the queryContainer then at least one of this condition must satisfied
+                var weights = new List<WeightElastic>();
+                if (searchSettings.UseDefaultWeights && (defaultWeights?.Any() == true))
+                {
+                    weights.AddRange(defaultWeights);
+                }
+                if (searchSettings.Weights?.Any() == true)
+                {
+                    weights.AddRange(searchSettings.Weights);
+                }
+                if (weights.Any())
+                {
+                    var shouldQuery = string.Join(" ", weights.Select(k => $"({k.Query})^{k.Value}"));
+                    var modifiedQuery = documentObjectFieldNames?.Any() == true ?
+                        PrefixQueryFields(shouldQuery, documentObjectFieldNames) :
+                        shouldQuery;
+                    sdesc.Query(q => q.Bool(b => b
+                        .Must(queryContainers.ToArray())
+                        .Should(sq => sq.QueryString(qs => qs.Query(modifiedQuery)))));
+                }
+                else
+                {
+                    sdesc.Query(q => q.Bool(b => b.Must(queryContainers.ToArray())));
+                }
+
+                // ORDER
+                if (!string.IsNullOrEmpty(searchSettings.Order?.OrderByField))
+                {
+                    var fieldName = MapDocumentObjectName(searchSettings.Order.OrderByField);
+                    if (interPretedFields != null && interPretedFields.Contains(searchSettings.Order.OrderByField))
+                    {
+                        fieldName += ".raw";
+                    }
+                    sdesc.Sort(s => (int)SortOrder.Descending == searchSettings.Order.OrderDirection ? s.Descending(fieldName) : s.Ascending(fieldName));
+                }
+
+                // COUNT
+                sdesc.Size(searchSettings.Count);
+
+                ApplyDocumentFieldFilter(sdesc, searchSettings.ResponseFieldList.Select(f => MapDocumentObjectName(f)));
+            }
+            else
+            {
+                sdesc.Size(0);
+            }
+            
+            #endregion
+
+
+            #region SUGGEST
+
+            if (autoCompleteSettings?.Count > 0)
+            {
+                var psgd = new PhraseSuggesterDescriptor<DocumentElastic>()
+                .Field(DocumentElastic.TextField)
+                .Size(autoCompleteSettings.Count)
+                //.RealWordErrorLikelihood(0.95), 0.95 is the default value
+                .Confidence(autoCompleteSettings.Confidence)
+                .MaxErrors(autoCompleteSettings.MaximumErrors)
+                .DirectGenerator(dg => dg
+                    .Field(DocumentElastic.TextField)
+                    .SuggestMode(SuggestMode.Always)
+                    .MinWordLength(3)
+                    .MinDocFrequency(3)
+                    .Size(1))
+                .Collate(c => c
+                    .Prune()
+                    .Query(q => q
+                    //unfortunately Params is not working here so had to hack the text field like this
+                      .Inline($"{{\"match\": {{\"{DocumentElastic.TextField}\" : {{\"query\": \"{{{{suggestion}}}}\", \"operator\": \"and\"}}}}}}")
+                    )
+                )
+                .Text(text);
+                sdesc.Suggest(s => s.Phrase(SuggestName, p => psgd));
+            }
+            
+
+            #endregion
+
+
+            var resp = Client.Search<DocumentElastic>(sdesc);
+            ResponseValidator(resp);
+
+            return resp;
         }
     }
 }

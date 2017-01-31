@@ -127,7 +127,8 @@ namespace Slamby.API.Services
         {
             var dataSet = GlobalStore.DataSets.Get(name);
             return serviceQuery.GetSettingsByDataSet<ClassifierSettingsElastic>(dataSet.IndexName).Any() ||
-                   serviceQuery.GetSettingsByDataSet<PrcSettingsElastic>(dataSet.IndexName).Any();
+                   serviceQuery.GetSettingsByDataSet<PrcSettingsElastic>(dataSet.IndexName).Any() ||
+                   serviceQuery.GetSettingsByDataSet<SearchSettingsWrapperElastic>(dataSet.IndexName).Any();
         }
 
         public bool IsExists(string name)

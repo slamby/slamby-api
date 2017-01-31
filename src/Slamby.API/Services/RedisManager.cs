@@ -86,6 +86,15 @@ namespace Slamby.Common.Services
                 flags: CommandFlags);
         }
 
+        public void SortedSetIncrement(string key, string name, double increment = 1)
+        {
+            Database.SortedSetIncrement(
+                key,
+                name,
+                increment,
+                flags: CommandFlags);
+        }
+
         public void SortedSetRemove(string key, string name)
         {
             Database.SortedSetRemove(key, name, flags: CommandFlags);
