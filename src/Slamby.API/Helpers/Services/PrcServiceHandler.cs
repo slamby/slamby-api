@@ -244,6 +244,7 @@ namespace Slamby.API.Helpers.Services
                 var service = serviceQuery.Get(settings.ServiceId);
                 service.Status = (int)ServiceStatusEnum.Prepared;
                 serviceQuery.Update(service.Id, service);
+                if (GlobalStore.ActivatedPrcs.IsExist(settings.ServiceId)) GlobalStore.ActivatedPrcs.Remove(settings.ServiceId);
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException)
                 {
                     processHandler.Cancelled(processId);
