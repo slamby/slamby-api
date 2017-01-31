@@ -218,7 +218,7 @@ namespace Slamby.API.Controllers.Services
             service.Status = (int)ServiceStatusEnum.Active;
 
             var process = processHandler.Create(
-                ProcessTypeEnum.ClassifierActivate,
+                ProcessTypeEnum.SearchActivate,
                 service.Id,
                 searchSettings,
                 string.Format(ServiceResources.Activating_0_Service_1, ServiceTypeEnum.Search, service.Name));
