@@ -222,4 +222,7 @@
   <data name="IdCantBeEmptyIn_0_Settings" xml:space="preserve">
     <value>Id can't be empty in the {0} Settings!</value>
   </data>
+  <data name="NotAllParentTagExists" xml:space="preserve">
+    <value>There is at least one parent tag in the ParentTagIdList which is not a parent of any activated tags!</value>
+  </data>
 </root>

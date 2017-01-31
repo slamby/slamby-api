@@ -310,7 +310,12 @@ namespace Slamby.API.Controllers
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, ServiceTypeEnum.Classifier));
             }
-            var results = classifierHandler.Recommend(id, request.Text, request.Count, request.UseEmphasizing, request.NeedTagInResult);
+            if (request.ParentTagIdList?.Any() == true &&
+                request.ParentTagIdList.Any(i => !GlobalStore.ActivatedClassifiers.Get(id).ClassifierParentTagIds.ContainsKey(i)))
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.NotAllParentTagExists);
+            }
+            var results = classifierHandler.Recommend(id, request.Text, request.Count, request.UseEmphasizing, request.NeedTagInResult, request.ParentTagIdList);
             return new OkObjectResult(results);
         }
 

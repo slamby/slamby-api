@@ -222,6 +222,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to There is at least one parent tag in the ParentTagIdList which is not a parent of any activated tags!.
+        /// </summary>
+        public static string NotAllParentTagExists {
+            get {
+                return ResourceManager.GetString("NotAllParentTagExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to The server doesn&apos;t have enough resource to activate the service with the given settings!.
         /// </summary>
         public static string NotEnoughResourceToActivateService {
