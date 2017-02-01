@@ -96,6 +96,7 @@ namespace Slamby.API.Helpers.Services
                 var service = serviceQuery.Get(settings.ServiceId);
                 service.Status = (int)ServiceStatusEnum.Prepared;
                 serviceQuery.Update(service.Id, service);
+                if (GlobalStore.ActivatedSearches.IsExist(settings.ServiceId)) GlobalStore.ActivatedSearches.Remove(settings.ServiceId);
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException)
                 {
                     processHandler.Cancelled(processId);
