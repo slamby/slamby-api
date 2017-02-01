@@ -34,6 +34,8 @@ services:
         max-file: "3"
     oom_score_adj: -1000
     cpu_shares: 1024
+    environment:
+      SLAMBY_ENVIRONMENT: production
   nginx:
     container_name: slamby_nginx
     image: slamby/nginx:1.0-wu
