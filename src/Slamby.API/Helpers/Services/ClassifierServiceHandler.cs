@@ -20,6 +20,7 @@ using System.Collections.Concurrent;
 using Slamby.API.Models;
 using Slamby.API.Services.Interfaces;
 using Slamby.Elastic.Factories.Interfaces;
+using Slamby.SDK.Net.Models.Services;
 
 namespace Slamby.API.Helpers.Services
 {
@@ -208,6 +209,7 @@ namespace Slamby.API.Helpers.Services
                 var service = serviceQuery.Get(settings.ServiceId);
                 service.Status = (int)ServiceStatusEnum.Prepared;
                 serviceQuery.Update(service.Id, service);
+                if (GlobalStore.ActivatedClassifiers.IsExist(settings.ServiceId)) GlobalStore.ActivatedClassifiers.Remove(settings.ServiceId);
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException)
                 {
                     processHandler.Cancelled(processId);
@@ -308,6 +310,43 @@ namespace Slamby.API.Helpers.Services
             {
                 processHandler.Interrupted(processId, ex);
             }
+        }
+
+        public IEnumerable<ClassifierRecommendationResult> Recommend(string id, string originalText, int count, bool useEmphasizing, bool needTagInResult) {
+            var analyzeQuery = queryFactory.GetAnalyzeQuery(GlobalStore.ActivatedClassifiers.Get(id).ClassifiersSettings.DataSetName);
+            //a bi/tri stb gramokat nem jobb lenne elastic-al? Jelenleg a Scorer csinálja az NGramMaker-el
+            var tokens = analyzeQuery.Analyze(originalText, 1).ToList();
+            var text = string.Join(" ", tokens);
+
+            var allResults = new ConcurrentBag<KeyValuePair<string, double>>();
+            foreach (var scorerKvp in GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers)
+            {
+                var score = scorerKvp.Value.GetScore(text, 1.7, true);
+                allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
+            }
+
+            var resultsList = allResults.Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
+
+            var emphasizedCategoriesDictionary = new Dictionary<string, string>();
+            if (useEmphasizing)
+            {
+                emphasizedCategoriesDictionary = resultsList.Where(r =>
+                    GlobalStore.ActivatedClassifiers.Get(id).ClassifierEmphasizedTagIds.ContainsKey(r.Key) &&
+                    GlobalStore.ActivatedClassifiers.Get(id).ClassifierEmphasizedTagIds[r.Key].All(word => tokens.Contains(word)))
+                    .ToDictionary(r => r.Key, r => r.Key);
+
+                resultsList = resultsList.OrderByDescending(r => emphasizedCategoriesDictionary.ContainsKey(r.Key) ? (r.Value + 100) : r.Value).ToList();
+            }
+            if (count != 0 && resultsList.Count > count) resultsList = resultsList.Take(count).ToList();
+
+            var results = resultsList.Select(r => new ClassifierRecommendationResult
+            {
+                TagId = r.Key,
+                Score = r.Value,
+                Tag = needTagInResult ? GlobalStore.ActivatedClassifiers.Get(id).ClassifiersTags[r.Key] : null,
+                IsEmphasized = useEmphasizing && emphasizedCategoriesDictionary.ContainsKey(r.Key)
+            });
+            return results;
         }
     }
 }

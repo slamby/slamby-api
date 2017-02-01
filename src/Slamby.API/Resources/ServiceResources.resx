@@ -178,7 +178,7 @@
     <value>Preparing {0} service {1}</value>
   </data>
   <data name="ServiceNotExistsOrNotActivated" xml:space="preserve">
-    <value>Service not exists or not activated!</value>
+    <value>{0} Service not exists or not activated!</value>
   </data>
   <data name="SuccessfullyActivated_0_Service_1" xml:space="preserve">
     <value>Successfully activated {0} service {1}!</value>
@@ -218,5 +218,8 @@
   </data>
   <data name="SuccessfullyPartialIndexed_0_Service_1" xml:space="preserve">
     <value>Successfully partial indexed {0} service {1}!</value>
+  </data>
+  <data name="IdCantBeEmptyIn_0_Settings" xml:space="preserve">
+    <value>Id can't be empty in the {0} Settings!</value>
   </data>
 </root>

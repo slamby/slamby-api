@@ -12,6 +12,10 @@ using Slamby.Common.Helpers;
 using Slamby.Elastic.Models;
 using Slamby.Elastic.Queries;
 using Slamby.SDK.Net.Models.Enums;
+using Microsoft.AspNetCore.Mvc;
+using Slamby.SDK.Net.Models.Services;
+using Microsoft.AspNetCore.Http;
+using Slamby.API.Resources;
 
 namespace Slamby.API.Services
 {
@@ -60,6 +64,7 @@ namespace Slamby.API.Services
         {
             WarmUpService<PrcSettingsElastic, PrcServiceHandler>(ServiceTypeEnum.Prc);
             WarmUpService<ClassifierSettingsElastic, ClassifierServiceHandler>(ServiceTypeEnum.Classifier);
+            WarmUpService<SearchSettingsWrapperElastic, SearchServiceHandler>(ServiceTypeEnum.Search);
         }
 
         private void WarmUpService<TServiceSettings, THandler>(ServiceTypeEnum serviceType)
@@ -79,6 +84,9 @@ namespace Slamby.API.Services
                         break;
                     case ServiceTypeEnum.Prc:
                         processType = ProcessTypeEnum.PrcActivate;
+                        break;
+                    case ServiceTypeEnum.Search:
+                        processType = ProcessTypeEnum.SearchActivate;
                         break;
                     default:
                         throw new Exception("Try to warm up service with undefined process activation type!");
@@ -213,6 +221,36 @@ namespace Slamby.API.Services
                     IOHelper.SafeDeleteDictionary(dirPath, true);
                 }
             }
+        }
+
+        public IActionResult ValidateIfServiceActive(string serviceIdOrAlias, ServiceTypeEnum serviceType)
+        {
+            if (GlobalStore.ServiceAliases.IsExist(serviceIdOrAlias))
+            {
+                serviceIdOrAlias = GlobalStore.ServiceAliases.Get(serviceIdOrAlias);
+            }
+            switch (serviceType)
+            {
+                case ServiceTypeEnum.Classifier:
+                    if (!GlobalStore.ActivatedClassifiers.IsExist(serviceIdOrAlias))
+                    {
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, serviceType));
+                    }
+                    break;
+                case ServiceTypeEnum.Prc:
+                    if (!GlobalStore.ActivatedPrcs.IsExist(serviceIdOrAlias))
+                    {
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, serviceType));
+                    }
+                    break;
+                case ServiceTypeEnum.Search:
+                    if (!GlobalStore.ActivatedSearches.IsExist(serviceIdOrAlias))
+                    {
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.ServiceNotExistsOrNotActivated, serviceType));
+                    }
+                    break;
+            }
+            return null;
         }
     }
 }

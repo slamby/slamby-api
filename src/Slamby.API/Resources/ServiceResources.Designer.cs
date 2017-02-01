@@ -22,7 +22,7 @@ namespace Slamby.API.Resources {
     // with the /str option, or rebuild your VS project.
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ServiceResources {
+    public class ServiceResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -35,7 +35,7 @@ namespace Slamby.API.Resources {
         ///    Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Slamby.API.Resources.ServiceResources", typeof(ServiceResources).GetTypeInfo().Assembly);
@@ -50,7 +50,7 @@ namespace Slamby.API.Resources {
         ///    resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -62,7 +62,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Activating {0} service {1}.
         /// </summary>
-        internal static string Activating_0_Service_1 {
+        public static string Activating_0_Service_1 {
             get {
                 return ResourceManager.GetString("Activating_0_Service_1", resourceCulture);
             }
@@ -71,7 +71,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to DataSet &apos;{0}&apos; not found!.
         /// </summary>
-        internal static string DataSet_0_NotFound {
+        public static string DataSet_0_NotFound {
             get {
                 return ResourceManager.GetString("DataSet_0_NotFound", resourceCulture);
             }
@@ -80,7 +80,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Empty Activate Settings! You have to use Activate Settings at least for the first Activation!.
         /// </summary>
-        internal static string EmptyActivateSettings {
+        public static string EmptyActivateSettings {
             get {
                 return ResourceManager.GetString("EmptyActivateSettings", resourceCulture);
             }
@@ -89,7 +89,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Export file can be download from here: {0}.
         /// </summary>
-        internal static string ExportFileCanBeDownloadFromHere_0 {
+        public static string ExportFileCanBeDownloadFromHere_0 {
             get {
                 return ResourceManager.GetString("ExportFileCanBeDownloadFromHere_0", resourceCulture);
             }
@@ -98,16 +98,25 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Exporting dictionaries from {0} service {1}.
         /// </summary>
-        internal static string ExportingDictionariesFrom_0_Service_1 {
+        public static string ExportingDictionariesFrom_0_Service_1 {
             get {
                 return ResourceManager.GetString("ExportingDictionariesFrom_0_Service_1", resourceCulture);
             }
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to Id can&apos;t be empty in the {0} Settings!.
+        /// </summary>
+        public static string IdCantBeEmptyIn_0_Settings {
+            get {
+                return ResourceManager.GetString("IdCantBeEmptyIn_0_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Indexing {0} service {1}.
         /// </summary>
-        internal static string Indexing_0_Service_1 {
+        public static string Indexing_0_Service_1 {
             get {
                 return ResourceManager.GetString("Indexing_0_Service_1", resourceCulture);
             }
@@ -116,7 +125,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to IndexPartial can be called after calling Index!.
         /// </summary>
-        internal static string IndexPartialCanBeCalledAfterCallingIndex {
+        public static string IndexPartialCanBeCalledAfterCallingIndex {
             get {
                 return ResourceManager.GetString("IndexPartialCanBeCalledAfterCallingIndex", resourceCulture);
             }
@@ -125,7 +134,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Invalid Id! Not existing Service!.
         /// </summary>
-        internal static string InvalidIdNotExistingService {
+        public static string InvalidIdNotExistingService {
             get {
                 return ResourceManager.GetString("InvalidIdNotExistingService", resourceCulture);
             }
@@ -134,7 +143,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Invalid Service type! Only &apos;{0}&apos; Services are valid for this request!.
         /// </summary>
-        internal static string InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest {
+        public static string InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest {
             get {
                 return ResourceManager.GetString("InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest", resourceCulture);
             }
@@ -143,7 +152,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Invalid Status! Only the Services with &apos;Active&apos; status can be deactivated!.
         /// </summary>
-        internal static string InvalidStatusOnlyTheServicesWithActiveStatusCanBeDeactivated {
+        public static string InvalidStatusOnlyTheServicesWithActiveStatusCanBeDeactivated {
             get {
                 return ResourceManager.GetString("InvalidStatusOnlyTheServicesWithActiveStatusCanBeDeactivated", resourceCulture);
             }
@@ -152,7 +161,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Invalid Status! Only the Services with &apos;Active&apos; status can be indexed!.
         /// </summary>
-        internal static string InvalidStatusOnlyTheServicesWithActiveStatusCanBeIndexed {
+        public static string InvalidStatusOnlyTheServicesWithActiveStatusCanBeIndexed {
             get {
                 return ResourceManager.GetString("InvalidStatusOnlyTheServicesWithActiveStatusCanBeIndexed", resourceCulture);
             }
@@ -161,7 +170,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Invalid Status! Only the Services with &apos;New&apos; status can be prepared!.
         /// </summary>
-        internal static string InvalidStatusOnlyTheServicesWithNewStatusCanBePrepared {
+        public static string InvalidStatusOnlyTheServicesWithNewStatusCanBePrepared {
             get {
                 return ResourceManager.GetString("InvalidStatusOnlyTheServicesWithNewStatusCanBePrepared", resourceCulture);
             }
@@ -170,7 +179,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Invalid Status! Only the Services with &apos;Prepared&apos; or &apos;Active&apos; status can be exported!.
         /// </summary>
-        internal static string InvalidStatusOnlyTheServicesWithPreparedOrActiveStatusCanBeExported {
+        public static string InvalidStatusOnlyTheServicesWithPreparedOrActiveStatusCanBeExported {
             get {
                 return ResourceManager.GetString("InvalidStatusOnlyTheServicesWithPreparedOrActiveStatusCanBeExported", resourceCulture);
             }
@@ -179,7 +188,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Invalid Status! Only the Services with &apos;Prepared&apos; status can be activated!.
         /// </summary>
-        internal static string InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated {
+        public static string InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated {
             get {
                 return ResourceManager.GetString("InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated", resourceCulture);
             }
@@ -188,7 +197,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to NGram can&apos;t be larger than the NGramCount of the DataSet!.
         /// </summary>
-        internal static string NGramCantBeLargerThanTheNGramCountOfTheDataSet {
+        public static string NGramCantBeLargerThanTheNGramCountOfTheDataSet {
             get {
                 return ResourceManager.GetString("NGramCantBeLargerThanTheNGramCountOfTheDataSet", resourceCulture);
             }
@@ -197,7 +206,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to NGram count wasn&apos;t prepared!.
         /// </summary>
-        internal static string NGramCountWasntPrepared {
+        public static string NGramCountWasntPrepared {
             get {
                 return ResourceManager.GetString("NGramCountWasntPrepared", resourceCulture);
             }
@@ -206,7 +215,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to NGramList can&apos;t be empty!.
         /// </summary>
-        internal static string NGramListCantBeEmpty {
+        public static string NGramListCantBeEmpty {
             get {
                 return ResourceManager.GetString("NGramListCantBeEmpty", resourceCulture);
             }
@@ -215,7 +224,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The server doesn&apos;t have enough resource to activate the service with the given settings!.
         /// </summary>
-        internal static string NotEnoughResourceToActivateService {
+        public static string NotEnoughResourceToActivateService {
             get {
                 return ResourceManager.GetString("NotEnoughResourceToActivateService", resourceCulture);
             }
@@ -224,7 +233,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Partial indexing {0} service {1}.
         /// </summary>
-        internal static string PartialIndexing_0_Service_1 {
+        public static string PartialIndexing_0_Service_1 {
             get {
                 return ResourceManager.GetString("PartialIndexing_0_Service_1", resourceCulture);
             }
@@ -233,16 +242,16 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Preparing {0} service {1}.
         /// </summary>
-        internal static string Preparing_0_Service_1 {
+        public static string Preparing_0_Service_1 {
             get {
                 return ResourceManager.GetString("Preparing_0_Service_1", resourceCulture);
             }
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to Service not exists or not activated!.
+        ///    Looks up a localized string similar to {0} Service not exists or not activated!.
         /// </summary>
-        internal static string ServiceNotExistsOrNotActivated {
+        public static string ServiceNotExistsOrNotActivated {
             get {
                 return ResourceManager.GetString("ServiceNotExistsOrNotActivated", resourceCulture);
             }
@@ -251,7 +260,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Successfully activated {0} service {1}!.
         /// </summary>
-        internal static string SuccessfullyActivated_0_Service_1 {
+        public static string SuccessfullyActivated_0_Service_1 {
             get {
                 return ResourceManager.GetString("SuccessfullyActivated_0_Service_1", resourceCulture);
             }
@@ -260,7 +269,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Successfully exported dictionaries from {0} service {1}!.
         /// </summary>
-        internal static string SuccessfullyExportedDictionariesFrom_0_Service_1 {
+        public static string SuccessfullyExportedDictionariesFrom_0_Service_1 {
             get {
                 return ResourceManager.GetString("SuccessfullyExportedDictionariesFrom_0_Service_1", resourceCulture);
             }
@@ -269,7 +278,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Successfully indexed {0} service {1}!.
         /// </summary>
-        internal static string SuccessfullyIndexed_0_Service_1 {
+        public static string SuccessfullyIndexed_0_Service_1 {
             get {
                 return ResourceManager.GetString("SuccessfullyIndexed_0_Service_1", resourceCulture);
             }
@@ -278,7 +287,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Successfully partial indexed {0} service {1}!.
         /// </summary>
-        internal static string SuccessfullyPartialIndexed_0_Service_1 {
+        public static string SuccessfullyPartialIndexed_0_Service_1 {
             get {
                 return ResourceManager.GetString("SuccessfullyPartialIndexed_0_Service_1", resourceCulture);
             }
@@ -287,7 +296,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Successfully prepared {0} service {1}!.
         /// </summary>
-        internal static string SuccessfullyPrepared_0_Service_1 {
+        public static string SuccessfullyPrepared_0_Service_1 {
             get {
                 return ResourceManager.GetString("SuccessfullyPrepared_0_Service_1", resourceCulture);
             }
@@ -296,7 +305,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The following EmphasizedTagIds were not prepared: {0}.
         /// </summary>
-        internal static string TheFollowingEmphasizedTagIdsWereNotPrepared_0 {
+        public static string TheFollowingEmphasizedTagIdsWereNotPrepared_0 {
             get {
                 return ResourceManager.GetString("TheFollowingEmphasizedTagIdsWereNotPrepared_0", resourceCulture);
             }
@@ -305,7 +314,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The following Fields not exist in the SampleDocument: {0}.
         /// </summary>
-        internal static string TheFollowingFieldsNotExistInTheSampleDocument_0 {
+        public static string TheFollowingFieldsNotExistInTheSampleDocument_0 {
             get {
                 return ResourceManager.GetString("TheFollowingFieldsNotExistInTheSampleDocument_0", resourceCulture);
             }
@@ -314,7 +323,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The following NGrams not exist in the Services: {0}.
         /// </summary>
-        internal static string TheFollowingNGramsNotExistInTheService_0 {
+        public static string TheFollowingNGramsNotExistInTheService_0 {
             get {
                 return ResourceManager.GetString("TheFollowingNGramsNotExistInTheService_0", resourceCulture);
             }
@@ -323,7 +332,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The following TagIds not exist in the DataSet: {0}.
         /// </summary>
-        internal static string TheFollowingTagIdsNotExistInTheDataSet_0 {
+        public static string TheFollowingTagIdsNotExistInTheDataSet_0 {
             get {
                 return ResourceManager.GetString("TheFollowingTagIdsNotExistInTheDataSet_0", resourceCulture);
             }
@@ -332,7 +341,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The following TagIds not exist in the Service: {0}.
         /// </summary>
-        internal static string TheFollowingTagIdsNotExistInTheService_0 {
+        public static string TheFollowingTagIdsNotExistInTheService_0 {
             get {
                 return ResourceManager.GetString("TheFollowingTagIdsNotExistInTheService_0", resourceCulture);
             }
@@ -341,7 +350,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The following TagIds were not prepared: {0}.
         /// </summary>
-        internal static string TheFollowingTagIdsWereNotPrepared_0 {
+        public static string TheFollowingTagIdsWereNotPrepared_0 {
             get {
                 return ResourceManager.GetString("TheFollowingTagIdsWereNotPrepared_0", resourceCulture);
             }
@@ -350,7 +359,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The given tag has no words in dictionary!.
         /// </summary>
-        internal static string TheGivenTagHasNoWordsInDictionary {
+        public static string TheGivenTagHasNoWordsInDictionary {
             get {
                 return ResourceManager.GetString("TheGivenTagHasNoWordsInDictionary", resourceCulture);
             }
@@ -359,7 +368,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The given tag is missing from the PRC Service!.
         /// </summary>
-        internal static string TheGivenTagIsMissingFromThePRCService {
+        public static string TheGivenTagIsMissingFromThePRCService {
             get {
                 return ResourceManager.GetString("TheGivenTagIsMissingFromThePRCService", resourceCulture);
             }

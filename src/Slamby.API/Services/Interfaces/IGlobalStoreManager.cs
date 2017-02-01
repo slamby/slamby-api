@@ -10,5 +10,6 @@ namespace Slamby.API.Services.Interfaces
         IGlobalStoreDataSetRepository DataSets { get; }
         IGlobalStoreProcessRepository Processes { get; }
         IGlobalStoreServiceAliasRepository ServiceAliases { get; }
+        IGlobalStoreSearchRepository ActivatedSearches { get; }
     }
 }
