@@ -21,6 +21,7 @@ using Slamby.API.Models;
 using Slamby.API.Services.Interfaces;
 using Slamby.Elastic.Factories.Interfaces;
 using Slamby.SDK.Net.Models.Services;
+using Slamby.API.Services;
 
 namespace Slamby.API.Helpers.Services
 {
@@ -34,6 +35,7 @@ namespace Slamby.API.Helpers.Services
         readonly IQueryFactory queryFactory;
         readonly ParallelService parallelService;
         readonly MachineResourceService machineResourceService;
+        readonly TagService tagService;
 
         public string GetDirectoryPath(string serviceId)
         {
@@ -44,7 +46,7 @@ namespace Slamby.API.Helpers.Services
 
         public ClassifierServiceHandler(SiteConfig siteConfig, ServiceQuery serviceQuery, ProcessHandler processHandler, 
             IQueryFactory queryFactory, ParallelService parallelService, MachineResourceService machineResourceService, 
-            IGlobalStoreManager globalStore)
+            IGlobalStoreManager globalStore, TagService tagService)
         {
             GlobalStore = globalStore;
             this.parallelService = parallelService;
@@ -54,6 +56,7 @@ namespace Slamby.API.Helpers.Services
             this.siteConfig = siteConfig;
             this.machineResourceService = machineResourceService;
             _dictionaryRootPath = siteConfig.Directory.Classifier;
+            this.tagService = tagService;
         }
 
         public void Prepare(string processId, ClassifierSettingsElastic settings, CancellationToken token)
@@ -174,15 +177,9 @@ namespace Slamby.API.Helpers.Services
                     var scorersDic = deserializedDics.GroupBy(d => d.Id).ToDictionary(d => d.Key, d => new Cerebellum.Scorer.PeSScorer(d.ToDictionary(di => di.NGram, di => di.Dictionary)));
                     globalStoreClassifier.ClassifierScorers = scorersDic;
                 }
-
                 var tagsDic = settings.Tags.ToDictionary(
                     t => t.Id,
-                    t => new SDK.Net.Models.Tag
-                    {
-                        Id = t.Id,
-                        Name = t.Name,
-                        ParentId = t.ParentId()
-                    }
+                    t => tagService.GetTagModel(settings.DataSetName, t.Id, false)
                 );
 
                 var analyzeQuery = queryFactory.GetAnalyzeQuery(settings.DataSetName);
@@ -196,7 +193,9 @@ namespace Slamby.API.Helpers.Services
 
                 globalStoreClassifier.ClassifierEmphasizedTagIds =  emphasizedTagsWords;
                 globalStoreClassifier.ClassifiersSettings = settings;
-                globalStoreClassifier.ClassifiersTags = tagsDic;
+                globalStoreClassifier.ClassifierTags = tagsDic;
+                globalStoreClassifier.ClassifierParentTagIds = tagsDic.SelectMany(td => td.Value.Properties.Paths
+                                .Select(p => p.Id)).Distinct().ToDictionary(p => p, p => p);
 
                 GlobalStore.ActivatedClassifiers.Add(settings.ServiceId, globalStoreClassifier);
 
@@ -312,14 +311,27 @@ namespace Slamby.API.Helpers.Services
             }
         }
 
-        public IEnumerable<ClassifierRecommendationResult> Recommend(string id, string originalText, int count, bool useEmphasizing, bool needTagInResult) {
+        public IEnumerable<ClassifierRecommendationResult> Recommend(string id, string originalText, int count, bool useEmphasizing, bool needTagInResult, List<string> parentTagIdList = null) {
             var analyzeQuery = queryFactory.GetAnalyzeQuery(GlobalStore.ActivatedClassifiers.Get(id).ClassifiersSettings.DataSetName);
             //a bi/tri stb gramokat nem jobb lenne elastic-al? Jelenleg a Scorer csinálja az NGramMaker-el
             var tokens = analyzeQuery.Analyze(originalText, 1).ToList();
             var text = string.Join(" ", tokens);
 
             var allResults = new ConcurrentBag<KeyValuePair<string, double>>();
-            foreach (var scorerKvp in GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers)
+
+            Dictionary<string, Cerebellum.Scorer.PeSScorer> scorers;
+            if (parentTagIdList?.Any() == true)
+            {
+                scorers = GlobalStore.ActivatedClassifiers.Get(id)
+                    .ClassifierTags
+                    .Values
+                    .Where(t => t.Properties?.Paths?.Select(p => p.Id).Intersect(parentTagIdList).Any() == true)
+                    .ToDictionary(s => s.Id, s => GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers[s.Id]);
+            } else
+            {
+                scorers = GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers;
+            }
+            foreach (var scorerKvp in scorers)
             {
                 var score = scorerKvp.Value.GetScore(text, 1.7, true);
                 allResults.Add(new KeyValuePair<string, double>(scorerKvp.Key, score));
@@ -343,7 +355,7 @@ namespace Slamby.API.Helpers.Services
             {
                 TagId = r.Key,
                 Score = r.Value,
-                Tag = needTagInResult ? GlobalStore.ActivatedClassifiers.Get(id).ClassifiersTags[r.Key] : null,
+                Tag = needTagInResult ? GlobalStore.ActivatedClassifiers.Get(id).ClassifierTags[r.Key] : null,
                 IsEmphasized = useEmphasizing && emphasizedCategoriesDictionary.ContainsKey(r.Key)
             });
             return results;
