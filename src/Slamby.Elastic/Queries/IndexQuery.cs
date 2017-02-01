@@ -237,7 +237,7 @@ namespace Slamby.Elastic.Queries
                     var filterDescriptor =
                         new ShingleTokenFilterDescriptor().MinShingleSize(actualIndex)
                             .MaxShingleSize(actualIndex)
-                            .OutputUnigrams(true)
+                            .OutputUnigrams(false)
                             .OutputUnigramsIfNoShingles(false);
                     tokenFilters.Shingle(filterName, desc => filterDescriptor);
                 }
