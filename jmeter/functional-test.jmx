@@ -1962,7 +1962,7 @@
     &quot;Text&quot;: &quot;${randomText_0}&quot;,&#xd;
     &quot;Count&quot;: &quot;3&quot;,&#xd;
     &quot;UseEmphasizing&quot;: false,&#xd;
-    &quot;NeedTagInResults&quot;: true&#xd;
+    &quot;NeedTagInResult&quot;: true&#xd;
 }</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
@@ -4386,7 +4386,7 @@ vars.put(&quot;randomContent&quot;, text );</stringProp>
     &quot;Text&quot;: &quot;Lorem Ipsum Dolorem&quot;,&#xd;
     &quot;Count&quot;: &quot;3&quot;,&#xd;
     &quot;UseEmphasizing&quot;: false,&#xd;
-    &quot;NeedTagInResults&quot;: true&#xd;
+    &quot;NeedTagInResult&quot;: true&#xd;
 }</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
             </elementProp>
