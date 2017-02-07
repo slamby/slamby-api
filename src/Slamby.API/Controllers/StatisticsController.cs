@@ -21,7 +21,9 @@ namespace Slamby.API.Controllers
     [SwaggerResponseRemoveDefaults]
     public class StatisticsController : BaseController
     {
-        [HttpGet("{year?}/{month?}")]
+        [HttpGet]
+        [HttpGet("{year}")]
+        [HttpGet("{year}/{month}")]
         [SwaggerOperation("GetStatistics")]
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(StatisticsWrapper))]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
