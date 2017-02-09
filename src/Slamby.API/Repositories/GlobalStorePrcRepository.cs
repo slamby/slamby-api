@@ -12,12 +12,12 @@ namespace Slamby.API.Repositories
 
         public bool IsExist(string id)
         {
-            return PrcDictionary.ContainsKey(id);
+            return !string.IsNullOrEmpty(id) && PrcDictionary.ContainsKey(id);
         }
 
         public GlobalStorePrc Get(string id)
         {
-            if (PrcDictionary.ContainsKey(id))
+            if (!string.IsNullOrEmpty(id) && PrcDictionary.ContainsKey(id))
             {
                 return PrcDictionary[id];
             }

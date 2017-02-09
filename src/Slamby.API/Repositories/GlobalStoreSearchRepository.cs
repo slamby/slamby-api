@@ -15,12 +15,12 @@ namespace Slamby.API.Repositories
 
         public bool IsExist(string id)
         {
-            return SearchDictionary.ContainsKey(id);
+            return !string.IsNullOrEmpty(id) && SearchDictionary.ContainsKey(id);
         }
 
         public GlobalStoreSearch Get(string id)
         {
-            if (SearchDictionary.ContainsKey(id))
+            if (!string.IsNullOrEmpty(id) && SearchDictionary.ContainsKey(id))
             {
                 return SearchDictionary[id];
             }

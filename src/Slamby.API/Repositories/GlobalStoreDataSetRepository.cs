@@ -22,7 +22,7 @@ namespace Slamby.API.Repositories
         /// <returns></returns>
         public bool IsExist(string name)
         {
-            return DataSetsDictionary.ContainsKey(name);
+            return !string.IsNullOrEmpty(name) && DataSetsDictionary.ContainsKey(name);
         }
 
         /// <summary>

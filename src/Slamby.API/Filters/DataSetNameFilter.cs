@@ -12,7 +12,7 @@ namespace Slamby.API.Filters
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (!context.HttpContext.Request.Headers.ContainsKey(DataSetHeader))
+            if (!context.HttpContext.Request.Headers.ContainsKey(DataSetHeader) || string.IsNullOrEmpty(context.HttpContext.Request.Headers[DataSetHeader]))
             {
                 context.Result = new BadRequestObjectResult(
                     new SDK.Net.Models.ErrorsModel

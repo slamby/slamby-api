@@ -12,12 +12,12 @@ namespace Slamby.API.Repositories
 
         public bool IsExist(string id)
         {
-            return ClassifierDictionary.ContainsKey(id);
+            return !string.IsNullOrEmpty(id) && ClassifierDictionary.ContainsKey(id);
         }
 
         public GlobalStoreClassifier Get(string id)
         {
-            if (ClassifierDictionary.ContainsKey(id))
+            if (!string.IsNullOrEmpty(id) && ClassifierDictionary.ContainsKey(id))
             {
                 return ClassifierDictionary[id];
             }

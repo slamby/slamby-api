@@ -27,7 +27,7 @@ namespace Slamby.API.Repositories
 
         public bool IsExist(string id)
         {
-            return ProcessesDictionary.ContainsKey(id);
+            return !string.IsNullOrEmpty(id) && ProcessesDictionary.ContainsKey(id);
         }
 
         public void Remove(string id)
