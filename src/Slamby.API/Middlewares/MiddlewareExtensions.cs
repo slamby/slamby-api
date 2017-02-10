@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using LimitsMiddleware.Extensions;
+using Microsoft.AspNetCore.Builder;
 
 namespace Slamby.API.Middlewares
 {
@@ -62,6 +63,11 @@ namespace Slamby.API.Middlewares
         public static IApplicationBuilder UseTerminal(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<TerminalMiddleware>();
+        }
+
+        public static IApplicationBuilder UseConcurrentRequestsLimit(this IApplicationBuilder builder, int limit)
+        {
+            return builder.MaxConcurrentRequests(limit);
         }
     }
 }
