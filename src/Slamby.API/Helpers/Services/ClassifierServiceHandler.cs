@@ -177,9 +177,10 @@ namespace Slamby.API.Helpers.Services
                     var scorersDic = deserializedDics.GroupBy(d => d.Id).ToDictionary(d => d.Key, d => new Cerebellum.Scorer.PeSScorer(d.ToDictionary(di => di.NGram, di => di.Dictionary)));
                     globalStoreClassifier.ClassifierScorers = scorersDic;
                 }
+                var tagsDics = settings.Tags.ToDictionary(t => t.Id, t => t);
                 var tagsDic = settings.Tags.ToDictionary(
                     t => t.Id,
-                    t => tagService.GetTagModel(settings.DataSetName, t.Id, false)
+                    t => tagService.GetTagModel(settings.DataSetName, t.Id, false, tagsDics)
                 );
 
                 var analyzeQuery = queryFactory.GetAnalyzeQuery(settings.DataSetName);
