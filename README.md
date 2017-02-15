@@ -28,7 +28,7 @@ We made a prepared Docker Compose file for the easy installation.
 
 4. Compose the containers (run next to the compose file)
   ```
-  $ docker-compose up -d
+  $ docker-compose -p slamby up -d
   ```
 
 5. Your server is installed. Check that if it's working correctly
