@@ -25,5 +25,7 @@
         public RequestLoggerConfig RequestLogger { get; set; } = new RequestLoggerConfig();
 
         public DiskSpaceLimitConfig DiskSpaceLimit { get; set; } = new DiskSpaceLimitConfig();
+
+        public AvailabilityConfig AvailabilityConfig { get; set; } = new AvailabilityConfig();
     }
 }

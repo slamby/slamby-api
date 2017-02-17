@@ -169,5 +169,11 @@ namespace Slamby.API.Services
                 }
             }
         }
+
+        public void UpdateReplicaNumbers(int repNum)
+        {
+            var elasticClient = clientFactory.GetClient();
+            elasticClient.UpdateIndexSettings(Indices.All, i => i.IndexSettings(iset => iset.NumberOfReplicas(repNum)));
+        }
     }
 }
