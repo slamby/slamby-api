@@ -635,32 +635,32 @@ namespace Slamby.API.Services
         }
 
 
-        public Result ValidateOrderByField(string dataSetName, string orderByField)
+        public Result ValidatePrimitiveTypeField(string dataSetName, string field, string propertyName)
         {
             var dataSet = DataSet(dataSetName).DataSet;
             if (dataSet.SampleDocument != null)
             {
-                if (!DocumentHelper.IsExist(dataSet.SampleDocument, orderByField))
+                if (!DocumentHelper.IsExist(dataSet.SampleDocument, field))
                 {
-                    return Result.Fail(string.Format(DocumentResources.The_0_FieldIsMissing, orderByField));
+                    return Result.Fail(string.Format(DocumentResources.The_0_FieldIsMissing, field));
                 }
-                if (!DocumentHelper.IsPrimitiveType(dataSet.SampleDocument, orderByField))
+                if (!DocumentHelper.IsPrimitiveType(dataSet.SampleDocument, field))
                 {
-                    return Result.Fail(DocumentResources.OnlyFieldOfPrimitiveTypeIsAllowedForOrderByField);
+                    return Result.Fail(string.Format(DocumentResources.OnlyFieldOfPrimitiveTypeIsAllowedFor_0, propertyName));
                 }
             }
             if (dataSet.Schema != null)
             {
                 var schemaFields = SchemaHelper.GetPaths(dataSet.Schema);
-                if (!schemaFields.ContainsKey(orderByField))
+                if (!schemaFields.ContainsKey(field))
                 {
-                    return Result.Fail(string.Format(DocumentResources.The_0_FieldIsMissing, orderByField));
+                    return Result.Fail(string.Format(DocumentResources.The_0_FieldIsMissing, field));
                 }
 
-                var orderFieldType = schemaFields[orderByField];
+                var orderFieldType = schemaFields[field];
                 if (!SchemaHelper.IsPrimitiveType(orderFieldType.Item1))
                 {
-                    return Result.Fail(DocumentResources.OnlyFieldOfPrimitiveTypeIsAllowedForOrderByField);
+                    return Result.Fail(string.Format(DocumentResources.OnlyFieldOfPrimitiveTypeIsAllowedFor_0, propertyName));
                 }
             }
 

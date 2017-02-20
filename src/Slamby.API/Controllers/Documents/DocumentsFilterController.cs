@@ -49,7 +49,7 @@ namespace Slamby.API.Controllers
 
                 if (!string.IsNullOrEmpty(filterSettings.Order?.OrderByField))
                 {
-                    var orderByFieldResult = documentService.ValidateOrderByField(dataSetName, filterSettings.Order.OrderByField);
+                    var orderByFieldResult = documentService.ValidatePrimitiveTypeField(dataSetName, filterSettings.Order.OrderByField, "OrderByField");
                     if (orderByFieldResult.IsFailure)
                     {
                         return HttpErrorResult(StatusCodes.Status400BadRequest, orderByFieldResult.Error);

@@ -407,7 +407,8 @@ namespace Slamby.API.Controllers.Services
             if (searchSettings == null) return null;
             if (searchSettings.SearchFieldList != null)
             {
-                var validateResult = documentService.ValidateFieldFilterFields(dataSetName, searchSettings.SearchFieldList);
+                var searchFieldList = searchSettings.SearchFieldList.Select(s => s.Split('^')[0]).ToList();
+                var validateResult = documentService.ValidateFieldFilterFields(dataSetName, searchFieldList);
                 if (validateResult.IsFailure)
                 {
                     return HttpErrorResult(StatusCodes.Status400BadRequest, validateResult.Error);
@@ -424,7 +425,7 @@ namespace Slamby.API.Controllers.Services
 
             if (!string.IsNullOrEmpty(searchSettings.Order?.OrderByField))
             {
-                var orderByFieldResult = documentService.ValidateOrderByField(dataSetName, searchSettings.Order.OrderByField);
+                var orderByFieldResult = documentService.ValidatePrimitiveTypeField(dataSetName, searchSettings.Order.OrderByField, "OrderByField");
                 if (orderByFieldResult.IsFailure)
                 {
                     return HttpErrorResult(StatusCodes.Status400BadRequest, orderByFieldResult.Error);

@@ -168,11 +168,11 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to Only field of primitive type is allowed for OrderByField.
+        ///    Looks up a localized string similar to Only field of primitive type is allowed for {0}.
         /// </summary>
-        public static string OnlyFieldOfPrimitiveTypeIsAllowedForOrderByField {
+        public static string OnlyFieldOfPrimitiveTypeIsAllowedFor_0 {
             get {
-                return ResourceManager.GetString("OnlyFieldOfPrimitiveTypeIsAllowedForOrderByField", resourceCulture);
+                return ResourceManager.GetString("OnlyFieldOfPrimitiveTypeIsAllowedFor_0", resourceCulture);
             }
         }
         

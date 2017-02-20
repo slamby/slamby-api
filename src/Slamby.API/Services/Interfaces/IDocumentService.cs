@@ -33,7 +33,7 @@ namespace Slamby.API.Services.Interfaces
         Result ValidateSchemaIdField(JToken root, string idField);
         Result ValidateSchemaTagField(JToken root, string tagField);
         Result ValidateSchemaInterpretedFields(JToken root, IEnumerable<string> interpretedFields);
-        Result ValidateOrderByField(string dataSetName, string orderByField);
+        Result ValidatePrimitiveTypeField(string dataSetName, string field, string propertyName);
         PaginatedList<object> GetScrolled(string dataSetName, string scrollId);
 
         BulkResults Bulk(string dataSetName, IEnumerable<object> documents, long requestSize, int parallelLimit);

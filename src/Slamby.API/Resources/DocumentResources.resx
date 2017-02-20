@@ -153,8 +153,8 @@
   <data name="Move_0_Documents_From_1_To_2" xml:space="preserve">
     <value>Moving {0} documents from the {1} dataset to the {2} dataset</value>
   </data>
-  <data name="OnlyFieldOfPrimitiveTypeIsAllowedForOrderByField" xml:space="preserve">
-    <value>Only field of primitive type is allowed for OrderByField</value>
+  <data name="OnlyFieldOfPrimitiveTypeIsAllowedFor_0" xml:space="preserve">
+    <value>Only field of primitive type is allowed for {0}</value>
   </data>
   <data name="ResultFileCanBeDownloadFromHere_0" xml:space="preserve">
     <value>The result file can be download from here: {0}</value>
