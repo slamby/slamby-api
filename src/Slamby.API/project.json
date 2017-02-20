@@ -17,7 +17,7 @@
     ]
   },
   "dependencies": {
-    "Elasticsearch.Net": "2.4.6",
+    "Elasticsearch.Net": "2.5.2",
     "FastMember": "1.1.0",
     "Microsoft.AspNetCore.Authentication.Cookies": "1.1.0",
     "Microsoft.AspNetCore.Cors": "1.1.0",
@@ -43,7 +43,7 @@
     "Microsoft.Extensions.Logging.Console": "1.1.0",
     "Microsoft.Extensions.Logging.Debug": "1.1.0",
     "Microsoft.Extensions.Options.ConfigurationExtensions": "1.1.0",
-    "NEST": "2.4.6",
+    "NEST": "2.5.2",
     "protobuf-net": "2.1.0",
     "Serilog.Extensions.Logging": "1.2.0",
     "Serilog.Sinks.Literate": "2.0.0",

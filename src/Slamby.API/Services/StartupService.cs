@@ -57,7 +57,6 @@ namespace Slamby.API.Helpers
 
             serviceManager.CreateServiceIndexes();
             dbUpdateService.UpdateDatabase();
-
             dbUpdateService.UpdateReplicaNumbers(siteConfig.AvailabilityConfig.ClusterPartners.Count);
 
             dataSetService.LoadGlobalStore();

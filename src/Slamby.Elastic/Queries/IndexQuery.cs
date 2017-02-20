@@ -28,7 +28,7 @@ namespace Slamby.Elastic.Queries
             this.defaultClient = clientFactory.GetClient();
         }
 
-        public void CreateIndex(string name, string indexName, int shingleCount, object sampleDynamicDocument, string idField, List<string> interpretedFields, string tagField)
+        public void CreateIndex(string name, string indexName, int shingleCount, object sampleDynamicDocument, string idField, List<string> interpretedFields, string tagField, int repNum)
         {
             try
             {
@@ -37,7 +37,7 @@ namespace Slamby.Elastic.Queries
                 var tokenFilters = CreateTokenFilterDescriptor();
                 var analyzers = CreateAnalyzersDescriptor(shingleCount, DefaultTokenizer, DefaultCharFilter, tokenFilters);
                 var analysisDescriptor = CreateAnalysisDescriptor(DefaultCharFilter, tokenFilters, analyzers);
-                var indexDescriptor = CreateIndexDescriptor(indexName, analysisDescriptor,
+                var indexDescriptor = CreateIndexDescriptor(indexName, repNum, analysisDescriptor,
                     (map) => map
                         .Dynamic(true)
                         .DateDetection(false)
@@ -130,7 +130,7 @@ namespace Slamby.Elastic.Queries
             }
         }
 
-        public void CreateIndexWithSchema(string name, string indexName, int shingleCount, object schema, string idField, List<string> interpretedFields, string tagField)
+        public void CreateIndexWithSchema(string name, string indexName, int shingleCount, object schema, string idField, List<string> interpretedFields, string tagField, int repNum)
         {
             var token = JObject.FromObject(schema);
 
@@ -144,7 +144,7 @@ namespace Slamby.Elastic.Queries
                 var multiPropDesc = CreateAnalyzerPropertiesDescriptor(shingleCount);
                 var ipfPropDesc = CreateInterpretedFieldsPropertyDescriptor();
 
-                var indexDescriptor = CreateIndexDescriptor(indexName, analysisDescriptor,
+                var indexDescriptor = CreateIndexDescriptor(indexName, repNum, analysisDescriptor,
                     (map) => map
                         .Properties(p => p
                             .String(s => s
@@ -178,10 +178,10 @@ namespace Slamby.Elastic.Queries
             }
         }
 
-        private static CreateIndexDescriptor CreateIndexDescriptor(string indexName, AnalysisDescriptor analysistDescriptor, Func<TypeMappingDescriptor<DocumentElastic>, TypeMappingDescriptor<DocumentElastic>> documentMappingDescriptor)
+        private static CreateIndexDescriptor CreateIndexDescriptor(string indexName, int repNum, AnalysisDescriptor analysistDescriptor, Func<TypeMappingDescriptor<DocumentElastic>, TypeMappingDescriptor<DocumentElastic>> documentMappingDescriptor)
         {
             var descriptor = new CreateIndexDescriptor(indexName);
-            descriptor.Settings(s => s.NumberOfReplicas(0).NumberOfShards(1).Analysis(a => analysistDescriptor))
+            descriptor.Settings(s => s.NumberOfReplicas(repNum).NumberOfShards(1).Analysis(a => analysistDescriptor))
                 .Mappings(mapping => mapping
                     .Map<DocumentElastic>(map => documentMappingDescriptor(map).AutoMap())
                     .Map<TagElastic>(mm => mm.AutoMap().Dynamic(false))

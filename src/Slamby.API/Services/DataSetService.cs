@@ -14,6 +14,7 @@ using Slamby.Elastic.Models;
 using Slamby.Elastic.Queries;
 using Slamby.SDK.Net.Models;
 using Slamby.API.Resources;
+using Slamby.Common.Config;
 
 namespace Slamby.API.Services
 {
@@ -25,18 +26,20 @@ namespace Slamby.API.Services
         readonly IndexQuery indexQuery;
         readonly ElasticClientFactory clientFactory;
         readonly ILogger logger;
+        readonly SiteConfig siteConfig;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public DataSetService(ServiceQuery serviceQuery, IQueryFactory queryFactory, 
             IndexQuery indexQuery, ElasticClientFactory clientFactory,
-            ILoggerFactory loggerFactory, IGlobalStoreManager globalStore)
+            ILoggerFactory loggerFactory, IGlobalStoreManager globalStore, SiteConfig siteConfig)
         {
             GlobalStore = globalStore;
             this.clientFactory = clientFactory;
             this.indexQuery = indexQuery;
             this.queryFactory = queryFactory;
             this.serviceQuery = serviceQuery;
+            this.siteConfig = siteConfig;
 
             this.logger = loggerFactory.CreateLogger<DataSetService>();
         }
@@ -207,7 +210,8 @@ namespace Slamby.API.Services
                         dataSet.SampleDocument,
                         dataSet.IdField,
                         dataSet.InterpretedFields,
-                        dataSet.TagField);
+                        dataSet.TagField,
+                        siteConfig.AvailabilityConfig.ClusterPartners.Count);
                 }
                 else
                 {
@@ -218,7 +222,8 @@ namespace Slamby.API.Services
                     dataSet.Schema,
                     dataSet.IdField,
                     dataSet.InterpretedFields,
-                    dataSet.TagField);
+                    dataSet.TagField,
+                    siteConfig.AvailabilityConfig.ClusterPartners.Count);
                 }
 
                 AddGlobalStoreInternal(dataSet.Name, indexName, dataSet);

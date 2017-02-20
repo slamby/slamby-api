@@ -29,7 +29,7 @@
     "Microsoft.Extensions.DependencyInjection": "1.0.0",
     "Microsoft.Extensions.Logging": "1.0.0",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
-    "NEST": "2.4.6",
+    "NEST": "2.5.2",
     "NJsonSchema": "3.3.6061.16591",
     "Slamby.SDK.Net": "1.5.0",
     "System.IO.FileSystem.DriveInfo": "4.0.0"
