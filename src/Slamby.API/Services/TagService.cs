@@ -146,23 +146,17 @@ namespace Slamby.API.Services
         /// <param name="withDetails">if set to <c>true</c> [with details].</param>
         /// <param name="tagElasticsDic">If don't want to work from database, then the tags can be given</param>
         /// <returns></returns>
-        public Tag GetTagModel(string dataSetName, string id, bool withDetails, Dictionary<string, TagElastic> tagElasticsDic = null)
+        public Tag GetTagModel(string dataSetName, string id, bool withDetails)
         {
             var dataSet = DataSet(dataSetName).DataSet;
             var tagQuery = TagQuery(dataSetName);
-            var tagElastic = tagElasticsDic != null ? tagElasticsDic[id] : tagQuery.Get(id);
+            var tagElastic = tagQuery.Get(id);
             var pathItems = new List<PathItem>();
 
             if (tagElastic.ParentIdList.Any())
             {
                 IEnumerable<TagElastic> pathTagElastics = new List<TagElastic>();
-                if (tagElasticsDic != null)
-                {
-                    pathTagElastics = tagElastic.ParentIdList.Where(pid => tagElasticsDic.ContainsKey(pid)).Select(pid => tagElasticsDic[pid]);
-                } else
-                {
-                    pathTagElastics = tagQuery.Get(tagElastic.ParentIdList);
-                }
+                pathTagElastics = tagQuery.Get(tagElastic.ParentIdList);
                 
                 pathItems = pathTagElastics
                             .OrderBy(t => t.Level)

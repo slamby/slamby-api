@@ -177,11 +177,10 @@ namespace Slamby.API.Helpers.Services
                     var scorersDic = deserializedDics.GroupBy(d => d.Id).ToDictionary(d => d.Key, d => new Cerebellum.Scorer.PeSScorer(d.ToDictionary(di => di.NGram, di => di.Dictionary)));
                     globalStoreClassifier.ClassifierScorers = scorersDic;
                 }
-                var tagsDics = settings.Tags.ToDictionary(t => t.Id, t => t);
                 var tagsDic = settings.Tags.ToDictionary(
                     t => t.Id,
-                    t => tagService.GetTagModel(settings.DataSetName, t.Id, false, tagsDics)
-                );
+                    t => t   
+                  );
 
                 var analyzeQuery = queryFactory.GetAnalyzeQuery(settings.DataSetName);
 
@@ -195,8 +194,8 @@ namespace Slamby.API.Helpers.Services
                 globalStoreClassifier.ClassifierEmphasizedTagIds =  emphasizedTagsWords;
                 globalStoreClassifier.ClassifiersSettings = settings;
                 globalStoreClassifier.ClassifierTags = tagsDic;
-                globalStoreClassifier.ClassifierParentTagIds = tagsDic.SelectMany(td => td.Value.Properties.Paths
-                                .Select(p => p.Id)).Distinct().ToDictionary(p => p, p => p);
+                globalStoreClassifier.ClassifierParentTagIds = settings.Tags.SelectMany(td => td.ParentIdList)
+                                .Distinct().ToDictionary(p => p, p => p);
 
                 GlobalStore.ActivatedClassifiers.Add(settings.ServiceId, globalStoreClassifier);
 
@@ -326,7 +325,7 @@ namespace Slamby.API.Helpers.Services
                 scorers = GlobalStore.ActivatedClassifiers.Get(id)
                     .ClassifierTags
                     .Values
-                    .Where(t => t.Properties?.Paths?.Select(p => p.Id).Intersect(parentTagIdList).Any() == true)
+                    .Where(t => t.ParentIdList?.Intersect(parentTagIdList).Any() == true)
                     .ToDictionary(s => s.Id, s => GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers[s.Id]);
             } else
             {
@@ -356,7 +355,13 @@ namespace Slamby.API.Helpers.Services
             {
                 TagId = r.Key,
                 Score = r.Value,
-                Tag = needTagInResult ? GlobalStore.ActivatedClassifiers.Get(id).ClassifierTags[r.Key] : null,
+                Tag = needTagInResult ? 
+                    new SDK.Net.Models.Tag
+                    {
+                        Id = GlobalStore.ActivatedClassifiers.Get(id).ClassifierTags[r.Key].Id,
+                        Name = GlobalStore.ActivatedClassifiers.Get(id).ClassifierTags[r.Key].Name,
+                        ParentId = GlobalStore.ActivatedClassifiers.Get(id).ClassifierTags[r.Key].ParentId()
+                    } : null,
                 IsEmphasized = useEmphasizing && emphasizedCategoriesDictionary.ContainsKey(r.Key)
             });
             return results;

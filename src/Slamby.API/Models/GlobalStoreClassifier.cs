@@ -13,7 +13,7 @@ namespace Slamby.API.Models
 
         public ClassifierSettingsElastic ClassifiersSettings { get; set; } = new ClassifierSettingsElastic();
 
-        public Dictionary<string, Tag> ClassifierTags { get; set; } = new Dictionary<string, Tag>();
+        public Dictionary<string, TagElastic> ClassifierTags { get; set; } = new Dictionary<string, TagElastic>();
 
         public Dictionary<string, string> ClassifierParentTagIds { get; set; } = new Dictionary<string, string>();
     }
