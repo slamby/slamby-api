@@ -1,10 +1,9 @@
-﻿using Slamby.API.Services;
+﻿using Slamby.API.Services.Interfaces;
 using Slamby.Common.DI;
 using Slamby.Common.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Slamby.API.Helpers.Services
 {
@@ -15,11 +14,11 @@ namespace Slamby.API.Helpers.Services
         RedisManager redisManager { get; }
         string instanceId;
 
-        public StatisticsRedisHandler(RedisManager redisManager, ILicenseManager licenseManager)
+        public StatisticsRedisHandler(RedisManager redisManager, IGlobalStoreManager globalStore)
         {
             redisManager.DbNo = RedisDb;
             this.redisManager = redisManager;
-            instanceId = licenseManager.InstanceId.ToString();
+            instanceId = globalStore.InstanceId;
 
         }
 

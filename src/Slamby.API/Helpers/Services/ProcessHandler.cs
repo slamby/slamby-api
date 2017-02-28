@@ -15,15 +15,13 @@ namespace Slamby.API.Helpers
     public class ProcessHandler
     {
         readonly ProcessQuery processQuery;
-        readonly ILicenseManager licenseManager;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
-        public ProcessHandler(ProcessQuery processQuery, IGlobalStoreManager globalStore, ILicenseManager licenseManager)
+        public ProcessHandler(ProcessQuery processQuery, IGlobalStoreManager globalStore)
         {
             GlobalStore = globalStore;
             this.processQuery = processQuery;
-            this.licenseManager = licenseManager;
         }
 
         public ProcessElastic Create(ProcessTypeEnum type, string affectedObjectId, object initObject, string description)
@@ -40,7 +38,7 @@ namespace Slamby.API.Helpers
                 InitObject = initObject,
                 AffectedObjectId = affectedObjectId,
                 Description = description,
-                InstanceId = licenseManager.InstanceId.ToString()
+                InstanceId = GlobalStore.InstanceId
             };
             processQuery.Index(process);
             return process;
@@ -123,7 +121,7 @@ namespace Slamby.API.Helpers
         {
             Serilog.Log.Error(ex, ProcessResources.FatalErrorOccuredDuringTheOperation + " {ProcessID}", processId);
 
-            var process = GlobalStore.Processes.IsExist(processId) ? GlobalStore.Processes.Get(processId).Process : processQuery.Get(licenseManager.InstanceId.ToString(), processId);
+            var process = GlobalStore.Processes.IsExist(processId) ? GlobalStore.Processes.Get(processId).Process : processQuery.Get(GlobalStore.InstanceId, processId);
             process.End = DateTime.UtcNow;
 
             process.ErrorMessages.Add(ProcessResources.FatalErrorOccuredDuringTheOperation);

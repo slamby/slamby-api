@@ -11,6 +11,7 @@ using Slamby.SDK.Net.Models;
 using Slamby.SDK.Net.Models.Enums;
 using Swashbuckle.SwaggerGen.Annotations;
 using Slamby.API.Services;
+using Slamby.API.Services.Interfaces;
 
 namespace Slamby.API.Controllers
 {
@@ -21,13 +22,13 @@ namespace Slamby.API.Controllers
     {
         readonly ProcessQuery processQuery;
         readonly ProcessHandler processHandler;
-        readonly ILicenseManager licenseManager;
+        readonly IGlobalStoreManager globalStore;
 
-        public ProcessesController(ProcessQuery processQuery, ProcessHandler processHandler, ILicenseManager licenseManager)
+        public ProcessesController(ProcessQuery processQuery, ProcessHandler processHandler, IGlobalStoreManager globalStore)
         {
             this.processHandler = processHandler;
             this.processQuery = processQuery;
-            this.licenseManager = licenseManager;
+            this.globalStore= globalStore;
         }
 
         [HttpGet]
@@ -35,7 +36,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(IEnumerable<Process>))]
         public IActionResult Get([FromQuery]bool allStatus = false, [FromQuery]bool allTime = false)
         {
-            var processes = processQuery.GetAll(licenseManager.InstanceId.ToString(), !allStatus, allTime ? 0 : 30);
+            var processes = processQuery.GetAll(globalStore.InstanceId, !allStatus, allTime ? 0 : 30);
             return new OkObjectResult(processes.Select(ModelHelper.ToProcessModel));
         }
 
@@ -45,7 +46,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         public IActionResult Get(string id)
         {
-            var process = processQuery.Get(licenseManager.InstanceId.ToString(), id);
+            var process = processQuery.Get(globalStore.InstanceId, id);
             if (process == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound,
@@ -62,7 +63,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         public IActionResult Cancel(string id)
         {
-            var process = processQuery.Get(licenseManager.InstanceId.ToString(), id);
+            var process = processQuery.Get(globalStore.InstanceId, id);
             if (process == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound,

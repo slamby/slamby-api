@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Slamby.API.Helpers;
 using Slamby.API.Services;
+using Slamby.API.Services.Interfaces;
 using Slamby.Common.Config;
 
 namespace Slamby.API.Filters
@@ -12,16 +13,16 @@ namespace Slamby.API.Filters
     {
         readonly ThrottleService throttleService;
         readonly SiteConfig siteConfig;
-        readonly ILicenseManager licenseManager;
+        readonly IGlobalStoreManager globalStore;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ThrottleActionFilter"/> class.
         /// </summary>
-        public ThrottleActionFilter(ThrottleService throttleService, SiteConfig siteConfig, ILicenseManager licenseManager)
+        public ThrottleActionFilter(ThrottleService throttleService, SiteConfig siteConfig, IGlobalStoreManager globalStore)
         {
             this.siteConfig = siteConfig;
             this.throttleService = throttleService;
-            this.licenseManager = licenseManager;
+            this.globalStore = globalStore;
         }
 
         /// <summary>
@@ -33,7 +34,7 @@ namespace Slamby.API.Filters
             base.OnActionExecuting(context);
 
             var endpoint = $"{context.RouteData?.Values?["controller"]}/{context.RouteData?.Values?["action"]}";
-            throttleService.SaveRequest(licenseManager.InstanceId.ToString(), endpoint);
+            throttleService.SaveRequest(globalStore.InstanceId, endpoint);
         }
     }
 }

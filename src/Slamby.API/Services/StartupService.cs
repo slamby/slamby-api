@@ -7,6 +7,7 @@ using Slamby.Common.Config;
 using Slamby.Common.DI;
 using Slamby.Common.Services;
 using Slamby.Elastic.Factories;
+using Slamby.API.Services.Interfaces;
 
 namespace Slamby.API.Helpers
 {
@@ -23,11 +24,12 @@ namespace Slamby.API.Helpers
         readonly ServiceManager serviceManager;
         readonly ILicenseManager licenseManager;
         readonly IClusterManager clusterManager;
+        readonly IGlobalStoreManager globalStoreManager;
 
         public StartupService(SiteConfig siteConfig, ILogger<StartupService> logger,
             ElasticClientFactory elasticClientFactory, DataSetService dataSetService, 
             DBUpdateService dbUpdateService, MachineResourceService machineResourceService,
-            ServiceManager serviceManager, ILicenseManager licenseManager, IClusterManager clusterManager)
+            ServiceManager serviceManager, ILicenseManager licenseManager, IClusterManager clusterManager, IGlobalStoreManager globalStoreManager)
         {
             this.licenseManager = licenseManager;
             this.serviceManager = serviceManager;
@@ -38,6 +40,7 @@ namespace Slamby.API.Helpers
             this.siteConfig = siteConfig;
             this.machineResourceService = machineResourceService;
             this.clusterManager = clusterManager;
+            this.globalStoreManager = globalStoreManager;
         }
 
         public void Startup()
@@ -51,6 +54,7 @@ namespace Slamby.API.Helpers
             CreateDirectories();
             licenseManager.EnsureAppIdCreated();
             licenseManager.StartBackgroundValidator();
+            globalStoreManager.InstanceId = licenseManager.InstanceId.ToString();
 
             logger.LogInformation("Waiting ElasticSearch to start...");
             WaitForElastic();

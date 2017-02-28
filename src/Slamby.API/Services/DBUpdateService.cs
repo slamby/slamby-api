@@ -10,6 +10,7 @@ using Slamby.Elastic.Factories.Interfaces;
 using Slamby.Elastic.Models;
 using Slamby.Elastic.Queries;
 using Slamby.SDK.Net.Models.Enums;
+using Slamby.API.Services.Interfaces;
 
 namespace Slamby.API.Services
 {
@@ -24,11 +25,11 @@ namespace Slamby.API.Services
         readonly ServiceQuery serviceQuery;
         readonly ProcessQuery processQuery;
         readonly ServiceManager serviceManager;
-        readonly ILicenseManager licenseManager;
+        readonly IGlobalStoreManager globalStore;
 
         public DBUpdateService(ElasticClientFactory clientFactory, IndexQuery indexQuery, IQueryFactory queryFactory,
             ILoggerFactory loggerFactory, MetadataQuery metadataQuery, ServiceQuery serviceQuery, ProcessQuery processQuery,
-            ServiceManager serviceManager, ILicenseManager licenseManager)
+            ServiceManager serviceManager, IGlobalStoreManager globalStore)
         {
             this.serviceManager = serviceManager;
             this.processQuery = processQuery;
@@ -38,7 +39,7 @@ namespace Slamby.API.Services
             this.indexQuery = indexQuery;
             this.clientFactory = clientFactory;
             this.logger = loggerFactory.CreateLogger<DBUpdateService>();
-            this.licenseManager = licenseManager;
+            this.globalStore = globalStore;
         }
 
         private IEnumerable<string> GetIndexes()
@@ -98,7 +99,7 @@ namespace Slamby.API.Services
                 var processes = processQuery.GetAll(null, false);
                 foreach(var process in processes)
                 {
-                    process.InstanceId = licenseManager.InstanceId.ToString();
+                    process.InstanceId = globalStore.InstanceId;
                 }
                 processQuery.ParallelBulkIndex(processes, 0);
             });

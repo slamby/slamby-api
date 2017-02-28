@@ -33,11 +33,10 @@ namespace Slamby.API.Services
         readonly ILogger<ServiceManager> logger;
         readonly PrcServiceHandler prcServiceHandler;
         readonly PrcIndexServiceHandler prcIndexServiceHandler;
-        readonly ILicenseManager licenseManager;
 
         public ServiceManager(ServiceQuery serviceQuery, IServiceProvider serviceProvider, ProcessQuery processQuery,
             ProcessHandler processHandler, IGlobalStoreManager globalStore, DataSetService dataSetService,
-            ILogger<ServiceManager> logger, PrcServiceHandler prcServiceHandler, PrcIndexServiceHandler prcIndexServiceHandler, ILicenseManager licenseManager)
+            ILogger<ServiceManager> logger, PrcServiceHandler prcServiceHandler, PrcIndexServiceHandler prcIndexServiceHandler)
         {
             this.prcIndexServiceHandler = prcIndexServiceHandler;
             this.prcServiceHandler = prcServiceHandler;
@@ -48,7 +47,6 @@ namespace Slamby.API.Services
             this.processQuery = processQuery;
             this.serviceProvider = serviceProvider;
             this.serviceQuery = serviceQuery;
-            this.licenseManager = licenseManager;
         }
 
         public void CreateServiceIndexes()
@@ -164,7 +162,7 @@ namespace Slamby.API.Services
 
         public void CancelBusyProcesses()
         {
-            var busyProcesses = processQuery.GetAll(licenseManager.InstanceId.ToString(), true);
+            var busyProcesses = processQuery.GetAll(GlobalStore.InstanceId, true);
             foreach (var process in busyProcesses)
             {
                 if (process.Type == (int)ProcessTypeEnum.PrcIndex)
@@ -193,7 +191,7 @@ namespace Slamby.API.Services
 
             foreach (var service in busyServices)
             {
-                var lastProcess = processQuery.Get(licenseManager.InstanceId.ToString(), service.ProcessIdList.Last());
+                var lastProcess = processQuery.Get(GlobalStore.InstanceId, service.ProcessIdList.Last());
 
                 //if the last process was a preparation then the service will be in New status
                 if (lastProcess.Type == (int)ProcessTypeEnum.ClassifierPrepare ||
