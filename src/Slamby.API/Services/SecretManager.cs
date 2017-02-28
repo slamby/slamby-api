@@ -46,6 +46,11 @@ namespace Slamby.API.Services
 
         public bool IsSet() => !string.IsNullOrWhiteSpace(ApiSecret);
 
+        public string GetSecret()
+        {
+            return ApiSecret;
+        }
+
         public bool IsMatch(string text) => string.Equals(ApiSecret, text, StringComparison.Ordinal);
 
         public Result Validate(string secret)

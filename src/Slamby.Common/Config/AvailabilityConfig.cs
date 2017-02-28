@@ -8,7 +8,7 @@ namespace Slamby.Common.Config
     public class AvailabilityConfig
     {
         public List<ClusterMember> ClusterPartners { get; set; } = new List<ClusterMember>();
-
+        public int ClusterSize { get; set; } = 1;
 
     }
 

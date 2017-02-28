@@ -10,6 +10,7 @@ using Slamby.Elastic.Queries;
 using Slamby.SDK.Net.Models;
 using Slamby.SDK.Net.Models.Enums;
 using Swashbuckle.SwaggerGen.Annotations;
+using Slamby.API.Services;
 
 namespace Slamby.API.Controllers
 {
@@ -20,11 +21,13 @@ namespace Slamby.API.Controllers
     {
         readonly ProcessQuery processQuery;
         readonly ProcessHandler processHandler;
+        readonly ILicenseManager licenseManager;
 
-        public ProcessesController(ProcessQuery processQuery, ProcessHandler processHandler)
+        public ProcessesController(ProcessQuery processQuery, ProcessHandler processHandler, ILicenseManager licenseManager)
         {
             this.processHandler = processHandler;
             this.processQuery = processQuery;
+            this.licenseManager = licenseManager;
         }
 
         [HttpGet]
@@ -32,7 +35,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(IEnumerable<Process>))]
         public IActionResult Get([FromQuery]bool allStatus = false, [FromQuery]bool allTime = false)
         {
-            var processes = processQuery.GetAll(!allStatus, allTime ? 0 : 30);
+            var processes = processQuery.GetAll(licenseManager.InstanceId.ToString(), !allStatus, allTime ? 0 : 30);
             return new OkObjectResult(processes.Select(ModelHelper.ToProcessModel));
         }
 
@@ -42,7 +45,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         public IActionResult Get(string id)
         {
-            var process = processQuery.Get(id);
+            var process = processQuery.Get(licenseManager.InstanceId.ToString(), id);
             if (process == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound,
@@ -59,7 +62,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         public IActionResult Cancel(string id)
         {
-            var process = processQuery.Get(id);
+            var process = processQuery.Get(licenseManager.InstanceId.ToString(), id);
             if (process == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound,

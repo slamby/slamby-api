@@ -211,7 +211,7 @@ namespace Slamby.API.Services
                         dataSet.IdField,
                         dataSet.InterpretedFields,
                         dataSet.TagField,
-                        siteConfig.AvailabilityConfig.ClusterPartners.Count);
+                        siteConfig.AvailabilityConfig.ClusterSize);
                 }
                 else
                 {
@@ -223,7 +223,7 @@ namespace Slamby.API.Services
                     dataSet.IdField,
                     dataSet.InterpretedFields,
                     dataSet.TagField,
-                    siteConfig.AvailabilityConfig.ClusterPartners.Count);
+                    siteConfig.AvailabilityConfig.ClusterSize);
                 }
 
                 AddGlobalStoreInternal(dataSet.Name, indexName, dataSet);

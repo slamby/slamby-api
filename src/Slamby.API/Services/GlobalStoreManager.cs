@@ -27,11 +27,11 @@ namespace Slamby.API.Services
 
         public IGlobalStoreProcessRepository Processes { get; } = new GlobalStoreProcessRepository();
 
+        public IGlobalStoreServiceAliasRepository ServiceAliases { get; } = new GlobalStoreServiceAliasRepository();
+
         public IGlobalStoreClassifierRepository ActivatedClassifiers { get; } = new GlobalStoreClassifierRepository();
 
         public IGlobalStorePrcRepository ActivatedPrcs { get; } = new GlobalStorePrcRepository();
-
-        public IGlobalStoreServiceAliasRepository ServiceAliases { get; } = new GlobalStoreServiceAliasRepository();
 
         public IGlobalStoreSearchRepository ActivatedSearches { get; } = new GlobalStoreSearchRepository();
     }

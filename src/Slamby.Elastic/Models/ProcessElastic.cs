@@ -42,5 +42,8 @@ namespace Slamby.Elastic.Models
         [String(Name = "result_message")]
         public string ResultMessage { get; set; }
 
+        [String(Name = "instance_id", Index = FieldIndexOption.NotAnalyzed)]
+        public string InstanceId { get; set; }
+
     }
 }

@@ -24,10 +24,11 @@ namespace Slamby.API.Services
         readonly ServiceQuery serviceQuery;
         readonly ProcessQuery processQuery;
         readonly ServiceManager serviceManager;
+        readonly ILicenseManager licenseManager;
 
         public DBUpdateService(ElasticClientFactory clientFactory, IndexQuery indexQuery, IQueryFactory queryFactory,
             ILoggerFactory loggerFactory, MetadataQuery metadataQuery, ServiceQuery serviceQuery, ProcessQuery processQuery,
-            ServiceManager serviceManager)
+            ServiceManager serviceManager, ILicenseManager licenseManager)
         {
             this.serviceManager = serviceManager;
             this.processQuery = processQuery;
@@ -37,6 +38,7 @@ namespace Slamby.API.Services
             this.indexQuery = indexQuery;
             this.clientFactory = clientFactory;
             this.logger = loggerFactory.CreateLogger<DBUpdateService>();
+            this.licenseManager = licenseManager;
         }
 
         private IEnumerable<string> GetIndexes()
@@ -85,6 +87,20 @@ namespace Slamby.API.Services
             {
                 serviceManager.UpdateDataSetNameToIndex<PrcSettingsElastic>(ServiceTypeEnum.Prc);
                 serviceManager.UpdateDataSetNameToIndex<ClassifierSettingsElastic>(ServiceTypeEnum.Classifier);
+            });
+
+            UpdateVersion(7, () =>
+            {
+                logger.LogInformation("Adding InstanceId field to Process");
+                MapModelElastic<ProcessElastic>(Elastic.Constants.SlambyProcessesIndex);
+
+                logger.LogInformation("Fill up InstanceId field with data");
+                var processes = processQuery.GetAll(null, false);
+                foreach(var process in processes)
+                {
+                    process.InstanceId = licenseManager.InstanceId.ToString();
+                }
+                processQuery.ParallelBulkIndex(processes, 0);
             });
         }
 

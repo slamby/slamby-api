@@ -7,6 +7,7 @@ using Slamby.Common.DI;
 using Slamby.API.Services.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
+using Slamby.API.Services;
 
 namespace Slamby.API.Helpers
 {
@@ -14,13 +15,15 @@ namespace Slamby.API.Helpers
     public class ProcessHandler
     {
         readonly ProcessQuery processQuery;
+        readonly ILicenseManager licenseManager;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
-        public ProcessHandler(ProcessQuery processQuery, IGlobalStoreManager globalStore)
+        public ProcessHandler(ProcessQuery processQuery, IGlobalStoreManager globalStore, ILicenseManager licenseManager)
         {
             GlobalStore = globalStore;
             this.processQuery = processQuery;
+            this.licenseManager = licenseManager;
         }
 
         public ProcessElastic Create(ProcessTypeEnum type, string affectedObjectId, object initObject, string description)
@@ -36,7 +39,8 @@ namespace Slamby.API.Helpers
                 ErrorMessages = new System.Collections.Generic.List<string>(),
                 InitObject = initObject,
                 AffectedObjectId = affectedObjectId,
-                Description = description
+                Description = description,
+                InstanceId = licenseManager.InstanceId.ToString()
             };
             processQuery.Index(process);
             return process;
@@ -119,7 +123,7 @@ namespace Slamby.API.Helpers
         {
             Serilog.Log.Error(ex, ProcessResources.FatalErrorOccuredDuringTheOperation + " {ProcessID}", processId);
 
-            var process = GlobalStore.Processes.IsExist(processId) ? GlobalStore.Processes.Get(processId).Process : processQuery.Get(processId);
+            var process = GlobalStore.Processes.IsExist(processId) ? GlobalStore.Processes.Get(processId).Process : processQuery.Get(licenseManager.InstanceId.ToString(), processId);
             process.End = DateTime.UtcNow;
 
             process.ErrorMessages.Add(ProcessResources.FatalErrorOccuredDuringTheOperation);

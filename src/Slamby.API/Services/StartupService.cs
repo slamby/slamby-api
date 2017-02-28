@@ -22,11 +22,12 @@ namespace Slamby.API.Helpers
         readonly MachineResourceService machineResourceService;
         readonly ServiceManager serviceManager;
         readonly ILicenseManager licenseManager;
+        readonly IClusterManager clusterManager;
 
         public StartupService(SiteConfig siteConfig, ILogger<StartupService> logger,
             ElasticClientFactory elasticClientFactory, DataSetService dataSetService, 
             DBUpdateService dbUpdateService, MachineResourceService machineResourceService,
-            ServiceManager serviceManager, ILicenseManager licenseManager)
+            ServiceManager serviceManager, ILicenseManager licenseManager, IClusterManager clusterManager)
         {
             this.licenseManager = licenseManager;
             this.serviceManager = serviceManager;
@@ -36,6 +37,7 @@ namespace Slamby.API.Helpers
             this.elasticClientFactory = elasticClientFactory;
             this.siteConfig = siteConfig;
             this.machineResourceService = machineResourceService;
+            this.clusterManager = clusterManager;
         }
 
         public void Startup()
@@ -57,9 +59,11 @@ namespace Slamby.API.Helpers
 
             serviceManager.CreateServiceIndexes();
             dbUpdateService.UpdateDatabase();
-            dbUpdateService.UpdateReplicaNumbers(siteConfig.AvailabilityConfig.ClusterPartners.Count);
+            dbUpdateService.UpdateReplicaNumbers(siteConfig.AvailabilityConfig.ClusterSize);
 
             dataSetService.LoadGlobalStore();
+
+            clusterManager.StartBackgroundMembersCheck();
 
             serviceManager.LoadGlobalStore();
             serviceManager.MaintainBusyServices();
