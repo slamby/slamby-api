@@ -27,5 +27,8 @@
         public DiskSpaceLimitConfig DiskSpaceLimit { get; set; } = new DiskSpaceLimitConfig();
 
         public AvailabilityConfig AvailabilityConfig { get; set; } = new AvailabilityConfig();
+
+        //can't modify it fom appsettings, because the startup procedure will override the value
+        public string InstanceId { get; set; }
     }
 }

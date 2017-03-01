@@ -13,7 +13,6 @@ using Slamby.Elastic.Models;
 using Slamby.Elastic.Queries;
 using Slamby.SDK.Net.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
-using Slamby.SDK.Net.Models.Services;
 using Microsoft.AspNetCore.Http;
 using Slamby.API.Resources;
 
@@ -162,7 +161,7 @@ namespace Slamby.API.Services
 
         public void CancelBusyProcesses()
         {
-            var busyProcesses = processQuery.GetAll(GlobalStore.InstanceId, true);
+            var busyProcesses = processQuery.GetAll(true);
             foreach (var process in busyProcesses)
             {
                 if (process.Type == (int)ProcessTypeEnum.PrcIndex)
@@ -191,7 +190,7 @@ namespace Slamby.API.Services
 
             foreach (var service in busyServices)
             {
-                var lastProcess = processQuery.Get(GlobalStore.InstanceId, service.ProcessIdList.Last());
+                var lastProcess = processQuery.Get(service.ProcessIdList.Last());
 
                 //if the last process was a preparation then the service will be in New status
                 if (lastProcess.Type == (int)ProcessTypeEnum.ClassifierPrepare ||

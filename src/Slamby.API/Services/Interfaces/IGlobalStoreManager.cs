@@ -11,6 +11,5 @@ namespace Slamby.API.Services.Interfaces
         IGlobalStoreProcessRepository Processes { get; }
         IGlobalStoreServiceAliasRepository ServiceAliases { get; }
         IGlobalStoreSearchRepository ActivatedSearches { get; }
-        string InstanceId { get; set; }
     }
 }

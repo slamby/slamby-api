@@ -7,7 +7,7 @@ using Slamby.Common.DI;
 using Slamby.API.Services.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
-using Slamby.API.Services;
+using Slamby.Common.Config;
 
 namespace Slamby.API.Helpers
 {
@@ -17,11 +17,13 @@ namespace Slamby.API.Helpers
         readonly ProcessQuery processQuery;
 
         public IGlobalStoreManager GlobalStore { get; set; }
+        readonly SiteConfig siteConfig;
 
-        public ProcessHandler(ProcessQuery processQuery, IGlobalStoreManager globalStore)
+        public ProcessHandler(ProcessQuery processQuery, IGlobalStoreManager globalStore, SiteConfig siteConfig)
         {
             GlobalStore = globalStore;
             this.processQuery = processQuery;
+            this.siteConfig = siteConfig;
         }
 
         public ProcessElastic Create(ProcessTypeEnum type, string affectedObjectId, object initObject, string description)
@@ -38,7 +40,7 @@ namespace Slamby.API.Helpers
                 InitObject = initObject,
                 AffectedObjectId = affectedObjectId,
                 Description = description,
-                InstanceId = GlobalStore.InstanceId
+                InstanceId = siteConfig.InstanceId
             };
             processQuery.Index(process);
             return process;
@@ -121,7 +123,7 @@ namespace Slamby.API.Helpers
         {
             Serilog.Log.Error(ex, ProcessResources.FatalErrorOccuredDuringTheOperation + " {ProcessID}", processId);
 
-            var process = GlobalStore.Processes.IsExist(processId) ? GlobalStore.Processes.Get(processId).Process : processQuery.Get(GlobalStore.InstanceId, processId);
+            var process = GlobalStore.Processes.IsExist(processId) ? GlobalStore.Processes.Get(processId).Process : processQuery.Get(processId);
             process.End = DateTime.UtcNow;
 
             process.ErrorMessages.Add(ProcessResources.FatalErrorOccuredDuringTheOperation);

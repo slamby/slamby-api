@@ -11,6 +11,7 @@ using Slamby.Elastic.Models;
 using Slamby.Elastic.Queries;
 using Slamby.SDK.Net.Models.Enums;
 using Slamby.API.Services.Interfaces;
+using Slamby.Common.Config;
 
 namespace Slamby.API.Services
 {
@@ -25,11 +26,11 @@ namespace Slamby.API.Services
         readonly ServiceQuery serviceQuery;
         readonly ProcessQuery processQuery;
         readonly ServiceManager serviceManager;
-        readonly IGlobalStoreManager globalStore;
+        readonly SiteConfig siteConfig;
 
         public DBUpdateService(ElasticClientFactory clientFactory, IndexQuery indexQuery, IQueryFactory queryFactory,
             ILoggerFactory loggerFactory, MetadataQuery metadataQuery, ServiceQuery serviceQuery, ProcessQuery processQuery,
-            ServiceManager serviceManager, IGlobalStoreManager globalStore)
+            ServiceManager serviceManager, SiteConfig siteConfig)
         {
             this.serviceManager = serviceManager;
             this.processQuery = processQuery;
@@ -39,7 +40,7 @@ namespace Slamby.API.Services
             this.indexQuery = indexQuery;
             this.clientFactory = clientFactory;
             this.logger = loggerFactory.CreateLogger<DBUpdateService>();
-            this.globalStore = globalStore;
+            this.siteConfig = siteConfig;
         }
 
         private IEnumerable<string> GetIndexes()
@@ -96,10 +97,10 @@ namespace Slamby.API.Services
                 MapModelElastic<ProcessElastic>(Elastic.Constants.SlambyProcessesIndex);
 
                 logger.LogInformation("Fill up InstanceId field with data");
-                var processes = processQuery.GetAll(null, false);
+                var processes = processQuery.GetAll(false, 0, true);
                 foreach(var process in processes)
                 {
-                    process.InstanceId = globalStore.InstanceId;
+                    process.InstanceId = siteConfig.InstanceId;
                 }
                 processQuery.ParallelBulkIndex(processes, 0);
             });

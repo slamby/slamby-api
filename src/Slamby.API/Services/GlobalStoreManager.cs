@@ -8,7 +8,6 @@ namespace Slamby.API.Services
     [SingletonDependency(ServiceType = typeof(IGlobalStoreManager))]
     public class GlobalStoreManager : IGlobalStoreManager
     {
-        public string InstanceId { get; set; }
         public GlobalStoreManager(IGlobalStoreDataSetRepository dataSetRepository,
             IGlobalStoreProcessRepository processesRepository,
             IGlobalStoreClassifierRepository classifiersRepository,

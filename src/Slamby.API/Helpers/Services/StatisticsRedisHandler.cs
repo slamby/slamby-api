@@ -1,4 +1,5 @@
 ﻿using Slamby.API.Services.Interfaces;
+using Slamby.Common.Config;
 using Slamby.Common.DI;
 using Slamby.Common.Services;
 using System;
@@ -14,11 +15,11 @@ namespace Slamby.API.Helpers.Services
         RedisManager redisManager { get; }
         string instanceId;
 
-        public StatisticsRedisHandler(RedisManager redisManager, IGlobalStoreManager globalStore)
+        public StatisticsRedisHandler(RedisManager redisManager, SiteConfig siteConfig)
         {
             redisManager.DbNo = RedisDb;
             this.redisManager = redisManager;
-            instanceId = globalStore.InstanceId;
+            instanceId = siteConfig.InstanceId;
 
         }
 

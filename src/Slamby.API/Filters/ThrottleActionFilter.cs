@@ -13,16 +13,14 @@ namespace Slamby.API.Filters
     {
         readonly ThrottleService throttleService;
         readonly SiteConfig siteConfig;
-        readonly IGlobalStoreManager globalStore;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ThrottleActionFilter"/> class.
         /// </summary>
-        public ThrottleActionFilter(ThrottleService throttleService, SiteConfig siteConfig, IGlobalStoreManager globalStore)
+        public ThrottleActionFilter(ThrottleService throttleService, SiteConfig siteConfig)
         {
             this.siteConfig = siteConfig;
             this.throttleService = throttleService;
-            this.globalStore = globalStore;
         }
 
         /// <summary>
@@ -34,7 +32,7 @@ namespace Slamby.API.Filters
             base.OnActionExecuting(context);
 
             var endpoint = $"{context.RouteData?.Values?["controller"]}/{context.RouteData?.Values?["action"]}";
-            throttleService.SaveRequest(globalStore.InstanceId, endpoint);
+            throttleService.SaveRequest(siteConfig.InstanceId, endpoint);
         }
     }
 }
