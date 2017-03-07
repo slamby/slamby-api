@@ -16,7 +16,6 @@ namespace Slamby.API.Services
     [SingletonDependency(ServiceType = typeof(IClusterClient))]
     public class ClusterClient : IClusterClient
     {
-        readonly List<ClusterMember> ClusterMembers;
         private Dictionary<string, Configuration> sdkConfigurationDic = new Dictionary<string, Configuration>();
         private ISecretManager secretManager;
 

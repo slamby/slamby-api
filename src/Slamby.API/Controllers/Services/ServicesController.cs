@@ -14,6 +14,9 @@ using Swashbuckle.SwaggerGen.Annotations;
 using Slamby.API.Helpers;
 using Slamby.API.Services.Interfaces;
 using Slamby.API.Filters;
+using Slamby.Common.Helpers;
+using Slamby.API.Resources;
+using Slamby.Common.Config;
 
 namespace Slamby.API.Controllers
 {
@@ -23,13 +26,15 @@ namespace Slamby.API.Controllers
     public class ServicesController : BaseController
     {
         readonly ServiceQuery serviceQuery;
+        readonly ServiceHandler serviceHandler;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
-        public ServicesController(ServiceQuery serviceQuery, IGlobalStoreManager globalStore)
+        public ServicesController(ServiceQuery serviceQuery, IGlobalStoreManager globalStore, ServiceHandler serviceHandler)
         {
             GlobalStore = globalStore;
             this.serviceQuery = serviceQuery;
+            this.serviceHandler = serviceHandler;
         }
 
         [HttpGet]
@@ -37,14 +42,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(IEnumerable<Service>))]
         public IActionResult Get()
         {
-            var serviceElastics = serviceQuery.GetAll();
-            var services = serviceElastics.Select(s => 
-            {
-                var service = s.ToServiceModel<Service>();
-                service.ActualProcessId = s.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
-                return service;
-            });
-
+            var services = serviceHandler.GetAll();
             return new OkObjectResult(services);
         }
 
@@ -54,13 +52,11 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         public IActionResult Get(string id)
         {
-            var serviceElastic = serviceQuery.Get(id);
-            if (serviceElastic == null)
+            var service = serviceHandler.Get(id);
+            if (service == null)
             {
                 return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
-            var service = serviceElastic.ToServiceModel<Service>();
-            service.ActualProcessId = serviceElastic.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
             return new OkObjectResult(service);
         }
 
@@ -92,7 +88,6 @@ namespace Slamby.API.Controllers
             GlobalStore.ServiceAliases.Set(serviceElastic.Alias, serviceElastic.Id);
 
             var serviceModel = serviceElastic.ToServiceModel<Service>();
-            serviceModel.ActualProcessId = serviceElastic.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
 
             return base.CreatedAtRoute("GetService", new { Controller = "Services", id = serviceElastic.Id }, serviceModel);
         }
@@ -114,29 +109,29 @@ namespace Slamby.API.Controllers
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
         public IActionResult Put(string id, [FromBody]Service service)
         {
-            var serviceElastic = serviceQuery.Get(id);
-            if (serviceElastic == null)
+            var serviceOrig = serviceHandler.Get(id);
+            if (serviceOrig == null)
             {
                 return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
 
             if (!string.IsNullOrEmpty(service.Name))
             {
-                serviceElastic.Name = service.Name;
+                serviceOrig.Name = service.Name;
             }
             if (!string.IsNullOrEmpty(service.Description))
             {
-                serviceElastic.Description = service.Description;
+                serviceOrig.Description = service.Description;
             }
             if (!string.IsNullOrEmpty(service.Alias))
             {
                 RemoveServiceAlias(service.Alias);
-                serviceElastic.Alias = service.Alias;
+                serviceOrig.Alias = service.Alias;
             }
 
-            serviceQuery.Index(serviceElastic);
+            serviceHandler.Index(serviceOrig);
 
-            GlobalStore.ServiceAliases.Set(serviceElastic.Alias, serviceElastic.Id);
+            GlobalStore.ServiceAliases.Set(serviceOrig.Alias, serviceOrig.Id);
 
             return new StatusCodeResult(StatusCodes.Status200OK);
         }
@@ -145,34 +140,39 @@ namespace Slamby.API.Controllers
         [SwaggerOperation("DeleteService")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
-        public IActionResult Delete(string id, [FromServices]IServiceProvider serviceProvider, [FromServices]ProcessQuery processQuery)
+        public IActionResult Delete(string id, [FromServices]IServiceProvider serviceProvider, [FromServices]ProcessQuery processQuery, [FromServices]SiteConfig siteConfig)
         {
-            var service = serviceQuery.Get(id);
+            var service = serviceHandler.Get(id, true);
             if (service == null)
             {
                 return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
 
+            if (siteConfig.AvailabilityConfig.ClusterSize > 1 && service.Status == ServiceStatusEnum.Busy)
+            {
+                return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusInClusterModeOnlyNotBusyCanDelete);
+            }
+
             switch (service.Type)
             {
-                case (int)ServiceTypeEnum.Classifier:
+                case ServiceTypeEnum.Classifier:
                     var classifierHandler = serviceProvider.GetService<ClassifierServiceHandler>();
                     classifierHandler.Delete(service);
                     serviceQuery.DeleteSettings<ClassifierSettingsElastic>(service.Id);
                     break;
-                case (int)ServiceTypeEnum.Prc:
+                case ServiceTypeEnum.Prc:
                     var prcHandler = serviceProvider.GetService <PrcServiceHandler>();
                     prcHandler.Delete(service);
                     serviceQuery.DeleteSettings<PrcSettingsElastic>(service.Id);
                     break;
-                case (int)ServiceTypeEnum.Search:
+                case ServiceTypeEnum.Search:
                     var searchHandler = serviceProvider.GetService<SearchServiceHandler>();
                     searchHandler.Delete(service);
                     serviceQuery.DeleteSettings<SearchSettingsWrapperElastic>(service.Id);
                     break;
             }
 
-            serviceQuery.Delete(service);
+            serviceQuery.Delete(service.Id);
 
             GlobalStore.ServiceAliases.Remove(service.Alias);
 

@@ -53,7 +53,7 @@ namespace Slamby.Elastic.Queries
             ResponseValidator(mapResp);
         }
 
-        public IEnumerable<ProcessElastic> GetAll(bool justActives, int lastDays = 0, bool withoutInstanceId = false)
+        public IEnumerable<ProcessElastic> GetAll(bool justActives, int lastDays = 0, List<string> ids = null, bool withoutInstanceId = false)
         {
             var sdesc = new SearchDescriptor<ProcessElastic>();
             var queryContDesc = new QueryContainerDescriptor<ProcessElastic>();
@@ -78,6 +78,10 @@ namespace Slamby.Elastic.Queries
                         .Field(f => f.Start)
                         .GreaterThanOrEquals(System.DateTime.UtcNow.AddDays(-lastDays))));
             }
+            if (ids != null)
+            {
+                queryContainers.Add(queryContDesc.Ids(idq => idq.Values(ids)));
+            }
 
             sdesc.Query(query => query
                 .Bool(selector => selector
@@ -88,15 +92,12 @@ namespace Slamby.Elastic.Queries
 
         public ProcessElastic Get(string id)
         {
-            var sdesc = new SearchDescriptor<ProcessElastic>().Query(q => q
-            .Bool(qb => qb
-                .Must(qbm => qbm
-                    .Ids(i => i.Values(id)))
-                .Must(qbm => qbm
-                    .Term(t => t
+            var sdesc = new SearchDescriptor<ProcessElastic>().Query(q => 
+                    q.Ids(i => i.Values(id)) &&
+                    q.Term(t => t
                             .Field(f => f.InstanceId)
-                            .Value(SiteConfig.InstanceId)))
-            ));
+                            .Value(SiteConfig.InstanceId))
+            );
             return Get(sdesc).Items.FirstOrDefault();
         }
 

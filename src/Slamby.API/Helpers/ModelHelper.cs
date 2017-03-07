@@ -24,6 +24,19 @@ namespace Slamby.API.Helpers
             };
         }
 
+        public static ServiceElastic ToServiceElastic(this Service service) {
+            return new ServiceElastic
+            {
+                Alias = service.Alias,
+                Description = service.Description,
+                Id = service.Id,
+                Name = service.Name,
+                ProcessIdList = service.ProcessIdList,
+                Status = (int)service.Status,
+                Type = (int)service.Type
+            };
+        }
+
         public static Process ToProcessModel(this ProcessElastic process)
         {
             var model = new Process

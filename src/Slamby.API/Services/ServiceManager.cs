@@ -15,6 +15,7 @@ using Slamby.SDK.Net.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Slamby.API.Resources;
+using Slamby.SDK.Net.Models.Services;
 
 namespace Slamby.API.Services
 {
@@ -32,10 +33,12 @@ namespace Slamby.API.Services
         readonly ILogger<ServiceManager> logger;
         readonly PrcServiceHandler prcServiceHandler;
         readonly PrcIndexServiceHandler prcIndexServiceHandler;
+        readonly ServiceHandler serviceHandler;
 
         public ServiceManager(ServiceQuery serviceQuery, IServiceProvider serviceProvider, ProcessQuery processQuery,
             ProcessHandler processHandler, IGlobalStoreManager globalStore, DataSetService dataSetService,
-            ILogger<ServiceManager> logger, PrcServiceHandler prcServiceHandler, PrcIndexServiceHandler prcIndexServiceHandler)
+            ILogger<ServiceManager> logger, PrcServiceHandler prcServiceHandler, PrcIndexServiceHandler prcIndexServiceHandler,
+            ServiceHandler serviceHandler)
         {
             this.prcIndexServiceHandler = prcIndexServiceHandler;
             this.prcServiceHandler = prcServiceHandler;
@@ -46,6 +49,7 @@ namespace Slamby.API.Services
             this.processQuery = processQuery;
             this.serviceProvider = serviceProvider;
             this.serviceQuery = serviceQuery;
+            this.serviceHandler = serviceHandler;
         }
 
         public void CreateServiceIndexes()
@@ -68,9 +72,9 @@ namespace Slamby.API.Services
 
         private void WarmUpService<TServiceSettings, THandler>(ServiceTypeEnum serviceType)
             where TServiceSettings : BaseServiceSettingsElastic
-            where THandler : IServiceHandler<TServiceSettings>
+            where THandler : ITypedServiceHandler<TServiceSettings>
         {
-            var services = serviceQuery.GetByType((int)serviceType).ToList();
+            var services = serviceHandler.GetByType<Service>(serviceType, true).ToList();
 
             var handler = serviceProvider.GetService<THandler>();
             foreach (var service in services)
@@ -91,7 +95,7 @@ namespace Slamby.API.Services
                         throw new Exception("Try to warm up service with undefined process activation type!");
                 }
 
-                if (service.Status != (int)ServiceStatusEnum.Active)
+                if (service.Status != ServiceStatusEnum.Active)
                 {
                     continue;
                 }
@@ -104,7 +108,7 @@ namespace Slamby.API.Services
                     string.Format(Resources.ServiceResources.Activating_0_Service_1, serviceType, service.Name));
 
                 service.ProcessIdList.Add(process.Id);
-                serviceQuery.Update(service.Id, service);
+                serviceHandler.Update(service.Id, service);
 
                 processHandler.Start(process, (tokenSource) => handler.Activate(process.Id, settings, tokenSource.Token));
             }
@@ -140,7 +144,7 @@ namespace Slamby.API.Services
 
         public void LoadGlobalStore()
         {
-            foreach (var service in serviceQuery.GetAll().Where(s => !string.IsNullOrEmpty(s.Alias)))
+            foreach (var service in serviceHandler.GetAll().Where(s => !string.IsNullOrEmpty(s.Alias)))
             {
                 GlobalStore.ServiceAliases.Set(service.Alias, service.Id);
             }
@@ -183,37 +187,40 @@ namespace Slamby.API.Services
 
         public void MaintainBusyServices()
         {
-            var busyServices = serviceQuery.GetAll().Where(s => s.Status == (int)ServiceStatusEnum.Busy).ToList();
+            var busyServices = serviceHandler.GetAll().Where(s => s.Status == ServiceStatusEnum.Busy).ToList();
 
             var classifierHandler = serviceProvider.GetService<ClassifierServiceHandler>();
             var prcHandler = serviceProvider.GetService<PrcServiceHandler>();
 
             foreach (var service in busyServices)
             {
-                var lastProcess = processQuery.Get(service.ProcessIdList.Last());
+                var lastProcess = processQuery.GetAll(false, 0, service.ProcessIdList).OrderByDescending(p => p.Start).FirstOrDefault();
+                if (service.ProcessIdList.Last() != lastProcess.Id) continue;
 
                 //if the last process was a preparation then the service will be in New status
                 if (lastProcess.Type == (int)ProcessTypeEnum.ClassifierPrepare ||
-                    lastProcess.Type == (int)ProcessTypeEnum.PrcPrepare) service.Status = (int)ServiceStatusEnum.New;
+                lastProcess.Type == (int)ProcessTypeEnum.PrcPrepare ||
+                lastProcess.Type == (int)ProcessTypeEnum.SearchPrepare) service.Status = ServiceStatusEnum.New;
 
                 //if the last process was an activation then the service will be in Activated status (so the API can Activate the service)
-                else if (lastProcess.Type == (int)ProcessTypeEnum.ClassifierActivate ||
-                            lastProcess.Type == (int)ProcessTypeEnum.PrcActivate) service.Status = (int)ServiceStatusEnum.Active;
+                else if (   lastProcess.Type == (int)ProcessTypeEnum.ClassifierActivate ||
+                            lastProcess.Type == (int)ProcessTypeEnum.PrcActivate ||
+                            lastProcess.Type == (int)ProcessTypeEnum.SearchActivate) service.Status = ServiceStatusEnum.Active;
 
                 //otherwise it will be New
                 else service.Status = (int)ServiceStatusEnum.New;
 
-                serviceQuery.Update(service.Id, service);
+                serviceHandler.Update(service.Id, service);
 
                 //if a preparation failed, then we need to delete the dictionaries directory (maybe in the future we can continue it...)
                 if (service.Status == (int)ServiceStatusEnum.New)
                 {
                     var dirPath = "";
-                    if (service.Type == (int)ServiceTypeEnum.Classifier)
+                    if (service.Type == ServiceTypeEnum.Classifier)
                     {
                         dirPath = classifierHandler.GetDirectoryPath(service.Id);
                     }
-                    if (service.Type == (int)ServiceTypeEnum.Prc)
+                    if (service.Type == ServiceTypeEnum.Prc)
                     {
                         dirPath = prcHandler.GetDirectoryPath(service.Id);
                     }

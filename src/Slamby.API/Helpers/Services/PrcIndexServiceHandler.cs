@@ -31,11 +31,12 @@ namespace Slamby.API.Helpers.Services
         readonly ILogger<PrcIndexServiceHandler> logger;
         readonly ProcessHandler processHandler;
         readonly IGlobalStoreManager GlobalStore;
+        readonly PrcServiceHandler prcServiceHandler;
 
         const double ScoreMultiplier = 1.7;
 
         public PrcIndexServiceHandler(ServiceQuery serviceQuery, PrcIndexRedisHandler prcIndexRedisHandler, IQueryFactory queryFactory,
-            ParallelService parallelService, ILogger<PrcIndexServiceHandler> logger, ProcessHandler processHandler, IGlobalStoreManager globalStore)
+            ParallelService parallelService, ILogger<PrcIndexServiceHandler> logger, ProcessHandler processHandler, IGlobalStoreManager globalStore, PrcServiceHandler prcServiceHandler)
         {
             this.GlobalStore = globalStore;
             this.processHandler = processHandler;
@@ -44,6 +45,7 @@ namespace Slamby.API.Helpers.Services
             this.queryFactory = queryFactory;
             this.redisHandler = prcIndexRedisHandler;
             this.serviceQuery = serviceQuery;
+            this.prcServiceHandler = prcServiceHandler;
         }
 
         public void CleanPrcIndex(string serviceId)
@@ -69,7 +71,7 @@ namespace Slamby.API.Helpers.Services
             try
             {
                 const int parallelMultiplier = 2;
-                var service = serviceQuery.Get(prcSettings.ServiceId);
+                var service = prcServiceHandler.Get(prcSettings.ServiceId);
 
                 redisHandler.Clean(PrcIndexRedisKey.ServiceDeleteKey(prcSettings.ServiceId));
 
@@ -214,7 +216,7 @@ namespace Slamby.API.Helpers.Services
             {
                 const int parallelMultiplier = 2;
                 var partialIndexDate = DateTime.UtcNow;
-                var service = serviceQuery.Get(prcSettings.ServiceId);
+                var service = prcServiceHandler.Get(prcSettings.ServiceId);
 
                 var wordQuery = queryFactory.GetWordQuery(prcSettings.DataSetName);
                 var tagProgress = new Progress(prcSettings.IndexSettings.FilterTagIdList.Count);

@@ -26,7 +26,7 @@ using Slamby.API.Services;
 namespace Slamby.API.Helpers.Services
 {
     [TransientDependency]
-    public class ClassifierServiceHandler : IServiceHandler<ClassifierSettingsElastic>
+    public class ClassifierServiceHandler : ITypedServiceHandler<ClassifierSettingsElastic>
     {
         private readonly string _dictionaryRootPath;
         readonly SiteConfig siteConfig;
@@ -36,6 +36,7 @@ namespace Slamby.API.Helpers.Services
         readonly ParallelService parallelService;
         readonly MachineResourceService machineResourceService;
         readonly TagService tagService;
+        readonly ServiceHandler serviceHandler;
 
         public string GetDirectoryPath(string serviceId)
         {
@@ -46,7 +47,7 @@ namespace Slamby.API.Helpers.Services
 
         public ClassifierServiceHandler(SiteConfig siteConfig, ServiceQuery serviceQuery, ProcessHandler processHandler, 
             IQueryFactory queryFactory, ParallelService parallelService, MachineResourceService machineResourceService, 
-            IGlobalStoreManager globalStore, TagService tagService)
+            IGlobalStoreManager globalStore, TagService tagService, ServiceHandler serviceHandler)
         {
             GlobalStore = globalStore;
             this.parallelService = parallelService;
@@ -57,6 +58,46 @@ namespace Slamby.API.Helpers.Services
             this.machineResourceService = machineResourceService;
             _dictionaryRootPath = siteConfig.Directory.Classifier;
             this.tagService = tagService;
+            this.serviceHandler = serviceHandler;
+        }
+
+        public ClassifierService Get(string id, bool withSettings = true)
+        {
+            var service = serviceHandler.Get<ClassifierService>(id);
+            if (service == null) return null;
+
+            ClassifierActivateSettings activateSettings = null;
+            ClassifierPrepareSettings prepareSettings = null;
+            var classifierSettingsElastic = withSettings ? serviceQuery.GetSettings<ClassifierSettingsElastic>(service.Id) : null;
+
+            if (classifierSettingsElastic != null)
+            {
+                if (service.Status == ServiceStatusEnum.Prepared || service.Status == ServiceStatusEnum.Active)
+                {
+                    prepareSettings = new ClassifierPrepareSettings
+                    {
+                        DataSetName = GlobalStore.DataSets.Get(classifierSettingsElastic.DataSetName).AliasName,
+                        NGramList = classifierSettingsElastic.NGramList,
+                        TagIdList = classifierSettingsElastic.Tags.Select(t => t.Id).ToList(),
+                        CompressSettings = CompressHelper.ToCompressSettings(classifierSettingsElastic.CompressSettings),
+                        CompressLevel = CompressHelper.ToCompressLevel(classifierSettingsElastic.CompressSettings)
+                    };
+                    if (service.Status == ServiceStatusEnum.Active)
+                    {
+                        activateSettings = new ClassifierActivateSettings
+                        {
+                            TagIdList = classifierSettingsElastic.ActivatedTagIdList,
+                            EmphasizedTagIdList = classifierSettingsElastic.EmphasizedTagIdList,
+                            NGramList = classifierSettingsElastic.ActivatedNGramList
+                        };
+                    }
+
+                }
+            }
+            service.ActivateSettings = activateSettings;
+            service.PrepareSettings = prepareSettings;
+
+            return service;
         }
 
         public void Prepare(string processId, ClassifierSettingsElastic settings, CancellationToken token)
@@ -64,9 +105,9 @@ namespace Slamby.API.Helpers.Services
             var directoryPath = GetDirectoryPath(settings.ServiceId);
             try
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Busy;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Busy;
+                serviceHandler.Update(service.Id, service);
 
                 IOHelper.SafeDeleteDictionary(directoryPath, true);
 
@@ -110,14 +151,14 @@ namespace Slamby.API.Helpers.Services
                 }
 
                 processHandler.Finished(processId, string.Format(ServiceResources.SuccessfullyPrepared_0_Service_1, ServiceTypeEnum.Classifier, service.Name));
-                service.Status = (int)ServiceStatusEnum.Prepared;
-                serviceQuery.Update(service.Id, service);
+                service.Status = ServiceStatusEnum.Prepared;
+                serviceHandler.Update(service.Id, service);
             }
             catch (Exception ex)
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.New;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.New;
+                serviceHandler.Update(service.Id, service);
                 IOHelper.SafeDeleteDictionary(directoryPath, true);
 
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException) {
@@ -152,9 +193,9 @@ namespace Slamby.API.Helpers.Services
                     throw new Common.Exceptions.OutOfResourceException(ServiceResources.NotEnoughResourceToActivateService);
                 }
 
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Busy;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Busy;
+                serviceHandler.Update(service.Id, service);
 
                 var lockObject = new object();
                 var counter = 0;
@@ -201,14 +242,14 @@ namespace Slamby.API.Helpers.Services
                 GlobalStore.ActivatedClassifiers.Add(settings.ServiceId, globalStoreClassifier);
 
                 processHandler.Finished(processId, string.Format(ServiceResources.SuccessfullyActivated_0_Service_1, ServiceTypeEnum.Classifier, service.Name));
-                service.Status = (int)ServiceStatusEnum.Active;
-                serviceQuery.Update(service.Id, service);
+                service.Status = ServiceStatusEnum.Active;
+                serviceHandler.Update(service.Id, service);
             }
             catch (Exception ex)
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Prepared;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Prepared;
+                serviceHandler.Update(service.Id, service);
                 if (GlobalStore.ActivatedClassifiers.IsExist(settings.ServiceId)) GlobalStore.ActivatedClassifiers.Remove(settings.ServiceId);
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException)
                 {
@@ -228,15 +269,15 @@ namespace Slamby.API.Helpers.Services
             GC.Collect();
         }
 
-        public void Delete(Elastic.Models.ServiceElastic serviceElastic)
+        public void Delete(Service service)
         {
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Active)
+            if (service.Status == ServiceStatusEnum.Active)
             {
-                Deactivate(serviceElastic.Id);
+                Deactivate(service.Id);
             }
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Busy)
+            if (service.Status == ServiceStatusEnum.Busy)
             {
-                var actualProcessId = serviceElastic.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
+                var actualProcessId = service.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
                 if (actualProcessId != null)
                 {
                     processHandler.Cancel(actualProcessId);
@@ -244,9 +285,9 @@ namespace Slamby.API.Helpers.Services
                 }
                 
             }
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Prepared) { }
+            if (service.Status == ServiceStatusEnum.Prepared) { }
 
-            var directoryPath = string.Format("{0}/{1}", _dictionaryRootPath, serviceElastic.Id);
+            var directoryPath = string.Format("{0}/{1}", _dictionaryRootPath, service.Id);
             IOHelper.SafeDeleteDictionary(directoryPath, true);
         }
 
@@ -254,7 +295,7 @@ namespace Slamby.API.Helpers.Services
         {
             try
             {
-                var service = serviceQuery.Get(settings.ServiceId);
+                var service = Get(settings.ServiceId);
 
                 var dataSet = GlobalStore.DataSets.Get(settings.DataSetName).DataSet;
                 var allDicCount = tagIdList.Count * nGramList.Count;

@@ -35,12 +35,13 @@ namespace Slamby.API.Controllers.Services
         readonly ServiceManager serviceManager;
         readonly IDocumentService documentService;
         readonly ClassifierServiceHandler classifierHandler;
+        readonly ServiceHandler serviceHandler;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public SearchController(ServiceQuery serviceQuery, SearchServiceHandler searchHandler, ProcessHandler processHandler,
             IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceManager serviceManager, IDocumentService documentService,
-            ClassifierServiceHandler classifierHandler)
+            ClassifierServiceHandler classifierHandler, ServiceHandler serviceHandler)
         {
             GlobalStore = globalStore;
             this.queryFactory = queryFactory;
@@ -50,6 +51,7 @@ namespace Slamby.API.Controllers.Services
             this.serviceManager = serviceManager;
             this.documentService = documentService;
             this.classifierHandler = classifierHandler;
+            this.serviceHandler = serviceHandler;
         }
 
         [HttpGet("{id}")]
@@ -59,32 +61,17 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         public IActionResult Get(string id)
         {
-            var service = serviceQuery.Get(id);
+            var service = searchHandler.Get(id);
             if (service == null)
             {
                 return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
-            if (service.Type != (int)ServiceTypeEnum.Search)
+            if (service.Type != ServiceTypeEnum.Search)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Search"));
             }
 
-            SearchActivateSettings activateSettings = null;
-            SearchPrepareSettings prepareSettings = null;
-
-            var searchSettingsElastic = serviceQuery.GetSettings<SearchSettingsWrapperElastic>(service.Id);
-            if (searchSettingsElastic != null)
-            {
-                prepareSettings = searchSettingsElastic.ToSearchPrepareSettingsModel();
-                activateSettings = searchSettingsElastic.ToSearchActivateSettingsModel();
-            }
-
-            var respService = service.ToServiceModel<SearchService>();
-            respService.ActualProcessId = service.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
-            respService.ActivateSettings = activateSettings;
-            respService.PrepareSettings = prepareSettings;
-
-            return new OkObjectResult(respService);
+            return new OkObjectResult(service);
         }
 
         [HttpPost("{id}/Prepare")]
@@ -96,16 +83,16 @@ namespace Slamby.API.Controllers.Services
         public IActionResult Prepare(string id, [FromBody]SearchPrepareSettings searchPrepareSettings)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = searchHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Search)
+            if (service.Type != ServiceTypeEnum.Search)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Search"));
             }
-            if (service.Status != (int)ServiceStatusEnum.New)
+            if (service.Status != ServiceStatusEnum.New)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithNewStatusCanBePrepared);
             }
@@ -161,7 +148,7 @@ namespace Slamby.API.Controllers.Services
                 string.Format(ServiceResources.Preparing_0_Service_1, ServiceTypeEnum.Search, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => searchHandler.Prepare(process.Id, serviceSettings, tokenSource.Token));
 
@@ -176,16 +163,16 @@ namespace Slamby.API.Controllers.Services
         public IActionResult Activate(string id, [FromBody]SearchActivateSettings searchActivateSettings)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = searchHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Search)
+            if (service.Type != ServiceTypeEnum.Search)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Search"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Prepared)
+            if (service.Status != ServiceStatusEnum.Prepared)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated);
             }
@@ -215,7 +202,7 @@ namespace Slamby.API.Controllers.Services
                     searchSettings.SearchSettings = searchActivateSettings.SearchSettings.ToSearchSettingsElastic(searchSettings.SearchSettings);
                 }
             }
-            service.Status = (int)ServiceStatusEnum.Active;
+            service.Status = ServiceStatusEnum.Active;
 
             var process = processHandler.Create(
                 ProcessTypeEnum.SearchActivate,
@@ -224,7 +211,7 @@ namespace Slamby.API.Controllers.Services
                 string.Format(ServiceResources.Activating_0_Service_1, ServiceTypeEnum.Search, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
             serviceQuery.IndexSettings(searchSettings);
 
             processHandler.Start(process, (tokenSource) => searchHandler.Activate(process.Id, searchSettings, tokenSource.Token));
@@ -240,24 +227,24 @@ namespace Slamby.API.Controllers.Services
         public IActionResult Deactivate(string id)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = searchHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Search)
+            if (service.Type != ServiceTypeEnum.Search)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Search"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Active)
+            if (service.Status != ServiceStatusEnum.Active)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithActiveStatusCanBeDeactivated);
             }
 
             searchHandler.Deactivate(service.Id);
 
-            service.Status = (int)ServiceStatusEnum.Prepared;
-            serviceQuery.Update(service.Id, service);
+            service.Status = ServiceStatusEnum.Prepared;
+            serviceHandler.Update(service.Id, service);
 
             return new OkResult();
         }

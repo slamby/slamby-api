@@ -225,4 +225,7 @@
   <data name="NotAllParentTagExists" xml:space="preserve">
     <value>There is at least one parent tag in the ParentTagIdList which is not a parent of any activated tags!</value>
   </data>
+  <data name="InvalidStatusInClusterModeOnlyNotBusyCanDelete" xml:space="preserve">
+    <value>Invalid Status! In Cluster Mode only the Services with non 'Busy' status can be deleted!</value>
+  </data>
 </root>

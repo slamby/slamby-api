@@ -18,28 +18,27 @@ namespace Slamby.API.Helpers
 
         readonly ElasticClientFactory elasticClientFactory;
         readonly ILogger<StartupService> logger;
-        readonly DataSetService dataSetService;
         readonly DBUpdateService dbUpdateService;
         readonly MachineResourceService machineResourceService;
         readonly ServiceManager serviceManager;
         readonly ILicenseManager licenseManager;
         readonly IClusterManager clusterManager;
         readonly IGlobalStoreManager globalStoreManager;
+        readonly LoadService loadService;
 
         public StartupService(SiteConfig siteConfig, ILogger<StartupService> logger,
-            ElasticClientFactory elasticClientFactory, DataSetService dataSetService, 
-            DBUpdateService dbUpdateService, MachineResourceService machineResourceService,
-            ServiceManager serviceManager, ILicenseManager licenseManager, IClusterManager clusterManager)
+            ElasticClientFactory elasticClientFactory, DBUpdateService dbUpdateService, MachineResourceService machineResourceService,
+            ServiceManager serviceManager, ILicenseManager licenseManager, IClusterManager clusterManager, LoadService loadService)
         {
             this.licenseManager = licenseManager;
             this.serviceManager = serviceManager;
             this.dbUpdateService = dbUpdateService;
-            this.dataSetService = dataSetService;
             this.logger = logger;
             this.elasticClientFactory = elasticClientFactory;
             this.siteConfig = siteConfig;
             this.machineResourceService = machineResourceService;
             this.clusterManager = clusterManager;
+            this.loadService = loadService;
         }
 
         public void Startup()
@@ -64,7 +63,7 @@ namespace Slamby.API.Helpers
             dbUpdateService.UpdateDatabase();
             dbUpdateService.UpdateReplicaNumbers(siteConfig.AvailabilityConfig.ClusterSize - 1);
 
-            dataSetService.LoadGlobalStore();
+            loadService.ReloadDataSets();
 
             clusterManager.StartBackgroundMembersCheck();
 

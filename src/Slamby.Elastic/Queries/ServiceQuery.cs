@@ -131,9 +131,9 @@ namespace Slamby.Elastic.Queries
             return response.Id;
         }
 
-        public bool Delete(ServiceElastic service)
+        public bool Delete(string serviceId)
         {
-            var deleteResponse = Client.Delete<ServiceElastic>(service.Id);
+            var deleteResponse = Client.Delete<ServiceElastic>(serviceId);
             ResponseValidator(deleteResponse);
             ResponseValidator(Client.Flush(IndexName));
             return true;

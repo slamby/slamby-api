@@ -44,13 +44,12 @@ namespace Slamby.API.Services
             this.logger = loggerFactory.CreateLogger<DataSetService>();
         }
 
-        internal void LoadGlobalStore()
+        internal Dictionary<string, DataSet> GetAllDataSet()
         {
+            var resultDic = new Dictionary<string, DataSet>();
             var aliases = indexQuery.GetAliases();
 
             var properties = indexQuery.GetProperties(null);
-            var countsDic = queryFactory.GetDocumentQuery().CountAll(aliases.Keys.ToList());
-
             foreach (var aliasDefinition in aliases)
             {
                 var name = aliasDefinition.Value.Select(a => a.Name).FirstOrDefault();
@@ -58,73 +57,13 @@ namespace Slamby.API.Services
 
                 if (!properties.ContainsKey(indexName)) continue;
 
-                var dataSet = Convert(name ?? indexName, properties[indexName], (int)countsDic[indexName]);
-                AddGlobalStoreInternal(name, indexName, dataSet);
+                var dataSet = Convert(name ?? indexName, properties[indexName], 0);
+                resultDic.Add(indexName, dataSet);
             }
+            return resultDic;
         }
 
-        private void AddGlobalStoreInternal(string name, string indexName, DataSet dataSet)
-        {
-            var paths = new List<string>();
-            var attachments = new List<string>();
-            var tagIsArray = false;
-            var tagIsInteger = false;
-
-            if (dataSet.SampleDocument != null)
-            {
-                var pathTokens = DocumentHelper.GetAllPathTokens(dataSet.SampleDocument);
-                paths = pathTokens.Keys.ToList();
-
-                if (!pathTokens.ContainsKey(dataSet.TagField))
-                {
-                    throw new InvalidOperationException($"DataSet Name: ´{name}´, Index: ´{indexName}´. SampleDocument does not contain TagField ´{dataSet.TagField}´");
-                }
-
-                var tagToken = pathTokens[dataSet.TagField];
-                tagIsArray = tagToken.Type == JTokenType.Array;
-
-                if (tagIsArray)
-                {
-                    tagIsInteger = JTokenHelper.GetUnderlyingToken(tagToken).Type == JTokenType.Integer;
-                }
-                else
-                {
-                    tagIsInteger = tagToken.Type == JTokenType.Integer;
-                }
-            }
-            else if (dataSet.Schema != null)
-            {
-                var pathDictionary = SchemaHelper.GetPaths(dataSet.Schema);
-
-                paths = pathDictionary.Keys.ToList();
-                attachments = pathDictionary
-                    .Where(kv => kv.Value.Item1 == SchemaHelper.Types.Attachment)
-                    .Select(kv => kv.Key)
-                    .ToList();
-
-                if (!pathDictionary.ContainsKey(dataSet.TagField))
-                {
-                    throw new InvalidOperationException($"DataSet Name: ´{name}´, Index: ´{indexName}´. Schema does not contain TagField ´{dataSet.TagField}´");
-                }
-
-                var tagTuple = pathDictionary[dataSet.TagField];
-                tagIsArray = SchemaHelper.IsArray(tagTuple.Item1);
-                if (tagIsArray)
-                {
-                    tagIsInteger = SchemaHelper.IsInteger(tagTuple.Item2);
-                }
-                else
-                {
-                    tagIsInteger = SchemaHelper.IsInteger(tagTuple.Item1);
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException("DataSet has no SampleDocument nor Schema property");
-            }
-
-            GlobalStore.DataSets.Add(name ?? indexName, new GlobalStoreDataSet(name, indexName, dataSet, paths, tagIsArray, tagIsInteger, attachments));
-        }
+        
 
         public bool HasServiceReference(string name)
         {
@@ -194,7 +133,7 @@ namespace Slamby.API.Services
             };
         }
 
-        public void Create(DataSet dataSet, bool withSchema)
+        public string Create(DataSet dataSet, bool withSchema)
         {
             try
             {
@@ -225,14 +164,12 @@ namespace Slamby.API.Services
                     dataSet.TagField,
                     siteConfig.AvailabilityConfig.ClusterSize);
                 }
-
-                AddGlobalStoreInternal(dataSet.Name, indexName, dataSet);
+                return indexName;
             }
             finally
             {
                 GlobalStore.DataSets.RemoveBusy(dataSet.Name);
             }
-            
         }
 
         private static string GenerateIndexName()

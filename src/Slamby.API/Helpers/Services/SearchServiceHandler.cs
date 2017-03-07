@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace Slamby.API.Helpers.Services
 {
     [TransientDependency]
-    public class SearchServiceHandler : IServiceHandler<SearchSettingsWrapperElastic>
+    public class SearchServiceHandler : ITypedServiceHandler<SearchSettingsWrapperElastic>
     {
         readonly SiteConfig siteConfig;
         readonly ServiceQuery serviceQuery;
@@ -28,12 +28,13 @@ namespace Slamby.API.Helpers.Services
         readonly ParallelService parallelService;
         readonly MachineResourceService machineResourceService;
         readonly SearchRedisHandler searchRedisHandler;
+        readonly ServiceHandler serviceHandler;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public SearchServiceHandler(SiteConfig siteConfig, ServiceQuery serviceQuery, ProcessHandler processHandler,
             IQueryFactory queryFactory, ParallelService parallelService, MachineResourceService machineResourceService,
-            IGlobalStoreManager globalStore, SearchRedisHandler searchRedisHandler)
+            IGlobalStoreManager globalStore, SearchRedisHandler searchRedisHandler, ServiceHandler serviceHandler)
         {
             GlobalStore = globalStore;
             this.parallelService = parallelService;
@@ -43,25 +44,47 @@ namespace Slamby.API.Helpers.Services
             this.siteConfig = siteConfig;
             this.machineResourceService = machineResourceService;
             this.searchRedisHandler = searchRedisHandler;
+            this.serviceHandler = serviceHandler;
+        }
+
+        public SearchService Get(string id, bool withSettings = true)
+        {
+            var service = serviceHandler.Get<SearchService>(id);
+            if (service == null) return null;
+
+            SearchActivateSettings activateSettings = null;
+            SearchPrepareSettings prepareSettings = null;
+
+            var searchSettingsElastic = withSettings ? serviceQuery.GetSettings<SearchSettingsWrapperElastic>(service.Id) : null;
+            if (searchSettingsElastic != null)
+            {
+                prepareSettings = searchSettingsElastic.ToSearchPrepareSettingsModel();
+                activateSettings = searchSettingsElastic.ToSearchActivateSettingsModel();
+            }
+
+            service.ActivateSettings = activateSettings;
+            service.PrepareSettings = prepareSettings;
+
+            return service;
         }
 
         public void Prepare(string processId, SearchSettingsWrapperElastic settings, CancellationToken token)
         {
             try
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Busy;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Busy;
+                serviceHandler.Update(service.Id, service);
 
                 processHandler.Finished(processId, string.Format(ServiceResources.SuccessfullyPrepared_0_Service_1, ServiceTypeEnum.Classifier, service.Name));
-                service.Status = (int)ServiceStatusEnum.Prepared;
-                serviceQuery.Update(service.Id, service);
+                service.Status = ServiceStatusEnum.Prepared;
+                serviceHandler.Update(service.Id, service);
             }
             catch (Exception ex)
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.New;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.New;
+                serviceHandler.Update(service.Id, service);
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException)
                 {
                     processHandler.Cancelled(processId);
@@ -77,9 +100,9 @@ namespace Slamby.API.Helpers.Services
         {
             try
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Busy;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Busy;
+                serviceHandler.Update(service.Id, service);
 
                 var globalStoreSearch = new GlobalStoreSearch {
                     SearchSettingsWrapper = settings
@@ -88,14 +111,14 @@ namespace Slamby.API.Helpers.Services
                 GlobalStore.ActivatedSearches.Add(settings.ServiceId, globalStoreSearch);
 
                 processHandler.Finished(processId, string.Format(ServiceResources.SuccessfullyActivated_0_Service_1, ServiceTypeEnum.Search, service.Name));
-                service.Status = (int)ServiceStatusEnum.Active;
-                serviceQuery.Update(service.Id, service);
+                service.Status = ServiceStatusEnum.Active;
+                serviceHandler.Update(service.Id, service);
             }
             catch (Exception ex)
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Prepared;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Prepared;
+                serviceHandler.Update(service.Id, service);
                 if (GlobalStore.ActivatedSearches.IsExist(settings.ServiceId)) GlobalStore.ActivatedSearches.Remove(settings.ServiceId);
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException)
                 {
@@ -115,15 +138,15 @@ namespace Slamby.API.Helpers.Services
             GC.Collect();
         }
 
-        public void Delete(ServiceElastic serviceElastic)
+        public void Delete(Service service)
         {
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Active)
+            if (service.Status == ServiceStatusEnum.Active)
             {
-                Deactivate(serviceElastic.Id);
+                Deactivate(service.Id);
             }
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Busy)
+            if (service.Status == ServiceStatusEnum.Busy)
             {
-                var actualProcessId = serviceElastic.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
+                var actualProcessId = service.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
                 if (actualProcessId != null)
                 {
                     processHandler.Cancel(actualProcessId);
@@ -131,7 +154,7 @@ namespace Slamby.API.Helpers.Services
                 }
 
             }
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Prepared) { }
+            if (service.Status == ServiceStatusEnum.Prepared) { }
         }
 
 

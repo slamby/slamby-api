@@ -150,6 +150,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to Invalid Status! In Cluster Mode only the Services with non &apos;Busy&apos; status can be deleted!.
+        /// </summary>
+        public static string InvalidStatusInClusterModeOnlyNotBusyCanDelete {
+            get {
+                return ResourceManager.GetString("InvalidStatusInClusterModeOnlyNotBusyCanDelete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Invalid Status! Only the Services with &apos;Active&apos; status can be deactivated!.
         /// </summary>
         public static string InvalidStatusOnlyTheServicesWithActiveStatusCanBeDeactivated {

@@ -97,7 +97,7 @@ namespace Slamby.API.Services
                 MapModelElastic<ProcessElastic>(Elastic.Constants.SlambyProcessesIndex);
 
                 logger.LogInformation("Fill up InstanceId field with data");
-                var processes = processQuery.GetAll(false, 0, true);
+                var processes = processQuery.GetAll(false, 0, null, true);
                 foreach(var process in processes)
                 {
                     process.InstanceId = siteConfig.InstanceId;

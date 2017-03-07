@@ -28,19 +28,21 @@ namespace Slamby.API.Controllers
     {
         readonly ServiceQuery serviceQuery;
         readonly ClassifierServiceHandler classifierHandler;
+        readonly ServiceHandler serviceHandler;
         readonly ProcessHandler processHandler;
         readonly IQueryFactory queryFactory;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         public ClassifierController(ServiceQuery serviceQuery, ClassifierServiceHandler classifierHandler, ProcessHandler processHandler, 
-            IQueryFactory queryFactory, IGlobalStoreManager globalStore)
+            IQueryFactory queryFactory, IGlobalStoreManager globalStore, ServiceHandler serviceHandler)
         {
             GlobalStore = globalStore;
             this.queryFactory = queryFactory;
             this.processHandler = processHandler;
             this.classifierHandler = classifierHandler;
             this.serviceQuery = serviceQuery;
+            this.serviceHandler = serviceHandler;
         }
 
         [HttpGet("{id}")]
@@ -50,7 +52,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         public IActionResult Get(string id)
         {
-            var service = serviceQuery.Get(id);
+            var service = classifierHandler.Get(id);
             if (service == null)
             {
                 return new StatusCodeResult(StatusCodes.Status404NotFound);
@@ -59,41 +61,7 @@ namespace Slamby.API.Controllers
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Classifier"));
             }
-
-            ClassifierActivateSettings activateSettings = null;
-            ClassifierPrepareSettings prepareSettings = null;
-
-            var classifierSettingsElastic = serviceQuery.GetSettings<ClassifierSettingsElastic>(service.Id);
-            if (classifierSettingsElastic != null)
-            {
-                if (service.Status == (int)ServiceStatusEnum.Prepared || service.Status == (int)ServiceStatusEnum.Active)
-                {
-                    prepareSettings = new ClassifierPrepareSettings {
-                        DataSetName = GlobalStore.DataSets.Get(classifierSettingsElastic.DataSetName).AliasName,
-                        NGramList = classifierSettingsElastic.NGramList,
-                        TagIdList = classifierSettingsElastic.Tags.Select(t => t.Id).ToList(),
-                        CompressSettings = CompressHelper.ToCompressSettings(classifierSettingsElastic.CompressSettings),
-                        CompressLevel = CompressHelper.ToCompressLevel(classifierSettingsElastic.CompressSettings)
-                    };
-                    if (service.Status == (int)ServiceStatusEnum.Active)
-                    {
-                        activateSettings = new ClassifierActivateSettings
-                        {
-                            TagIdList = classifierSettingsElastic.ActivatedTagIdList,
-                            EmphasizedTagIdList = classifierSettingsElastic.EmphasizedTagIdList,
-                            NGramList = classifierSettingsElastic.ActivatedNGramList
-                        };
-                    }
-                    
-                }
-            }
-
-            var respService = service.ToServiceModel<ClassifierService>();
-            respService.ActualProcessId = service.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
-            respService.ActivateSettings = activateSettings;
-            respService.PrepareSettings = prepareSettings;
-
-            return new OkObjectResult(respService);
+            return new OkObjectResult(service);
         }
 
         [HttpPost("{id}/Prepare")]
@@ -105,7 +73,7 @@ namespace Slamby.API.Controllers
         public IActionResult Prepare(string id, [FromBody]ClassifierPrepareSettings classifierPrepareSettings)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = classifierHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
@@ -170,7 +138,7 @@ namespace Slamby.API.Controllers
                 string.Format(ServiceResources.Preparing_0_Service_1, ServiceTypeEnum.Classifier, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => classifierHandler.Prepare(process.Id, serviceSettings, tokenSource.Token));
 
@@ -185,21 +153,21 @@ namespace Slamby.API.Controllers
         public IActionResult Activate(string id, [FromBody]ClassifierActivateSettings classifierActivateSettings)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = classifierHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Classifier)
+            if (service.Type != ServiceTypeEnum.Classifier)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Classifier"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Prepared)
+            if (service.Status != ServiceStatusEnum.Prepared)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated);
             }
             var classifierSettings = serviceQuery.GetSettings<ClassifierSettingsElastic>(service.Id);
-            service.Status = (int)ServiceStatusEnum.Active;
+            service.Status = ServiceStatusEnum.Active;
 
             if (classifierActivateSettings == null)
             {
@@ -258,7 +226,7 @@ namespace Slamby.API.Controllers
                 string.Format(ServiceResources.Activating_0_Service_1, ServiceTypeEnum.Classifier, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
             serviceQuery.IndexSettings(classifierSettings);
 
             processHandler.Start(process, (tokenSource) => classifierHandler.Activate(process.Id, classifierSettings, tokenSource.Token));
@@ -273,24 +241,24 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         public IActionResult Deactivate(string id) {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = classifierHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Classifier)
+            if (service.Type != ServiceTypeEnum.Classifier)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Classifier"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Active)
+            if (service.Status != ServiceStatusEnum.Active)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithActiveStatusCanBeDeactivated);
             }
 
             classifierHandler.Deactivate(service.Id);
 
-            service.Status = (int)ServiceStatusEnum.Prepared;
-            serviceQuery.Update(service.Id, service);
+            service.Status = ServiceStatusEnum.Prepared;
+            serviceHandler.Update(service.Id, service);
 
             return new OkResult();
         }
@@ -328,7 +296,7 @@ namespace Slamby.API.Controllers
         public IActionResult ExportDictionaries(string id, [FromBody]ExportDictionariesSettings settings, [FromServices]UrlProvider urlProvider)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = classifierHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
@@ -337,7 +305,7 @@ namespace Slamby.API.Controllers
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Classifier"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Active && service.Status != (int)ServiceStatusEnum.Prepared)
+            if (service.Status != ServiceStatusEnum.Active && service.Status != ServiceStatusEnum.Prepared)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithPreparedOrActiveStatusCanBeExported);
             }
@@ -375,7 +343,7 @@ namespace Slamby.API.Controllers
                 string.Format(ServiceResources.ExportingDictionariesFrom_0_Service_1, ServiceTypeEnum.Classifier, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => 
                 classifierHandler.ExportDictionaries(process.Id, classifierSettings, tagIds, settings.NGramList, tokenSource.Token, urlProvider.GetHostUrl()));

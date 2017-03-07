@@ -21,11 +21,13 @@ namespace Slamby.API.Controllers
     {
         readonly DataSetService dataSetService;
         readonly IDocumentService documentService;
+        readonly LoadService loadService;
 
-        public DataSetsController(DataSetService dataSetService, IDocumentService documentService)
+        public DataSetsController(DataSetService dataSetService, IDocumentService documentService, LoadService loadService)
         {
             this.documentService = documentService;
             this.dataSetService = dataSetService;
+            this.loadService = loadService;
         }
 
         // GET: api/datasets
@@ -93,7 +95,9 @@ namespace Slamby.API.Controllers
                 return BadRequest(ErrorsModel.Create(validateResult.Error));
             }
 
-            dataSetService.Create(dataSet, withSchema: false);
+            var indexName = dataSetService.Create(dataSet, withSchema: false);
+            loadService.AddDataSetGlobalStore(dataSet.Name, indexName, dataSet);
+
 
             return new StatusCodeResult(StatusCodes.Status201Created);
         }
@@ -138,7 +142,8 @@ namespace Slamby.API.Controllers
                 return BadRequest(ErrorsModel.Create(validateSchemaResult.Error));
             }
 
-            dataSetService.Create(dataSet, withSchema: true);
+            var indexName = dataSetService.Create(dataSet, withSchema: true);
+            loadService.AddDataSetGlobalStore(dataSet.Name, indexName, dataSet);
 
             return new StatusCodeResult(StatusCodes.Status201Created);
         }

@@ -35,13 +35,15 @@ namespace Slamby.API.Controllers.Services
         readonly ProcessHandler processHandler;
         readonly ParallelService parallelService;
         readonly ServiceManager serviceManager;
+        readonly ServiceHandler serviceHandler;
 
         public IGlobalStoreManager GlobalStore { get; set; }
 
         readonly PrcIndexServiceHandler prcIndexHandler;
 
         public PrcController(ServiceQuery serviceQuery, PrcServiceHandler prcHandler, IQueryFactory queryFactory, ProcessHandler processHandler,
-            ParallelService parallelService, ServiceManager serviceManager, IGlobalStoreManager globalStore, PrcIndexServiceHandler prcIndexHandler)
+            ParallelService parallelService, ServiceManager serviceManager, IGlobalStoreManager globalStore, PrcIndexServiceHandler prcIndexHandler,
+            ServiceHandler serviceHandler)
         {
             this.prcIndexHandler = prcIndexHandler;
             GlobalStore = globalStore;
@@ -51,6 +53,7 @@ namespace Slamby.API.Controllers.Services
             this.queryFactory = queryFactory;
             this.prcHandler = prcHandler;
             this.serviceQuery = serviceQuery;
+            this.serviceHandler = serviceHandler;
         }
 
         [HttpGet("{id}")]
@@ -58,61 +61,16 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(PrcService))]
         public IActionResult Get(string id)
         {
-            var service = serviceQuery.Get(id);
+            var service = prcHandler.Get(id);
             if (service == null)
             {
                 return new StatusCodeResult(StatusCodes.Status404NotFound);
             }
-            if (service.Type != (int)ServiceTypeEnum.Prc)
+            if (service.Type != ServiceTypeEnum.Prc)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Prc"));
             }
-
-            PrcActivateSettings activateSettings = null;
-            PrcPrepareSettings prepareSettings = null;
-            PrcIndexSettings indexSettings = null;
-
-            var prcSettingsElastic = serviceQuery.GetSettings<PrcSettingsElastic>(service.Id);
-            if (prcSettingsElastic != null)
-            {
-                if (service.Status == (int)ServiceStatusEnum.Prepared || service.Status == (int)ServiceStatusEnum.Active)
-                {
-                    prepareSettings = new PrcPrepareSettings
-                    {
-                        DataSetName = GlobalStore.DataSets.Get(prcSettingsElastic.DataSetName).AliasName,
-                        TagIdList = prcSettingsElastic.Tags.Select(t => t.Id).ToList(),
-                        CompressSettings = CompressHelper.ToCompressSettings(prcSettingsElastic.CompressSettings),
-                        CompressLevel = CompressHelper.ToCompressLevel(prcSettingsElastic.CompressSettings)
-                    };
-                    if (service.Status == (int)ServiceStatusEnum.Active)
-                    {
-                        activateSettings = new PrcActivateSettings
-                        {
-                            FieldsForRecommendation = prcSettingsElastic.FieldsForRecommendation
-                        };
-
-                        if (prcSettingsElastic?.IndexSettings?.IndexDate != null)
-                        {
-                            indexSettings = new PrcIndexSettings()
-                            {
-                                Filter = new Filter()
-                                {
-                                    Query = prcSettingsElastic.IndexSettings.FilterQuery,
-                                    TagIdList = prcSettingsElastic.IndexSettings.FilterTagIdList
-                                }
-                            };
-                        }
-                    }
-                }
-            }
-
-            var respService = service.ToServiceModel<PrcService>();
-            respService.ActualProcessId = service.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
-            respService.ActivateSettings = activateSettings;
-            respService.PrepareSettings = prepareSettings;
-            respService.IndexSettings = indexSettings;
-
-            return new OkObjectResult(respService);
+            return new OkObjectResult(service);
         }
 
         [HttpPost("{id}/Prepare")]
@@ -122,16 +80,16 @@ namespace Slamby.API.Controllers.Services
         public IActionResult Prepare(string id, [FromBody]PrcPrepareSettings prcPrepareSettings)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = prcHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Prc)
+            if (service.Type != ServiceTypeEnum.Prc)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Prc"));
             }
-            if (service.Status != (int)ServiceStatusEnum.New)
+            if (service.Status != ServiceStatusEnum.New)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithNewStatusCanBePrepared);
             }
@@ -180,7 +138,7 @@ namespace Slamby.API.Controllers.Services
                 string.Format(ServiceResources.Preparing_0_Service_1, ServiceTypeEnum.Prc, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => prcHandler.Prepare(process.Id, serviceSettings, tokenSource.Token));
 
@@ -193,16 +151,16 @@ namespace Slamby.API.Controllers.Services
         public IActionResult Activate(string id, [FromBody]PrcActivateSettings prcActivateSettings)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = prcHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Prc)
+            if (service.Type != ServiceTypeEnum.Prc)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Prc"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Prepared)
+            if (service.Status != ServiceStatusEnum.Prepared)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithPreparedStatusCanBeActivated);
             }
@@ -241,7 +199,7 @@ namespace Slamby.API.Controllers.Services
                 string.Format(ServiceResources.Activating_0_Service_1, ServiceTypeEnum.Prc, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
             serviceQuery.IndexSettings(prcSettings);
 
             processHandler.Start(process, (tokenSource) => prcHandler.Activate(process.Id, prcSettings, tokenSource.Token));
@@ -255,24 +213,24 @@ namespace Slamby.API.Controllers.Services
         public IActionResult Deactivate(string id)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = prcHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Prc)
+            if (service.Type != ServiceTypeEnum.Prc)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Prc"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Active)
+            if (service.Status != ServiceStatusEnum.Active)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithActiveStatusCanBeDeactivated);
             }
 
             prcHandler.Deactivate(service.Id);
 
-            service.Status = (int)ServiceStatusEnum.Prepared;
-            serviceQuery.Update(service.Id, service);
+            service.Status = ServiceStatusEnum.Prepared;
+            serviceHandler.Update(service.Id, service);
 
             return new OkResult();
         }
@@ -284,6 +242,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status406NotAcceptable)]
         public IActionResult Keywords(string id, [FromBody]PrcKeywordsRequest request, [FromQuery]bool isStrict = false)
         {
+            if (request == null) return new StatusCodeResult(StatusCodes.Status400BadRequest);
             // If Id is Alias, translate to Id
             if (GlobalStore.ServiceAliases.IsExist(id))
             {
@@ -515,18 +474,18 @@ namespace Slamby.API.Controllers.Services
         public IActionResult Index(string id, [FromBody]PrcIndexSettings prcIndexSettings)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = prcHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound,
                     ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Prc)
+            if (service.Type != ServiceTypeEnum.Prc)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                     string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Prc"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Active)
+            if (service.Status != ServiceStatusEnum.Active)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                     ServiceResources.InvalidStatusOnlyTheServicesWithActiveStatusCanBeIndexed);
@@ -563,7 +522,7 @@ namespace Slamby.API.Controllers.Services
                 string.Format(ServiceResources.Indexing_0_Service_1, ServiceTypeEnum.Prc, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => prcIndexHandler.Index(process.Id, prcSettings, tokenSource.Token));
 
@@ -578,18 +537,18 @@ namespace Slamby.API.Controllers.Services
         public IActionResult IndexPartial(string id)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = prcHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound,
                     ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Prc)
+            if (service.Type != ServiceTypeEnum.Prc)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                     string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Prc"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Active)
+            if (service.Status != ServiceStatusEnum.Active)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                     ServiceResources.InvalidStatusOnlyTheServicesWithActiveStatusCanBeIndexed);
@@ -610,7 +569,7 @@ namespace Slamby.API.Controllers.Services
                 string.Format(ServiceResources.PartialIndexing_0_Service_1, ServiceTypeEnum.Prc, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => prcIndexHandler.IndexPartial(process.Id, prcSettings, tokenSource.Token));
 
@@ -652,16 +611,16 @@ namespace Slamby.API.Controllers.Services
         public IActionResult ExportDictionaries(string id, [FromBody]ExportDictionariesSettings settings, [FromServices]UrlProvider urlProvider)
         {
             //SERVICE VALIDATION
-            var service = serviceQuery.Get(id);
+            var service = prcHandler.Get(id);
             if (service == null)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status404NotFound, ServiceResources.InvalidIdNotExistingService);
             }
-            if (service.Type != (int)ServiceTypeEnum.Prc)
+            if (service.Type != ServiceTypeEnum.Prc)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.InvalidServiceTypeOnly_0_ServicesAreValidForThisRequest, "Prc"));
             }
-            if (service.Status != (int)ServiceStatusEnum.Active && service.Status != (int)ServiceStatusEnum.Prepared)
+            if (service.Status != ServiceStatusEnum.Active && service.Status != ServiceStatusEnum.Prepared)
             {
                 return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, ServiceResources.InvalidStatusOnlyTheServicesWithPreparedOrActiveStatusCanBeExported);
             }
@@ -692,7 +651,7 @@ namespace Slamby.API.Controllers.Services
                 string.Format(ServiceResources.ExportingDictionariesFrom_0_Service_1, ServiceTypeEnum.Prc, service.Name));
 
             service.ProcessIdList.Add(process.Id);
-            serviceQuery.Update(service.Id, service);
+            serviceHandler.Update(service.Id, service);
 
             processHandler.Start(process, (tokenSource) => prcHandler.ExportDictionaries(process.Id, prcSettings, tagIds, tokenSource.Token, urlProvider.GetHostUrl()));
 

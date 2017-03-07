@@ -22,11 +22,13 @@ using Slamby.Elastic.Models;
 using Slamby.Elastic.Queries;
 using Slamby.SDK.Net.Models.Enums;
 using StackExchange.Redis;
+using Slamby.SDK.Net.Models.Services;
+using Slamby.SDK.Net.Models;
 
 namespace Slamby.API.Helpers.Services
 {
     [TransientDependency]
-    public class PrcServiceHandler : IServiceHandler<PrcSettingsElastic>
+    public class PrcServiceHandler : ITypedServiceHandler<PrcSettingsElastic>
     {
         private readonly string _dictionaryRootPath;
         readonly SiteConfig siteConfig;
@@ -35,6 +37,7 @@ namespace Slamby.API.Helpers.Services
         readonly IQueryFactory queryFactory;
         readonly ParallelService parallelService;
         readonly MachineResourceService machineResourceService;
+        readonly ServiceHandler serviceHandler;
 
         public string GetDirectoryPath(string serviceId) => $"{_dictionaryRootPath}/{serviceId}";
 
@@ -44,7 +47,7 @@ namespace Slamby.API.Helpers.Services
 
         public PrcServiceHandler(SiteConfig siteConfig, ServiceQuery serviceQuery, ProcessHandler processHandler, IQueryFactory queryFactory,
             ParallelService parallelService, MachineResourceService machineResourceService, IGlobalStoreManager globalStore,
-            ILogger<PrcServiceHandler> logger)
+            ILogger<PrcServiceHandler> logger, ServiceHandler serviceHandler)
         {
             this.logger = logger;
             GlobalStore = globalStore;
@@ -55,6 +58,56 @@ namespace Slamby.API.Helpers.Services
             this.siteConfig = siteConfig;
             this.machineResourceService = machineResourceService;
             _dictionaryRootPath = siteConfig.Directory.Prc;
+            this.serviceHandler = serviceHandler;
+        }
+
+        public PrcService Get(string id, bool withSettings = true)
+        {
+            var service = serviceHandler.Get<PrcService>(id);
+            if (service == null) return null;
+
+            PrcActivateSettings activateSettings = null;
+            PrcPrepareSettings prepareSettings = null;
+            PrcIndexSettings indexSettings = null;
+
+            var prcSettingsElastic = withSettings ? serviceQuery.GetSettings<PrcSettingsElastic>(service.Id) : null;
+            if (prcSettingsElastic != null)
+            {
+                if (service.Status == ServiceStatusEnum.Prepared || service.Status == ServiceStatusEnum.Active)
+                {
+                    prepareSettings = new PrcPrepareSettings
+                    {
+                        DataSetName = GlobalStore.DataSets.Get(prcSettingsElastic.DataSetName).AliasName,
+                        TagIdList = prcSettingsElastic.Tags.Select(t => t.Id).ToList(),
+                        CompressSettings = CompressHelper.ToCompressSettings(prcSettingsElastic.CompressSettings),
+                        CompressLevel = CompressHelper.ToCompressLevel(prcSettingsElastic.CompressSettings)
+                    };
+                    if (service.Status == ServiceStatusEnum.Active)
+                    {
+                        activateSettings = new PrcActivateSettings
+                        {
+                            FieldsForRecommendation = prcSettingsElastic.FieldsForRecommendation
+                        };
+
+                        if (prcSettingsElastic?.IndexSettings?.IndexDate != null)
+                        {
+                            indexSettings = new PrcIndexSettings()
+                            {
+                                Filter = new Filter()
+                                {
+                                    Query = prcSettingsElastic.IndexSettings.FilterQuery,
+                                    TagIdList = prcSettingsElastic.IndexSettings.FilterTagIdList
+                                }
+                            };
+                        }
+                    }
+                }
+            }
+            service.ActivateSettings = activateSettings;
+            service.PrepareSettings = prepareSettings;
+            service.IndexSettings = indexSettings;
+
+            return service;
         }
 
         public void Prepare(string processId, PrcSettingsElastic settings, CancellationToken token)
@@ -63,9 +116,9 @@ namespace Slamby.API.Helpers.Services
 
             try
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Busy;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Busy;
+                serviceHandler.Update(service.Id, service);
 
                 IOHelper.SafeDeleteDictionary(directoryPath, true);
 
@@ -137,15 +190,15 @@ namespace Slamby.API.Helpers.Services
                 });
 
                 processHandler.Finished(processId, string.Format(ServiceResources.SuccessfullyPrepared_0_Service_1, ServiceTypeEnum.Prc, service.Name));
-                service.Status = (int)ServiceStatusEnum.Prepared;
-                serviceQuery.Update(service.Id, service);
+                service.Status = ServiceStatusEnum.Prepared;
+                serviceHandler.Update(service.Id, service);
             }
             catch (Exception ex)
             {
 
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.New;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.New;
+                serviceHandler.Update(service.Id, service);
                 IOHelper.SafeDeleteDictionary(directoryPath, true);
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException)
                 {
@@ -180,9 +233,9 @@ namespace Slamby.API.Helpers.Services
                     throw new Common.Exceptions.OutOfResourceException(ServiceResources.NotEnoughResourceToActivateService);
                 }
 
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Busy;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Busy;
+                serviceHandler.Update(service.Id, service);
 
                 var deserializedDics = new ConcurrentBag<DictionaryProtoBuf>();
                 var deserializedSubsets = new ConcurrentBag<SubsetProtoBuf>();
@@ -236,14 +289,14 @@ namespace Slamby.API.Helpers.Services
                 GlobalStore.ActivatedPrcs.Add(settings.ServiceId, globalStorePrc);
 
                 processHandler.Finished(processId, string.Format(ServiceResources.SuccessfullyActivated_0_Service_1, ServiceTypeEnum.Prc, service.Name));
-                service.Status = (int)ServiceStatusEnum.Active;
-                serviceQuery.Update(service.Id, service);
+                service.Status = ServiceStatusEnum.Active;
+                serviceHandler.Update(service.Id, service);
             }
             catch (Exception ex)
             {
-                var service = serviceQuery.Get(settings.ServiceId);
-                service.Status = (int)ServiceStatusEnum.Prepared;
-                serviceQuery.Update(service.Id, service);
+                var service = Get(settings.ServiceId);
+                service.Status = ServiceStatusEnum.Prepared;
+                serviceHandler.Update(service.Id, service);
                 if (GlobalStore.ActivatedPrcs.IsExist(settings.ServiceId)) GlobalStore.ActivatedPrcs.Remove(settings.ServiceId);
                 if (ex.InnerException != null && ex.InnerException is OperationCanceledException)
                 {
@@ -263,24 +316,24 @@ namespace Slamby.API.Helpers.Services
             GC.Collect();
         }
 
-        public void Delete(ServiceElastic serviceElastic)
+        public void Delete(Service service)
         {
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Active)
+            if (service.Status == ServiceStatusEnum.Active)
             {
-                Deactivate(serviceElastic.Id);
+                Deactivate(service.Id);
             }
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Busy)
+            if (service.Status == ServiceStatusEnum.Busy)
             {
-                var actualProcessId = serviceElastic.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
+                var actualProcessId = service.ProcessIdList.FirstOrDefault(pid => GlobalStore.Processes.IsExist(pid));
                 if (actualProcessId != null)
                 {
                     processHandler.Cancel(actualProcessId);
                     while (GlobalStore.Processes.IsExist(actualProcessId)) { }
                 }
             }
-            if (serviceElastic.Status == (int)ServiceStatusEnum.Prepared) { }
+            if (service.Status == ServiceStatusEnum.Prepared) { }
 
-            var directoryPath = string.Format("{0}/{1}", _dictionaryRootPath, serviceElastic.Id);
+            var directoryPath = string.Format("{0}/{1}", _dictionaryRootPath, service.Id);
             IOHelper.SafeDeleteDictionary(directoryPath, true);
         }
 
@@ -288,7 +341,7 @@ namespace Slamby.API.Helpers.Services
         {
             try
             {
-                var service = serviceQuery.Get(settings.ServiceId);
+                var service = Get(settings.ServiceId);
 
                 var dataSet = GlobalStore.DataSets.Get(settings.DataSetName).DataSet;
                 var allDicCount = tagIdList.Count;
