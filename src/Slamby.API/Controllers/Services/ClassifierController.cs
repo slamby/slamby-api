@@ -102,6 +102,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Prepare(string id, [FromBody]ClassifierPrepareSettings classifierPrepareSettings)
         {
             //SERVICE VALIDATION
@@ -182,6 +183,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Activate(string id, [FromBody]ClassifierActivateSettings classifierActivateSettings)
         {
             //SERVICE VALIDATION
@@ -271,6 +273,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, "")]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Deactivate(string id) {
             //SERVICE VALIDATION
             var service = serviceQuery.Get(id);
@@ -321,10 +324,11 @@ namespace Slamby.API.Controllers
 
         [HttpPost("{id}/ExportDictionaries")]
         [SwaggerOperation("ClassifierExportDictionaries")]
-        [SwaggerResponse(StatusCodes.Status200OK, "", typeof(Process))]
+        [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult ExportDictionaries(string id, [FromBody]ExportDictionariesSettings settings, [FromServices]UrlProvider urlProvider)
         {
             //SERVICE VALIDATION

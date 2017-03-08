@@ -240,6 +240,15 @@ namespace Slamby.API.Resources {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to The operation is not allowed, because the service &apos;{0}&apos; is busy!.
+        /// </summary>
+        public static string Operation_is_not_allowed_the_Service_0_is_busy {
+            get {
+                return ResourceManager.GetString("Operation_is_not_allowed_the_Service_0_is_busy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Partial indexing {0} service {1}.
         /// </summary>
         public static string PartialIndexing_0_Service_1 {

@@ -119,6 +119,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerOperation("PrcPrepareService")]
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Prepare(string id, [FromBody]PrcPrepareSettings prcPrepareSettings)
         {
             //SERVICE VALIDATION
@@ -190,6 +191,7 @@ namespace Slamby.API.Controllers.Services
         [HttpPost("{id}/Activate")]
         [SwaggerOperation("PrcActivateService")]
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Activate(string id, [FromBody]PrcActivateSettings prcActivateSettings)
         {
             //SERVICE VALIDATION
@@ -252,6 +254,7 @@ namespace Slamby.API.Controllers.Services
         [HttpPost("{id}/Deactivate")]
         [SwaggerOperation("PrcDeactivateService")]
         [SwaggerResponse(StatusCodes.Status200OK, "")]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Deactivate(string id)
         {
             //SERVICE VALIDATION
@@ -512,6 +515,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Index(string id, [FromBody]PrcIndexSettings prcIndexSettings)
         {
             //SERVICE VALIDATION
@@ -575,6 +579,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult IndexPartial(string id)
         {
             //SERVICE VALIDATION
@@ -647,8 +652,9 @@ namespace Slamby.API.Controllers.Services
 
         [HttpPost("{id}/ExportDictionaries")]
         [SwaggerOperation("PrcExportDictionaries")]
-        [SwaggerResponse(StatusCodes.Status200OK, "", typeof(Process))]
+        [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult ExportDictionaries(string id, [FromBody]ExportDictionariesSettings settings, [FromServices]UrlProvider urlProvider)
         {
             //SERVICE VALIDATION

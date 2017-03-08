@@ -127,7 +127,7 @@
     <value>Dataset '{0}' is not found</value>
   </data>
   <data name="Operation_is_not_allowed_the_dataset_0_is_busy" xml:space="preserve">
-    <value>The operarion is not allowed, because the dataset '{0}' is busy!</value>
+    <value>The operation is not allowed, because the dataset '{0}' is busy!</value>
   </data>
   <data name="SampleDocumentIsEmpty" xml:space="preserve">
     <value>SampleDocument is empty</value>

@@ -22,7 +22,7 @@ namespace Slamby.API.Resources {
     // with the /str option, or rebuild your VS project.
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class DataSetResources {
+    public class DataSetResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -35,7 +35,7 @@ namespace Slamby.API.Resources {
         ///    Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Slamby.API.Resources.DataSetResources", typeof(DataSetResources).GetTypeInfo().Assembly);
@@ -50,7 +50,7 @@ namespace Slamby.API.Resources {
         ///    resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -62,7 +62,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Dataset &apos;{0}&apos; is already exist.
         /// </summary>
-        internal static string DataSet_0_IsAlreadyExist {
+        public static string DataSet_0_IsAlreadyExist {
             get {
                 return ResourceManager.GetString("DataSet_0_IsAlreadyExist", resourceCulture);
             }
@@ -71,7 +71,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Dataset &apos;{0}&apos; is not found.
         /// </summary>
-        internal static string DataSet_0_IsNotFound {
+        public static string DataSet_0_IsNotFound {
             get {
                 return ResourceManager.GetString("DataSet_0_IsNotFound", resourceCulture);
             }
@@ -80,16 +80,16 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Dataset not allowed to delete because of depending service(s)!.
         /// </summary>
-        internal static string DataSetNotAllowedToDeleteBecauseOfDependingService {
+        public static string DataSetNotAllowedToDeleteBecauseOfDependingService {
             get {
                 return ResourceManager.GetString("DataSetNotAllowedToDeleteBecauseOfDependingService", resourceCulture);
             }
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to The operarion is not allowed, because the dataset &apos;{0}&apos; is busy!.
+        ///    Looks up a localized string similar to The operation is not allowed, because the dataset &apos;{0}&apos; is busy!.
         /// </summary>
-        internal static string Operation_is_not_allowed_the_dataset_0_is_busy {
+        public static string Operation_is_not_allowed_the_dataset_0_is_busy {
             get {
                 return ResourceManager.GetString("Operation_is_not_allowed_the_dataset_0_is_busy", resourceCulture);
             }
@@ -98,7 +98,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to SampleDocument is empty.
         /// </summary>
-        internal static string SampleDocumentIsEmpty {
+        public static string SampleDocumentIsEmpty {
             get {
                 return ResourceManager.GetString("SampleDocumentIsEmpty", resourceCulture);
             }
@@ -107,7 +107,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to Schema is empty.
         /// </summary>
-        internal static string SchemaIsEmpty {
+        public static string SchemaIsEmpty {
             get {
                 return ResourceManager.GetString("SchemaIsEmpty", resourceCulture);
             }
@@ -116,7 +116,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The dataset name must be minimum {0} and maximum {1} characters.
         /// </summary>
-        internal static string The_Dataset_name_MustBeMin_0_Max_1 {
+        public static string The_Dataset_name_MustBeMin_0_Max_1 {
             get {
                 return ResourceManager.GetString("The_Dataset_name_MustBeMin_0_Max_1", resourceCulture);
             }
@@ -125,7 +125,7 @@ namespace Slamby.API.Resources {
         /// <summary>
         ///    Looks up a localized string similar to The dataset name  must match the regular expression: &apos;{0}&apos;.
         /// </summary>
-        internal static string The_Dataset_name_MustMatchRegex_0 {
+        public static string The_Dataset_name_MustMatchRegex_0 {
             get {
                 return ResourceManager.GetString("The_Dataset_name_MustMatchRegex_0", resourceCulture);
             }

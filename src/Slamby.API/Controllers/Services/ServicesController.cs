@@ -112,6 +112,7 @@ namespace Slamby.API.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(Service))]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Put(string id, [FromBody]Service service)
         {
             var serviceElastic = serviceQuery.Get(id);
@@ -145,6 +146,7 @@ namespace Slamby.API.Controllers
         [SwaggerOperation("DeleteService")]
         [SwaggerResponse(StatusCodes.Status200OK)]
         [SwaggerResponse(StatusCodes.Status404NotFound)]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Delete(string id, [FromServices]IServiceProvider serviceProvider, [FromServices]ProcessQuery processQuery)
         {
             var service = serviceQuery.Get(id);

@@ -225,4 +225,7 @@
   <data name="NotAllParentTagExists" xml:space="preserve">
     <value>There is at least one parent tag in the ParentTagIdList which is not a parent of any activated tags!</value>
   </data>
+  <data name="Operation_is_not_allowed_the_Service_0_is_busy" xml:space="preserve">
+    <value>The operation is not allowed, because the service '{0}' is busy!</value>
+  </data>
 </root>

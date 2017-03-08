@@ -93,6 +93,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
         [ServiceFilter(typeof(DiskSpaceLimitFilter))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Prepare(string id, [FromBody]SearchPrepareSettings searchPrepareSettings)
         {
             //SERVICE VALIDATION
@@ -173,6 +174,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status202Accepted, "", typeof(Process))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Activate(string id, [FromBody]SearchActivateSettings searchActivateSettings)
         {
             //SERVICE VALIDATION
@@ -237,6 +239,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status200OK, "")]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "", typeof(ErrorsModel))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "", typeof(ErrorsModel))]
+        [ServiceFilter(typeof(ServiceBusyFilter))]
         public IActionResult Deactivate(string id)
         {
             //SERVICE VALIDATION
