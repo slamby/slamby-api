@@ -18,7 +18,7 @@ services:
   slambyapi:
     container_name: slamby_api
     restart: always
-    image: slamby/slamby.api:1.5.1
+    image: slamby/slamby.api:1.6.0
     volumes:
       - /usr/share/slamby:/Slamby
     depends_on:
