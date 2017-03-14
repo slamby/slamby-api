@@ -192,10 +192,7 @@ namespace Slamby.Elastic.Queries
             var prefixedQuery = query;
             var joinedFieldNames = string.Join("|", documentObjectFieldNames);
 
-            prefixedQuery = new Regex($"(^(\\b{joinedFieldNames}\\b))([:\\.])")
-                .Replace(prefixedQuery, $"{DocumentElastic.DocumentObjectMappingName}.$2$3");
-
-            prefixedQuery = new Regex($"([^.])(\\b{joinedFieldNames}\\b)([:\\.])")
+            prefixedQuery = new Regex($"([^.\\-_a-z]|^)(\\b{joinedFieldNames}\\b)([:\\.])")
                 .Replace(prefixedQuery, $"$1{DocumentElastic.DocumentObjectMappingName}.$2$3");
 
             return prefixedQuery;
