@@ -352,6 +352,13 @@ namespace Slamby.API
                     ContentTypeProvider = provider
                 });
 
+                //LimitsMiddleware.AspNetCore
+                int maxConcurrentRequests = int.TryParse(
+                    Configuration.GetValue("SlambyApi:RequestsLimiting:MaxConcurrentRequests", string.Empty),
+                    out maxConcurrentRequests) ? maxConcurrentRequests : 0;
+                if (maxConcurrentRequests > 0)
+                    app.UseConcurrentRequestsLimit(maxConcurrentRequests);
+
                 app.UseApiHeaderVersion();
                 app.UseApiHeaderAuthentication();
                 app.UseElapsedTime();
