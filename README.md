@@ -149,6 +149,12 @@ The maximum limit of the used threads in each operation. If it's 0 then the API 
 Tip: you can limit it in each request header also. Check it in the API documentation. 
 
 
+### `SlambyApi__RequestsLimiting__MaxConcurrentRequests`
+
+Default value: `50`
+
+With this setting you can set up a Maximum Concurrent Request number. If there are more concurrent requests than this number, the API will response with HTTP Status Code 503 (Service Unavailable).
+
 ## Issues
 
 We use GitHub issues to track public bugs. Please ensure your description is clear and has sufficient instructions to be able to reproduce the issue.
