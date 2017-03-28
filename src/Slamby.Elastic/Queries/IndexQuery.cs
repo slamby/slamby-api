@@ -42,6 +42,11 @@ namespace Slamby.Elastic.Queries
                         .Dynamic(true)
                         .DateDetection(false)
                         .NumericDetection(false)
+                        .DynamicTemplates(d => d.DynamicTemplate("slamby_template", dt => dt
+                            .MatchMappingType("string")
+                            .PathMatch($"{DocumentElastic.DocumentObjectMappingName}.{tagField}")
+                            .Mapping(m => m.String(s => s.Index(FieldIndexOption.NotAnalyzed)))
+                        ))
                         .AutoMap());
                 var createResp = defaultClient.CreateIndex(indexDescriptor);
                 ResponseValidator(createResp);
@@ -152,7 +157,7 @@ namespace Slamby.Elastic.Queries
                                 .Fields(f => multiPropDesc))
                             .Object<object>(o => o
                                 .Name(DocumentElastic.DocumentObjectMappingName)
-                                .Properties(op => IndexHelper.MapProperties(token, op, ipfPropDesc, interpretedFields)))
+                                .Properties(op => IndexHelper.MapProperties(token, op, ipfPropDesc, interpretedFields, tagField)))
                                 ));
                 var createResp = defaultClient.CreateIndex(indexDescriptor);
                 ResponseValidator(createResp);
@@ -296,7 +301,7 @@ namespace Slamby.Elastic.Queries
                     .Analyzer(analyzerName)
                     .SearchAnalyzer(analyzerName)
                     .TermVector(TermVectorOption.WithPositionsOffsetsPayloads));
-            
+
             // we only store the count for unigrams, because it's easy to calculate the others from this
             propDesc.TokenCount(desc => desc
                 .Name("1" + _tokenCountSuffix)
@@ -360,7 +365,8 @@ namespace Slamby.Elastic.Queries
         {
             var sdesc = new SearchDescriptor<PropertiesElastic>();
             ISearchResponse<PropertiesElastic> searchResponse;
-            if (string.IsNullOrEmpty(indexName)) {
+            if (string.IsNullOrEmpty(indexName))
+            {
                 sdesc.Index(Indices.AllIndices);
                 var client = clientFactory.GetClient();
                 var size = client.Search<PropertiesElastic>(sdesc).Total;
@@ -371,7 +377,7 @@ namespace Slamby.Elastic.Queries
             {
                 searchResponse = Client.Search<PropertiesElastic>(sdesc);
             }
-            
+
             ResponseValidator(searchResponse);
             return searchResponse?.Hits.ToDictionary(h => h.Index, h => h);
         }

@@ -10,7 +10,7 @@ namespace Slamby.Elastic.Helpers
 {
     public static class IndexHelper
     {
-        public static IPromise<IProperties> MapProperties(JToken node, PropertiesDescriptor<object> descriptor, PropertiesDescriptor<object> analyzers, List<string> interpretedFields)
+        public static IPromise<IProperties> MapProperties(JToken node, PropertiesDescriptor<object> descriptor, PropertiesDescriptor<object> analyzers, List<string> interpretedFields, string tagField)
         {
             if (node.Type != JTokenType.Object)
             {
@@ -26,14 +26,14 @@ namespace Slamby.Elastic.Helpers
                 if (type == SchemaHelper.Types.Object)
                 {
                     var propertiesProperty = properties.FirstOrDefault(c => c.Name == SchemaHelper.Elements.Properties).Value;
-                    return MapProperties(propertiesProperty, descriptor, analyzers, interpretedFields, string.Empty);
+                    return MapProperties(propertiesProperty, descriptor, analyzers, interpretedFields, tagField, string.Empty);
                 }
             }
 
             return descriptor;
         }
 
-        public static IPromise<IProperties> MapProperties(JToken node, PropertiesDescriptor<object> descriptor, PropertiesDescriptor<object> analyzers, List<string> interpretedFields, string path)
+        public static IPromise<IProperties> MapProperties(JToken node, PropertiesDescriptor<object> descriptor, PropertiesDescriptor<object> analyzers, List<string> interpretedFields, string tagField, string path)
         {
             var properties = node.Children<JProperty>().ToList();
 
@@ -66,9 +66,19 @@ namespace Slamby.Elastic.Helpers
                 {
                     case SchemaHelper.Types.String:
                         {
-                            descriptor.String(desc => desc
+                            if (tagField.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
+                            {
+                                descriptor.String(desc => desc
+                                .Name(name)
+                                .Fields(applyAnalyzerFields)
+                                .Index(FieldIndexOption.NotAnalyzed));
+                                
+                            } else
+                            {
+                                descriptor.String(desc => desc
                                 .Name(name)
                                 .Fields(applyAnalyzerFields));
+                            }
                             break;
                         }
                     case SchemaHelper.Types.Long:
@@ -131,6 +141,7 @@ namespace Slamby.Elastic.Helpers
                                                   propDesc,
                                                   analyzers,
                                                   interpretedFields,
+                                                  tagField,
                                                   fullPath)));
                             break;
                         }
