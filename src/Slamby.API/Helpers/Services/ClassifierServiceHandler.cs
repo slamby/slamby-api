@@ -319,17 +319,18 @@ namespace Slamby.API.Helpers.Services
 
             var allResults = new ConcurrentBag<KeyValuePair<string, double>>();
 
+            var allScorers = GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers;
             Dictionary<string, Cerebellum.Scorer.PeSScorer> scorers;
             if (parentTagIdList?.Any() == true)
             {
                 scorers = GlobalStore.ActivatedClassifiers.Get(id)
                     .ClassifierTags
                     .Values
-                    .Where(t => t.ParentIdList?.Intersect(parentTagIdList).Any() == true)
-                    .ToDictionary(s => s.Id, s => GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers[s.Id]);
+                    .Where(t => allScorers.ContainsKey(t.Id) && t.ParentIdList?.Intersect(parentTagIdList).Any() == true)
+                    .ToDictionary(s => s.Id, s => allScorers[s.Id]);
             } else
             {
-                scorers = GlobalStore.ActivatedClassifiers.Get(id).ClassifierScorers;
+                scorers = allScorers;
             }
             foreach (var scorerKvp in scorers)
             {
