@@ -139,6 +139,20 @@ namespace Slamby.API.Services
             }
         }
 
+        public void FillUpDestinationDataSetName()
+        {
+            foreach (var service in serviceQuery.GetByType((int)ServiceTypeEnum.Prc))
+            {
+                var settings = serviceQuery.GetSettings<PrcSettingsElastic>(service.Id);
+                if (settings == null)
+                {
+                    continue;
+                }
+                settings.DestinationDataSetName = settings.DataSetName;
+                serviceQuery.IndexSettings(settings);
+            }
+        }
+
         public void LoadGlobalStore()
         {
             foreach (var service in serviceQuery.GetAll().Where(s => !string.IsNullOrEmpty(s.Alias)))

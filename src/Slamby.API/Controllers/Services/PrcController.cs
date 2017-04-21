@@ -88,7 +88,8 @@ namespace Slamby.API.Controllers.Services
                     {
                         activateSettings = new PrcActivateSettings
                         {
-                            FieldsForRecommendation = prcSettingsElastic.FieldsForRecommendation
+                            FieldsForRecommendation = prcSettingsElastic.FieldsForRecommendation,
+                            DestinationDataSetName = GlobalStore.DataSets.Get(prcSettingsElastic.DestinationDataSetName).AliasName,
                         };
 
                         if (prcSettingsElastic?.IndexSettings?.IndexDate != null)
@@ -220,7 +221,7 @@ namespace Slamby.API.Controllers.Services
             }
             else
             {
-                if (prcActivateSettings?.FieldsForRecommendation?.Any() == true)
+                if (prcActivateSettings.FieldsForRecommendation?.Any() == true)
                 {
                     var fields = prcActivateSettings.FieldsForRecommendation.Intersect(GlobalStore.DataSets.Get(prcSettings.DataSetName).DataSet.InterpretedFields).ToList();
                     if (fields.Count != prcActivateSettings.FieldsForRecommendation.Count)
@@ -233,6 +234,19 @@ namespace Slamby.API.Controllers.Services
                 else
                 {
                     prcSettings.FieldsForRecommendation = GlobalStore.DataSets.Get(prcSettings.DataSetName).DataSet.InterpretedFields;
+                }
+                if (!string.IsNullOrEmpty(prcActivateSettings.DestinationDataSetName))
+                {
+                    //DATASET VALIDATION
+                    if (!GlobalStore.DataSets.IsExist(prcActivateSettings.DestinationDataSetName))
+                    {
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest, string.Format(ServiceResources.DataSet_0_NotFound, prcActivateSettings.DestinationDataSetName));
+                    }
+                    var globalStoreDataSet = GlobalStore.DataSets.Get(prcActivateSettings.DestinationDataSetName);
+                    prcSettings.DestinationDataSetName = globalStoreDataSet.IndexName;
+                } else
+                {
+                    prcSettings.DestinationDataSetName = prcSettings.DataSetName;
                 }
             }
 
@@ -352,7 +366,7 @@ namespace Slamby.API.Controllers.Services
         [SwaggerResponse(StatusCodes.Status200OK, "", typeof(IEnumerable<PrcRecommendationResult>))]
         [SwaggerResponse(StatusCodes.Status400BadRequest)]
         [SwaggerResponse(StatusCodes.Status406NotAcceptable)]
-        public IActionResult Recommend(string id, [FromBody]PrcRecommendationRequest request)
+        public IActionResult Recommend(string id, [FromBody]PrcRecommendationRequest request, bool isStrict = false)
         {
             if (request == null) return new StatusCodeResult(StatusCodes.Status400BadRequest);
             // If Id is Alias, translate to Id
@@ -397,16 +411,20 @@ namespace Slamby.API.Controllers.Services
                 tagId = resultsList.First().Key;
             }
 
+            var globalStoreDestinationDataSet = GlobalStore.DataSets.Get(GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.DestinationDataSetName);
+            var destinationDataSet = globalStoreDestinationDataSet.DataSet;
+
             var tagsToTest = new List<string>();
             if (request.Filter?.TagIdList?.Any() == true)
             {
-                var existingTags = GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.Tags.Select(t => t.Id).Intersect(request.Filter.TagIdList).ToList();
+                /*var existingTags = GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.Tags.Select(t => t.Id).Intersect(request.Filter.TagIdList).ToList();
                 if (existingTags.Count < request.Filter.TagIdList.Count)
                 {
                     var missingTagIds = request.Filter.TagIdList.Except(existingTags).ToList();
                     return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                         string.Format(ServiceResources.TheFollowingTagIdsNotExistInTheDataSet_0, string.Join(", ", missingTagIds)));
-                }
+                }*/
+                // TODO validate with the destination dataset tags
                 tagsToTest = request.Filter.TagIdList;
             }
 
@@ -425,6 +443,12 @@ namespace Slamby.API.Controllers.Services
                 WordsWithOccurences = wordsInDic.ToDictionary(w => w, w => globalSubset.WordsWithOccurences[w])
             };
             var baseDic = new Cerebellum.Dictionary.TwisterAlgorithm(baseSubset, true, false).GetDictionary();
+
+            if (isStrict)
+            {
+                var avg = baseDic.Sum(d => d.Value) / baseDic.Count;
+                baseDic.Where(d => d.Value < avg).ToList().ForEach(d => baseDic.Remove(d.Key));
+            }
 
             var globalScorer = GlobalStore.ActivatedPrcs.Get(id).PrcScorers[tagId];
             var baseScorer = new Cerebellum.Scorer.PeSScorer(new Dictionary<int, Dictionary<string, double>> { { 1, baseDic } });
@@ -453,16 +477,24 @@ namespace Slamby.API.Controllers.Services
 
             var fieldsForRecommendation = GlobalStore.ActivatedPrcs.Get(id).PrcsSettings.FieldsForRecommendation;
 
-            var documentQuery = queryFactory.GetDocumentQuery(dataSet.Name);
+            Func<string, bool> isAttachmentField = (field) => globalStoreDestinationDataSet.AttachmentFields.Any(attachmentField =>
+                string.Equals(attachmentField, field, StringComparison.OrdinalIgnoreCase));
+
+            var fieldList = fieldsForRecommendation
+                .Select(field => isAttachmentField(field) ? $"{field}.content" : field)
+                .Select(DocumentQuery.MapDocumentObjectName)
+                .ToList();
+
+            var documentQuery = queryFactory.GetDocumentQuery(destinationDataSet.Name);
             var documentElastics = new List<DocumentElastic>();
             var scrollResult = documentQuery
                 .Filter(query,
                         tagsToTest,
-                        dataSet.TagField,
+                        destinationDataSet.TagField,
                         request.Count,
                         null, false,
                         fieldsForRecommendation,
-                        globalStoreDataSet.DocumentFields,
+                        globalStoreDestinationDataSet.DocumentFields,
                         DocumentService.GetFieldFilter(globalStoreDataSet, new List<string> { request.NeedDocumentInResult ? "*" : globalStoreDataSet.DataSet.IdField }),
                         null, null, null,
                         shouldQuery);
@@ -470,18 +502,10 @@ namespace Slamby.API.Controllers.Services
             documentElastics.AddRange(scrollResult.Items);
 
             var docIdsWithScore = new ConcurrentDictionary<string, double>(new Dictionary<string, double>());
-            var wordQuery = queryFactory.GetWordQuery(dataSet.Name);
-
-            Func<string, bool> isAttachmentField = (field) => globalStoreDataSet.AttachmentFields.Any(attachmentField =>
-                string.Equals(attachmentField, field, StringComparison.OrdinalIgnoreCase));
-
+            var wordQuery = queryFactory.GetWordQuery(destinationDataSet.Name);
+            
             Parallel.ForEach(documentElastics, parallelService.ParallelOptions(), docElastic =>
             {
-                var fieldList = fieldsForRecommendation
-                    .Select(field => isAttachmentField(field) ? $"{field}.content" : field)
-                    .Select(DocumentQuery.MapDocumentObjectName)
-                    .ToList();
-
                 var wwo = wordQuery.GetWordsWithOccurences(new List<string> { docElastic.Id }, fieldList, 1);
                 var actualCleanedText = string.Join(" ", wwo.Select(w => string.Join(" ", Enumerable.Repeat(w.Key, w.Value.Tag))));
 
