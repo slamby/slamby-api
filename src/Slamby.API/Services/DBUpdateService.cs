@@ -86,6 +86,13 @@ namespace Slamby.API.Services
                 serviceManager.UpdateDataSetNameToIndex<PrcSettingsElastic>(ServiceTypeEnum.Prc);
                 serviceManager.UpdateDataSetNameToIndex<ClassifierSettingsElastic>(ServiceTypeEnum.Classifier);
             });
+
+            UpdateVersion(7, () =>
+            {
+                logger.LogInformation("Adding DestinationDataSetName field to PrcSettingsElastic");
+                MapModelElastic<PrcSettingsElastic>(Elastic.Constants.SlambyServicesIndex);
+                serviceManager.FillUpDestinationDataSetName();
+            });
         }
 
         private void MapModelElastic<TModelElastic>(string index) where TModelElastic : class

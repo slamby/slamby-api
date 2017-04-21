@@ -18,5 +18,8 @@ namespace Slamby.Elastic.Models
 
         [Object(Name = "index_settings")]
         public IndexSettingsElastic IndexSettings { get; set; }
+
+        [String(Name = "destination_dataset_name", Index = FieldIndexOption.NotAnalyzed)]
+        public string DestinationDataSetName { get; set; }
     }
 }
