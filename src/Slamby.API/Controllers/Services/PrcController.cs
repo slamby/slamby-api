@@ -424,7 +424,7 @@ namespace Slamby.API.Controllers.Services
                     return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
                         string.Format(ServiceResources.TheFollowingTagIdsNotExistInTheDataSet_0, string.Join(", ", missingTagIds)));
                 }*/
-                // a destination dataset tag-jei alapján validálni hogy léteznek-e a tag-ek
+                // TODO validate with the destination dataset tags
                 tagsToTest = request.Filter.TagIdList;
             }
 
