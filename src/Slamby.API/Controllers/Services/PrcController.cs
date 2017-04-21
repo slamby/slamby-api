@@ -497,7 +497,7 @@ namespace Slamby.API.Controllers.Services
                         null, false,
                         fieldsForRecommendation,
                         globalStoreDestinationDataSet.DocumentFields,
-                        DocumentService.GetFieldFilter(globalStoreDataSet, new List<string> { request.NeedDocumentInResult ? "*" : globalStoreDataSet.DataSet.IdField }),
+                        DocumentService.GetFieldFilter(globalStoreDestinationDataSet, new List<string> { request.NeedDocumentInResult ? "*" : globalStoreDestinationDataSet.DataSet.IdField }),
                         null, null, null,
                         shouldQuery);
 

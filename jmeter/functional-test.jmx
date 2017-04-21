@@ -92,7 +92,7 @@
           </elementProp>
           <elementProp name="apiVersion" elementType="Argument">
             <stringProp name="Argument.name">apiVersion</stringProp>
-            <stringProp name="Argument.value">1.7.1</stringProp>
+            <stringProp name="Argument.value">1.7.2</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
