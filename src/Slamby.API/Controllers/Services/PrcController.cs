@@ -221,20 +221,6 @@ namespace Slamby.API.Controllers.Services
             }
             else
             {
-                if (prcActivateSettings.FieldsForRecommendation?.Any() == true)
-                {
-                    var fields = prcActivateSettings.FieldsForRecommendation.Intersect(GlobalStore.DataSets.Get(prcSettings.DataSetName).DataSet.InterpretedFields).ToList();
-                    if (fields.Count != prcActivateSettings.FieldsForRecommendation.Count)
-                    {
-                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
-                        string.Format(ServiceResources.TheFollowingFieldsNotExistInTheSampleDocument_0, string.Join(", ", fields)));
-                    }
-                    prcSettings.FieldsForRecommendation = prcActivateSettings.FieldsForRecommendation;
-                }
-                else
-                {
-                    prcSettings.FieldsForRecommendation = GlobalStore.DataSets.Get(prcSettings.DataSetName).DataSet.InterpretedFields;
-                }
                 if (!string.IsNullOrEmpty(prcActivateSettings.DestinationDataSetName))
                 {
                     //DATASET VALIDATION
@@ -244,9 +230,25 @@ namespace Slamby.API.Controllers.Services
                     }
                     var globalStoreDataSet = GlobalStore.DataSets.Get(prcActivateSettings.DestinationDataSetName);
                     prcSettings.DestinationDataSetName = globalStoreDataSet.IndexName;
-                } else
+                }
+                else
                 {
                     prcSettings.DestinationDataSetName = prcSettings.DataSetName;
+                }
+                if (prcActivateSettings.FieldsForRecommendation?.Any() == true)
+                {
+                    var fields = prcActivateSettings.FieldsForRecommendation.Intersect(GlobalStore.DataSets.Get(prcSettings.DestinationDataSetName).DataSet.InterpretedFields).ToList();
+                    if (fields.Count != prcActivateSettings.FieldsForRecommendation.Count)
+                    {
+                        return new HttpStatusCodeWithErrorResult(StatusCodes.Status400BadRequest,
+                        string.Format(ServiceResources.TheFollowingFieldsNotExistInTheSampleDocument_0, string.Join(", ",
+                        prcActivateSettings.FieldsForRecommendation.Except(GlobalStore.DataSets.Get(prcSettings.DestinationDataSetName).DataSet.InterpretedFields).ToList())));
+                    }
+                    prcSettings.FieldsForRecommendation = prcActivateSettings.FieldsForRecommendation;
+                }
+                else
+                {
+                    prcSettings.FieldsForRecommendation = GlobalStore.DataSets.Get(prcSettings.DestinationDataSetName).DataSet.InterpretedFields;
                 }
             }
 
