@@ -244,6 +244,9 @@ namespace Slamby.API.Controllers.Services
                     }
                     var globalStoreDataSet = GlobalStore.DataSets.Get(prcActivateSettings.DestinationDataSetName);
                     prcSettings.DestinationDataSetName = globalStoreDataSet.IndexName;
+                } else
+                {
+                    prcSettings.DestinationDataSetName = prcSettings.DataSetName;
                 }
             }
 
