@@ -481,11 +481,9 @@ namespace Slamby.API.Controllers.Services
                 string.Equals(attachmentField, field, StringComparison.OrdinalIgnoreCase));
 
             var fieldList = fieldsForRecommendation
-                    .Select(field => isAttachmentField(field) ? $"{field}.content" : field)
-                    .ToList();
-            var mappedFieldList = fieldList
-                    .Select(DocumentQuery.MapDocumentObjectName)
-                    .ToList();
+                .Select(field => isAttachmentField(field) ? $"{field}.content" : field)
+                .Select(DocumentQuery.MapDocumentObjectName)
+                .ToList();
 
             var documentQuery = queryFactory.GetDocumentQuery(destinationDataSet.Name);
             var documentElastics = new List<DocumentElastic>();
@@ -508,7 +506,7 @@ namespace Slamby.API.Controllers.Services
             
             Parallel.ForEach(documentElastics, parallelService.ParallelOptions(), docElastic =>
             {
-                var wwo = wordQuery.GetWordsWithOccurences(new List<string> { docElastic.Id }, mappedFieldList, 1);
+                var wwo = wordQuery.GetWordsWithOccurences(new List<string> { docElastic.Id }, fieldList, 1);
                 var actualCleanedText = string.Join(" ", wwo.Select(w => string.Join(" ", Enumerable.Repeat(w.Key, w.Value.Tag))));
 
                 var actualBaseScore = baseScorer.GetScore(actualCleanedText, 1.7);
